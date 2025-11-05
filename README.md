@@ -3,8 +3,7 @@
 
 ## 🚀 기술 스택
 
-- React, React Router
-- TypeScript
+- Next.js
 - Tailwind CSS
 - Supabase
 
