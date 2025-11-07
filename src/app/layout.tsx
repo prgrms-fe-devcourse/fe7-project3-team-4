@@ -1,4 +1,4 @@
-import "./globals.css";
+import "@/assets/css/index.css";
 
 export const metadata = {
   title: "ALGO | AI PROMPT",
