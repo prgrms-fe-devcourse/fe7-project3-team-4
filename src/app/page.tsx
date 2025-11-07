@@ -1,4 +1,4 @@
-import IntroAnimation from "@/components/IntroAnimation";
+import IntroAnimation from "@/components/intro/IntroAnimation";
 
 export default function Page() {
   return (
