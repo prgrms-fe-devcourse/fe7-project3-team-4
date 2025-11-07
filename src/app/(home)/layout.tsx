@@ -1,5 +1,5 @@
 import "@/assets/css/index.css";
-import LeftSidebar from "@/components/sidebar/LeftSidebar";
+import LeftSidebar from "@/components/sidebar/Left/LeftSidebar";
 import RightSidebar from "@/components/sidebar/RightSidebar";
 
 export const metadata = {

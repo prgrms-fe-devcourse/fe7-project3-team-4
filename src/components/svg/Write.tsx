@@ -22,8 +22,8 @@ export default function Write() {
             y2="24"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stop-color="#656566" />
-            <stop offset="1" stop-color="#323234" />
+            <stop stopColor="#656566" />
+            <stop offset="1" stopColor="#323234" />
           </linearGradient>
         </defs>
       </svg>

@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import MenuBtn from "./MenuBtn";
+import MenuBtn from "../MenuBtn";
 import { Bell, House, MessageCircle, Search, User } from "lucide-react";
-import Gemini from "../svg/Gemini";
-import GPT from "../svg/GPT";
-import Write from "../svg/Write";
-import Logo from "../svg/Logo";
+import Gemini from "../../svg/Gemini";
+import GPT from "../../svg/GPT";
+import Write from "../../svg/Write";
+import Logo from "../../svg/Logo";
 import Link from "next/link";
 
 const MENU_ITEMS = [

@@ -1,6 +1,6 @@
 import News from "./Right/News";
 import Rank from "./Right/Rank";
-import Tags from "./Right/Tags";
+import Tags from "./Right/tag/Tags";
 
 export default function RightSidebar() {
   return (
