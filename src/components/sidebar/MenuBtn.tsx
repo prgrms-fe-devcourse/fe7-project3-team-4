@@ -1,14 +1,17 @@
 "use client";
+import Link from "next/link";
 import { ReactNode } from "react";
 
 export default function MenuBtn({
   icon,
   title,
+  url,
   active,
   onClick,
 }: {
   icon: ReactNode;
   title: string;
+  url?: string;
   active?: boolean;
   onClick?: () => void;
 }) {
@@ -40,9 +43,11 @@ export default function MenuBtn({
   }
 
   return (
-    <li className={className} onClick={onClick}>
-      {icon}
-      <span>{title}</span>
-    </li>
+    <Link href={`/${url}`}>
+      <li className={className} onClick={onClick}>
+        {icon}
+        <span>{title}</span>
+      </li>
+    </Link>
   );
 }
