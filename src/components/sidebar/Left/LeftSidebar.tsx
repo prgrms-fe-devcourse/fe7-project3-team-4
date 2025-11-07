@@ -16,10 +16,12 @@ const MENU_ITEMS = [
   {
     title: "GPT",
     icon: <GPT />,
+    url: "https://chatgpt.com/",
   },
   {
     title: "Gemini",
     icon: <Gemini />,
+    url: "https://gemini.google.com/",
   },
   { title: "게시글 작성", icon: <Write />, url: "write" },
   { title: "채팅", icon: <MessageCircle />, url: "message" },

@@ -24,18 +24,12 @@ export default function MenuBtn({
   const className = `${base} ${active ? activeStyle : inactiveStyle}`;
 
   const isExternal = title === "GPT" || title === "Gemini";
-  const href =
-    title === "GPT"
-      ? "https://chatgpt.com/"
-      : title === "Gemini"
-      ? "https://gemini.google.com/"
-      : undefined;
 
-  if (isExternal && href) {
+  if (isExternal) {
     return (
       <li className={className} onClick={onClick}>
         {icon}
-        <a href={href} rel="noreferrer" className="flex-1">
+        <a href={url} target="_blank" rel="noreferrer" className="flex-1">
           {title}
         </a>
       </li>
@@ -43,7 +37,7 @@ export default function MenuBtn({
   }
 
   return (
-    <Link href={`/${url}`}>
+    <Link className="block" href={`/${url}`}>
       <li className={className} onClick={onClick}>
         {icon}
         <span>{title}</span>
