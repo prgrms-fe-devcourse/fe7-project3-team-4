@@ -1,7 +1,11 @@
+import TopBar from "@/components/home/TobBar";
+
 export default function Page() {
   return (
     <>
-      <section></section>
+      <section className="w-2xl mx-auto">
+        <TopBar />
+      </section>
     </>
   );
 }

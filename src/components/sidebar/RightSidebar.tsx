@@ -1,4 +1,4 @@
-import News from "./Right/News";
+import News from "./Right/SideNews";
 import Rank from "./Right/Rank";
 import Tags from "./Right/tag/Tags";
 
