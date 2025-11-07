@@ -12,7 +12,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body>{children}</body>
+      <body className="min-h-screen bg-[linear-gradient(126.44deg,#EFF5FE_18.41%,#FBF3FB_81.59%)]">
+        {children}
+      </body>
     </html>
   );
 }
