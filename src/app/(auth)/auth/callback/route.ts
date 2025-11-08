@@ -34,9 +34,16 @@ export async function GET(request: Request) {
       );
     }
 
+    // const { data: profileRows, error: profileError } = await supabase
+    //   .from("profiles")
+    //   .select("bio")
+    //   .eq("id", user.id)
+    //   .limit(1);
+
+    // news 페이지 테스트를 위해서 bio를 체크하는 것을 수정함
     const { data: profileRows, error: profileError } = await supabase
       .from("profiles")
-      .select("bio")
+      .select("display_name") // 'bio' -> 'display_name'
       .eq("id", user.id)
       .limit(1);
 
@@ -50,8 +57,19 @@ export async function GET(request: Request) {
 
     const profile = profileRows?.[0];
     let redirectPath: string = "";
-    if (!profile || !profile.bio || profile.bio.trim() === "") {
-      console.log("Redirecting to /additionalInfo");
+
+    // if (!profile || !profile.bio || profile.bio.trim() === "") {
+    //   console.log("Redirecting to /additionalInfo");
+    //   redirectPath = "/additionalInfo"; //로그인 성공시 이동하는 경로
+    // } else {
+    //   console.log("Redirecting to 'next':", next);
+    //   redirectPath = next;
+    // }
+
+    // news 테스트를 위해서 'profile.bio' 대신 'profile.display_name'을 확인합니다.
+    if (!profile || !profile.display_name || profile.display_name.trim() === "") {
+      console.log("Redirecting to /usersetting"); // 경로가 /usersetting 일 수 있습니다.
+      // [참고] usersetting 페이지 경로로 수정이 필요할 수 있습니다. (예: "/usersetting")
       redirectPath = "/additionalInfo"; //로그인 성공시 이동하는 경로
     } else {
       console.log("Redirecting to 'next':", next);
