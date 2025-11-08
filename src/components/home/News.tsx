@@ -1,7 +1,11 @@
-export default function News() {
+import Post from "./Post";
+
+export default function News({ data }: { data: Post[] }) {
   return (
     <>
-      <h1>News</h1>
+      {data.map((data) => {
+        return <Post key={data.id} data={data} />;
+      })}
     </>
   );
 }

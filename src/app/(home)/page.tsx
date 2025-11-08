@@ -8,6 +8,7 @@ import Prompt from "@/components/home/Prompt";
 import TopBar from "@/components/home/TobBar";
 import Free from "@/components/home/Free";
 import Weekly from "@/components/home/Weekly";
+import { ArrowLeft } from "lucide-react";
 
 const MOCKUP_DATA: Post[] = [
   {
@@ -185,9 +186,10 @@ function PostDetail({ post, onBack }: { post: Post; onBack: () => void }) {
     <div className="space-y-4">
       <button
         onClick={onBack}
-        className="text-sm text-[#6758FF] hover:underline"
+        className="leading-none group cursor-pointer flex items-center gap-2 text-[#6758FF] hover:underline"
       >
-        ← 목록으로 돌아가기
+        <ArrowLeft className="arrow-wiggle" />
+        뒤로
       </button>
 
       <div className="p-6 bg-white/60 rounded-xl shadow-lg">
@@ -225,6 +227,7 @@ export default function Page() {
     return MOCKUP_DATA.find((post) => post.id === numericId) ?? null;
   }, [searchParams]);
 
+  // 탭 선택
   const handleTabChange = (tab: Tab) => {
     const type = tabToType[tab];
 
@@ -244,6 +247,17 @@ export default function Page() {
     }
   };
 
+  const postsByType = useMemo(
+    () => ({
+      all: MOCKUP_DATA,
+      news: MOCKUP_DATA.filter((post) => post.type === "news"),
+      prompt: MOCKUP_DATA.filter((post) => post.type === "prompt"),
+      free: MOCKUP_DATA.filter((post) => post.type === "free"),
+      weekly: MOCKUP_DATA.filter((post) => post.type === "weekly"),
+    }),
+    []
+  );
+
   return (
     <section className="max-w-2xl mx-auto">
       {/* 상단 탭은 유지 */}
@@ -255,11 +269,13 @@ export default function Page() {
         <PostDetail post={selectedPost} onBack={handleBack} />
       ) : (
         <>
-          {activeTab === "전체" && <All data={MOCKUP_DATA} />}
-          {activeTab === "뉴스" && <News />}
-          {activeTab === "프롬프트" && <Prompt />}
-          {activeTab === "자유" && <Free />}
-          {activeTab === "주간" && <Weekly />}
+          <div className="space-y-8 pb-6">
+            {activeTab === "전체" && <All data={postsByType.all} />}
+            {activeTab === "뉴스" && <News data={postsByType.news} />}
+            {activeTab === "프롬프트" && <Prompt data={postsByType.prompt} />}
+            {activeTab === "자유" && <Free data={postsByType.free} />}
+            {activeTab === "주간" && <Weekly data={postsByType.weekly} />}
+          </div>
         </>
       )}
     </section>

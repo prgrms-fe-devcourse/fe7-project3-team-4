@@ -1,7 +1,11 @@
-export default function Weekly() {
+import Post from "./Post";
+
+export default function Weekly({ data }: { data: Post[] }) {
   return (
     <>
-      <h1>Weekly</h1>
+      {data.map((data) => {
+        return <Post key={data.id} data={data} />;
+      })}
     </>
   );
 }

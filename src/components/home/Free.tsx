@@ -1,7 +1,11 @@
-export default function Free() {
+import Post from "./Post";
+
+export default function Free({ data }: { data: Post[] }) {
   return (
     <>
-      <h1>Free</h1>
+      {data.map((data) => {
+        return <Post key={data.id} data={data} />;
+      })}
     </>
   );
 }
