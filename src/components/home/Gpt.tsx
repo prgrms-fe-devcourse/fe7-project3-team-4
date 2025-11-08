@@ -1,7 +1,11 @@
-export default function Gpt() {
+import Post from "./Post";
+
+export default function Gpt({ data }: { data: Post[] }) {
   return (
     <>
-      <h1>Gpt</h1>
+      {data.map((data) => {
+        return <Post key={data.id} data={data} />;
+      })}
     </>
   );
 }

@@ -1,7 +1,11 @@
-export default function Gemini() {
+import Post from "./Post";
+
+export default function Gemini({ data }: { data: Post[] }) {
   return (
     <>
-      <h1>Gemini</h1>
+      {data.map((data) => {
+        return <Post key={data.id} data={data} />;
+      })}
     </>
   );
 }
