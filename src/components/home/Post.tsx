@@ -5,7 +5,7 @@ import Link from "next/link";
 export default function NewsPost({ data }: { data: Post }) {
   return (
     <>
-      <div className="p-6 bg-white/40 border-white/20 rounded-xl shadow-[0px_10px_25px_rgba(0,0,0,0.1),0px_4px_10px_rgba(0,0,0,0.1)] hover:-translate-y-1 hover:shadow-2xl">
+      <div className="p-6 bg-white/40 border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl">
         <Link
           href={`/?type=${data.type}&id=${data.id}`}
           scroll={false}
@@ -62,7 +62,7 @@ export default function NewsPost({ data }: { data: Post }) {
           </div>
         </Link>
         {/* 아래 버튼들 */}
-        <div className="flex justify-center gap-30">
+        <div className="flex justify-center gap-30 text-[#717182]">
           <button className="cursor-pointer py-1 px-2 rounded-md hover:text-[#FF569B] hover:bg-[#F7E6ED]">
             <div className="flex gap-2 text-sm items-center ">
               <Heart size={18} />

@@ -14,7 +14,7 @@ export default function Box({
   return (
     <>
       <div
-        className="w-full p-6 box-border bg-white/40 border border-white/50 rounded-xl shadow-[0px_10px_25px_rgba(0,0,0,0.1),0px_4px_10px_rgba(0,0,0,0.1)]"
+        className="w-full p-6 box-border bg-white/40 border border-white/50 rounded-xl shadow-xl"
         style={height ? { height } : undefined}
       >
         <div className="flex gap-2 mb-5">

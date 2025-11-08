@@ -27,7 +27,7 @@ export default function TopBar({
               className={[
                 "py-1 px-3 rounded-lg cursor-pointer transition-all duration-200",
                 isActive
-                  ? "text-[#0A0A0A] bg-white shadow-[0px_2px_6px_rgba(0,0,0,0.12)]"
+                  ? "text-[#0A0A0A] bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.10)]"
                   : "text-[#9CA3AF] hover:text-[#0A0A0A]",
               ].join(" ")}
             >
@@ -40,13 +40,13 @@ export default function TopBar({
       {/* right: 정렬 + 새 글 */}
       <div className="flex items-center gap-1.5">
         <ul className="text-[#9CA3AF] flex gap-1 bg-[#EEEEF0] p-0.5 rounded-lg items-center">
-          <button className="py-1 px-3 text-[#0A0A0A] bg-white rounded-lg shadow-[0px_2px_6px_rgba(0,0,0,0.12)] cursor-pointer text-[10px]">
+          <button className="py-1 px-3 text-[#0A0A0A] bg-white rounded-lg shadow-[0px_1px_2px_rgba(0,0,0,0.10)] cursor-pointer text-[10px]">
             최신순
           </button>
           <li className="py-1 px-3 cursor-pointer text-[10px]">인기순</li>
         </ul>
 
-        <Link className="block" href="/write">
+        <Link className="hidden lg:block" href="/write">
           <div className="flex items-center gap-0.5 px-2 py-1.5 rounded-lg bg-linear-to-b from-[#8B8B8B] to-[#2C2C2E] shadow-[0px_1px_2px_rgba(0,0,0,0.1)] hover:translate-y-[-1.5px]">
             <Plus size={14} color="#AEAEAE" />
             <span className="text-white text-[10px] leading-none">

@@ -33,6 +33,7 @@ export default function Rank() {
             <div key={i} className="flex justify-between items-center">
               <div className="flex items-center gap-1.5">
                 <div
+                  className="w-8"
                   style={
                     data.rank === "1st"
                       ? { color: "#EFAF00" }

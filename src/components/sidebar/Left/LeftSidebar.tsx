@@ -44,7 +44,7 @@ export default function LeftSidebar() {
   const pathname = usePathname();
   return (
     <>
-      <aside className="hidden md:block h-full p-6 box-border bg-white/40 border border-white/20 rounded-xl shadow-[0px_10px_25px_rgba(0,0,0,0.1),0px_4px_10px_rgba(0,0,0,0.1)]">
+      <aside className="hidden lg:block h-full p-6 box-border bg-white/40 border border-white/20 rounded-xl shadow-xl">
         {/* 로고 아이콘 */}
         <Link href={"/"}>
           <Logo />

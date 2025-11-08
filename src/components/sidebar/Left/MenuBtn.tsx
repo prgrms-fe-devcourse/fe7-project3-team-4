@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ReactNode, MouseEvent } from "react";
+import { ReactNode } from "react";
 
 type MenuBtnProps = {
   icon: ReactNode;
@@ -27,9 +27,10 @@ export default function MenuBtn({
 
   const isExternal = url.startsWith("http");
 
-  const handleClick = (e: MouseEvent<HTMLAnchorElement | HTMLLIElement>) => {
-    e.preventDefault();
-    if (onClick) onClick();
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    }
   };
 
   if (isExternal) {
