@@ -1,6 +1,11 @@
-import Post from "./Post";
+import NoPosts from "../NoPosts";
+import Post from "../Post";
 
 export default function Gemini({ data }: { data: Post[] }) {
+  if (!data || data.length === 0) {
+    return <NoPosts />;
+  }
+
   return (
     <>
       {data.map((data) => {

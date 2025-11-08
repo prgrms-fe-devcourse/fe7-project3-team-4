@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Gemini from "./Gemini";
-import Gpt from "./Gpt";
+import Gemini from "./prompt/Gemini";
+import Gpt from "./prompt/Gpt";
 import ModelToggle from "./ModelToggle";
 
 type PromptModel = "GPT" | "Gemini";

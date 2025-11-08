@@ -1,10 +1,11 @@
-import NoPosts from "./NoPosts";
-import Post from "./Post";
+import NoPosts from "../NoPosts";
+import Post from "../Post";
 
-export default function Free({ data }: { data: Post[] }) {
+export default function TextWeekly({ data }: { data: Post[] }) {
   if (!data || data.length === 0) {
     return <NoPosts />;
   }
+
   return (
     <>
       {data.map((data) => {
