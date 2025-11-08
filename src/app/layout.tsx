@@ -1,4 +1,6 @@
-import "@/assets/css/index.css";
+import "@/assets/css/index.css"; 
+import "react-loading-skeleton/dist/skeleton.css";
+import ClientSideScrollRestorer from "@/components/news/ClientScrollRestorer";
 
 export const metadata = {
   title: "ALGO | AI PROMPT",
@@ -12,7 +14,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body>{children}</body>
-    </html>
+      <body>
+        <ClientSideScrollRestorer />
+        {children}
+      </body>
+</html>
   );
 }
