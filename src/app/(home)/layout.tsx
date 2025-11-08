@@ -15,12 +15,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body className="min-h-screen bg-[linear-gradient(120deg,#EFF5FE_18.41%,#FBF3FB_81.59%)]">
-        <div className="p-6 grid lg:grid-cols-[208px_minmax(0,1fr)_332px] gap-6 h-screen overflow-hidden">
+      <body className="min-h-screen bg-[linear-gradient(130deg,#EFF5FE_18.41%,#FBF3FB_81.59%)]">
+        <div className="p-6 grid lg:grid-cols-[208px_minmax(0,1fr)_332px] gap-6 h-screen">
           <LeftSidebar />
-
           <DragScrollMain>{children}</DragScrollMain>
-
           <RightSidebar />
         </div>
       </body>
