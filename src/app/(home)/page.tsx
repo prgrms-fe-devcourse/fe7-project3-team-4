@@ -8,7 +8,7 @@ import Prompt from "@/components/home/Prompt";
 import TopBar from "@/components/home/TobBar";
 import Free from "@/components/home/Free";
 import Weekly from "@/components/home/Weekly";
-import { ArrowLeft } from "lucide-react";
+import PostDetail from "@/components/home/PostDetail";
 
 const MOCKUP_DATA: Post[] = [
   {
@@ -181,31 +181,6 @@ const tabToType: Record<Tab, string> = {
   주간: "weekly",
 };
 
-function PostDetail({ post, onBack }: { post: Post; onBack: () => void }) {
-  return (
-    <div className="space-y-4">
-      <button
-        onClick={onBack}
-        className="leading-none group cursor-pointer flex items-center gap-2 text-[#6758FF] hover:underline"
-      >
-        <ArrowLeft className="arrow-wiggle" />
-        뒤로
-      </button>
-
-      <div className="p-6 bg-white/60 rounded-xl shadow-lg">
-        <div className="text-xs text-[#717182] mb-1">
-          {post.type.toUpperCase()} · {post.createdAt.slice(0, 10)}
-        </div>
-        <h1 className="text-2xl font-semibold mb-3">{post.title}</h1>
-        <p className="text-sm text-[#555] mb-4 whitespace-pre-wrap">
-          {post.content}
-        </p>
-        {/* 필요하면 이미지/해시태그/버튼들 재사용 */}
-      </div>
-    </div>
-  );
-}
-
 export default function Page() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -260,7 +235,6 @@ export default function Page() {
 
   return (
     <section className="max-w-2xl mx-auto">
-      {/* 상단 탭은 유지 */}
       <div className="mb-5">
         <TopBar activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
