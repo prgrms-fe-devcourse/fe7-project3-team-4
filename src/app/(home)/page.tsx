@@ -7,6 +7,7 @@ import News from "@/components/home/News";
 import Prompt from "@/components/home/Prompt";
 import TopBar from "@/components/home/TobBar";
 import Free from "@/components/home/Free";
+import Weekly from "@/components/home/Weekly";
 
 const MOCKUP_DATA: Post[] = [
   {
@@ -250,16 +251,15 @@ export default function Page() {
         <TopBar activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
 
-      {/* ✅ id가 있으면 상세 페이지, 없으면 리스트 */}
       {selectedPost ? (
         <PostDetail post={selectedPost} onBack={handleBack} />
       ) : (
         <>
-          {activeTab === "전체" && <All />}
+          {activeTab === "전체" && <All data={MOCKUP_DATA} />}
           {activeTab === "뉴스" && <News />}
           {activeTab === "프롬프트" && <Prompt />}
           {activeTab === "자유" && <Free />}
-          {activeTab === "주간" && <All />}
+          {activeTab === "주간" && <Weekly />}
         </>
       )}
     </section>
