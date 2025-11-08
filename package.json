@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint"
   },
-  "dependencies": {
+"dependencies": {
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.79.0",
     "gsap": "^3.13.0",
@@ -16,7 +16,25 @@
     "lucide-react": "^0.552.0",
     "next": "16.0.1",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "@mozilla/readability": "^0.6.0",
+    "cheerio": "^1.1.2",
+    "date-fns": "^4.1.0",
+    "jsdom": "^27.1.0",
+    "metascraper": "^5.49.5",
+    "metascraper-author": "^5.49.5",
+    "metascraper-date": "^5.49.5",
+    "metascraper-description": "^5.49.5",
+    "metascraper-iframe": "^5.49.5",
+    "metascraper-image": "^5.49.5",
+    "metascraper-lang": "^5.49.5",
+    "metascraper-logo": "^5.49.5",
+    "metascraper-publisher": "^5.49.5",
+    "metascraper-title": "^5.49.5",
+    "metascraper-url": "^5.49.5",
+    "metascraper-video": "^5.49.5",
+    "react-loading-skeleton": "^3.5.0",
+    "react-spinners": "^0.17.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -27,6 +45,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@tailwindcss/typography": "^0.5.19",
+    "@types/jsdom": "^27.0.0"
   }
 }
