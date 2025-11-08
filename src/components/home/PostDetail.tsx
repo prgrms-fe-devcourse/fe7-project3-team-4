@@ -8,6 +8,51 @@ import {
   Smile,
 } from "lucide-react";
 import Image from "next/image";
+import Comments from "./Comments";
+
+export const MOCK_COMMENTS: PostComment[] = [
+  {
+    id: 1,
+    nickname: "prompt_holic",
+    email: "prompt_holic@algo.dev",
+    content: "이 프롬프트 써보고 답변 퀄리티 확실히 올라갔어요. 감사합니다 🙌",
+    createdAt: "2025-10-29T12:15:00+09:00",
+    hasReply: true,
+  },
+  {
+    id: 2,
+    nickname: "frontend_june",
+    email: "june@algo.dev",
+    content:
+      "Next.js 예시까지 있어서 바로 프로젝트에 적용했습니다. 이런 글 더 많이 보고 싶어요.",
+    createdAt: "2025-10-29T13:40:00+09:00",
+  },
+  {
+    id: 3,
+    nickname: "ai_learner",
+    email: "ai_learner@algo.dev",
+    content:
+      "초보자 기준에서 어떤 부분을 먼저 이해하면 좋을지 간단히 정리해주시면 더 좋을 것 같아요!",
+    createdAt: "2025-10-30T09:20:00+09:00",
+  },
+  {
+    id: 4,
+    nickname: "design_log",
+    email: "design@algo.dev",
+    content:
+      "UI 사례가 너무 좋아요. 이미지 프롬프트랑 같이 쓰니까 와이어프레임 뽑는 속도가 미쳤네요.",
+    createdAt: "2025-10-30T10:05:00+09:00",
+    hasReply: true,
+  },
+  {
+    id: 5,
+    nickname: "devcat",
+    email: "devcat@algo.dev",
+    content:
+      "GPT / Gemini 둘 다 비교해준 부분 유용했습니다. 팀 내 가이드 문서에 공유했어요 😺",
+    createdAt: "2025-10-31T18:32:00+09:00",
+  },
+];
 
 export default function PostDetail({
   post,
@@ -157,7 +202,12 @@ export default function PostDetail({
             </div>
           </div>
           {/* 댓글 영역 */}
-          <div className="pt-5 px-15 bg-amber-200"></div>
+          <div className="px-9">
+            {/* 댓글 */}
+            {MOCK_COMMENTS.map((comment) => (
+              <Comments key={comment.id} comment={comment} />
+            ))}
+          </div>
         </div>
       </div>
     </div>
