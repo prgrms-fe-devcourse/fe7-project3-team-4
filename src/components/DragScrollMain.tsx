@@ -8,16 +8,16 @@ export default function DragScrollMain({
   children: React.ReactNode;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
+
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [lastY, setLastY] = useState(0);
 
   const handleMouseDown = (e: MouseEvent<HTMLDivElement>) => {
-    if (e.button !== 0) return; // 왼쪽 클릭만
+    if (e.button !== 0) return;
     const el = ref.current;
     if (!el) return;
 
-    // 스크롤할 내용이 없으면 드래그 비활성
     if (el.scrollHeight <= el.clientHeight + 1) return;
 
     setIsMouseDown(true);
@@ -31,22 +31,24 @@ export default function DragScrollMain({
 
     const deltaY = e.clientY - lastY;
 
-    // 아직 드래그 시작 전: 살짝 흔들리는 건 무시
     if (!isDragging) {
-      if (Math.abs(deltaY) < 3) return;
+      const selection = window.getSelection();
+      if (selection && selection.toString().length > 0) {
+        return;
+      }
 
-      // 여기서부터 "드래그 시작"
+      if (Math.abs(deltaY) < 5) {
+        return;
+      }
+
       setIsDragging(true);
       el.style.cursor = "grabbing";
       el.style.userSelect = "none";
     }
 
-    // 드래그 중일 때만 스크롤 이동
-    if (isDragging) {
-      el.scrollTop -= deltaY;
-      setLastY(e.clientY);
-      e.preventDefault();
-    }
+    el.scrollTop -= deltaY;
+    setLastY(e.clientY);
+    e.preventDefault();
   };
 
   const stopDrag = () => {
