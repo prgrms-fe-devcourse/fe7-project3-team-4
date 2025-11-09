@@ -7,8 +7,8 @@
 import { createClient } from "@/utils/supabase/server";
 import DetailActions from "./DetailActions"; // [수정] 기능이 확장된 DetailActions
 import Link from "next/link";
+import Image from "next/image"; // [수정] Image 임포트
 import { NewsRow } from "@/types";
-import { Eye, Heart, Bookmark } from "lucide-react"; // [추가] 아이콘
 
 interface MetascraperData {
   author?: string;
@@ -38,8 +38,12 @@ type NewsItem = NewsRow & {
   audios: string[] | null;
   metadata: {
     metascraper?: MetascraperData | null;
-    jsonld?: any;
-    readability?: any;
+    jsonld?: {
+      // [수정] 'any' 대신 사용되는 필드만 타입 정의
+      author?: { name?: string } | string | null;
+      [key: string]: unknown; // 나머지 속성은 'unknown'
+    } | null;
+    readability?: unknown; // [수정] 'any' 대신 'unknown'
     media_positions?: {
       type: "video" | "audio" | "image";
       url: string;
@@ -116,10 +120,9 @@ export default async function NewsDetailPage({
 
   const author =
     newsItem.metadata?.metascraper?.author ??
-    newsItem.metadata?.jsonld?.author?.name ??
-    (typeof newsItem.metadata?.jsonld?.author === "string"
-      ? newsItem.metadata.jsonld.author
-      : null) ??
+    (typeof newsItem.metadata?.jsonld?.author === "string" // 1. string인지 먼저 확인
+      ? newsItem.metadata.jsonld.author // 2. string이면, 그 값을 그대로 사용
+      : newsItem.metadata?.jsonld?.author?.name) ?? // 3. string이 아니면(객체, null), .name에 접근
     newsItem.site_name ??
     "Unknown";
 
@@ -131,7 +134,7 @@ export default async function NewsDetailPage({
   } else if (lowerCaseTags.includes("gemini")) {
     model = "Gemini";
   }
-  
+
   // [추가] 썸네일 이미지
   const thumb = Array.isArray(newsItem.images) ? newsItem.images[0] : null;
 
@@ -149,13 +152,13 @@ export default async function NewsDetailPage({
       </div>
 
       {/* [수정] PostDetail.tsx 레이아웃 적용 */}
-      
+
       {/* 1. 작성자 정보 */}
       <div className="flex justify-between">
         <div className="flex gap-3 items-center">
           {/* 프로필 이미지 (임시) */}
           <div className="w-11 h-11 bg-gray-300 rounded-full flex items-center justify-center font-bold text-gray-500 shrink-0">
-             {(author[0] || "?").toUpperCase()}
+            {(author[0] || "?").toUpperCase()}
           </div>
           {/* 이름, 이메일, 작성 시간 */}
           <div className="space-y-1 leading-none">
@@ -183,14 +186,20 @@ export default async function NewsDetailPage({
         <div className="mb-6 space-y-4">
           <div className="text-[18px] font-semibold">{newsItem.title}</div>
         </div>
-        {/* 썸네일(이미지) */}
+
+        {/* 썸네일(이미지) - [수정됨] */}
         {thumb && (
-          <img
-            src={thumb}
-            alt={newsItem.title}
-            className="object-cover w-full h-auto bg-gray-300 rounded-lg mb-6"
-          />
+          <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-gray-300 mb-6">
+            <Image
+              src={thumb}
+              alt={newsItem.title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 768px"
+            />
+          </div>
         )}
+
         {/* 본문 (Readability가 추출한 HTML) */}
         <article className="prose prose-lg max-w-none">
           <div dangerouslySetInnerHTML={{ __html: contentHtml }} />
@@ -199,7 +208,7 @@ export default async function NewsDetailPage({
 
       {/* 4. 태그들 */}
       {tags.length > 0 && (
-         <div className="space-x-2 text-sm text-[#248AFF]">
+        <div className="space-x-2 text-sm text-[#248AFF]">
           {tags.map((tag, i) => (
             <span key={i}>{tag.startsWith("#") ? tag : `#${tag}`}</span>
           ))}

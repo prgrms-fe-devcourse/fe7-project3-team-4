@@ -1,19 +1,16 @@
 // src/app/news/[id]/DetailActions.tsx
-// [기능]: 뉴스 상세 페이지의 클라이언트 상호작용 (조회수, 좋아요, 북마크)
-// [수정] Post.tsx/NewsItem.tsx의 디자인 및 토글 로직 적용
-
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react' // [수정] useCallback 임포트
 import { createClient } from "@/utils/supabase/client"
-import { Heart, Eye, Bookmark } from 'lucide-react' // [수정] 아이콘 임포트
+import { Heart, Eye, Bookmark } from 'lucide-react'
 
 type DetailActionsProps = {
   id: string
   initialLikes: number
   initialViews: number
-  initialIsLiked: boolean; // [추가]
-  initialIsBookmarked: boolean; // [추가]
+  initialIsLiked: boolean;
+  initialIsBookmarked: boolean;
 }
 
 export default function DetailActions({
@@ -23,17 +20,16 @@ export default function DetailActions({
   initialIsLiked,
   initialIsBookmarked
 }: DetailActionsProps) {
-  const supabase = createClient();
+  // [수정] 1. useState를 사용해 Supabase 클라이언트를 한 번만 생성 (안정화)
+  const [supabase] = useState(() => createClient());
 
-  // [수정] 모든 상태를 useState로 관리
   const [likes, setLikes] = useState(initialLikes)
   const [views, setViews] = useState(initialViews)
   const [isLiked, setIsLiked] = useState(initialIsLiked)
   const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked)
 
-  const [liking, setLiking] = useState(false) // 좋아요 중복 클릭 방지
-  const [bookmarking, setBookmarking] = useState(false) // 북마크 중복 클릭 방지
-  
+  const [liking, setLiking] = useState(false)
+  const [bookmarking, setBookmarking] = useState(false) 
   const [hasViewed, setHasViewed] = useState(false)
 
   // 조회수 자동 증가 (첫 렌더링 시 1회)
@@ -49,8 +45,8 @@ export default function DetailActions({
         
         await supabase.rpc('news_increment_view', { p_id: id })
       
-      } catch (err) {
-        console.error("View increment failed:", err);
+      } catch (err: unknown) { // [수정] 4. any -> unknown
+        console.error("View increment failed:", err instanceof Error ? err.message : JSON.stringify(err));
         if (mounted) setViews(v => Math.max(0, v - 1))
       }
     }
@@ -58,10 +54,10 @@ export default function DetailActions({
     incView()
     
     return () => { mounted = false }
-  }, [id, hasViewed]) // [수정] 의존성 배열에 supabase 제거 (무한 루프 방지)
+  }, [id, hasViewed, supabase]) // [수정] 2. 안정화된 supabase 의존성 추가
 
-  // [추가] 좋아요 토글 (useNewsFeed.ts 로직 참고)
-  const handleLikeToggle = async () => {
+  // [수정] 3. useCallback 래핑
+  const handleLikeToggle = useCallback(async () => {
     if (liking) return;
     setLiking(true);
 
@@ -72,7 +68,6 @@ export default function DetailActions({
       return;
     }
 
-    // 1. 옵티미스틱 UI
     const currentlyLiked = isLiked;
     const currentLikes = likes;
     
@@ -81,7 +76,6 @@ export default function DetailActions({
 
     try {
       if (currentlyLiked) {
-        // 좋아요 취소 (DELETE)
         const { error } = await supabase
           .from("user_news_likes")
           .delete()
@@ -89,24 +83,23 @@ export default function DetailActions({
           .eq("news_id", id);
         if (error) throw error;
       } else {
-        // 좋아요 (INSERT)
         const { error } = await supabase
           .from("user_news_likes")
           .insert({ user_id: user.id, news_id: id });
         if (error) throw error;
       }
-    } catch (err: any) {
-      console.error("[LikeToggle Error]", err.message);
-      // 4. 롤백
+    } catch (err: unknown) { // [수정] 4. any -> unknown
+      console.error("[LikeToggle Error]", err instanceof Error ? err.message : JSON.stringify(err));
+      // 롤백
       setIsLiked(currentlyLiked);
       setLikes(currentLikes);
     } finally {
       setLiking(false);
     }
-  };
+  }, [liking, supabase, isLiked, likes, id]); // [수정] 3. 의존성 배열 추가
 
-  // [추가] 북마크 토글 (useNewsFeed.ts 로직 참고)
-  const handleBookmarkToggle = async () => {
+  // [수정] 3. useCallback 래핑
+  const handleBookmarkToggle = useCallback(async () => {
     if (bookmarking) return;
     setBookmarking(true);
 
@@ -117,13 +110,11 @@ export default function DetailActions({
       return;
     }
 
-    // 1. 옵티미스틱 UI
     const currentlyBookmarked = isBookmarked;
     setIsBookmarked(!currentlyBookmarked);
 
     try {
       if (currentlyBookmarked) {
-        // 북마크 취소 (DELETE)
         const { error } = await supabase
           .from("user_news_bookmarks")
           .delete()
@@ -131,23 +122,21 @@ export default function DetailActions({
           .eq("news_id", id);
         if (error) throw error;
       } else {
-        // 북마크 (INSERT)
         const { error } = await supabase
           .from("user_news_bookmarks")
           .insert({ user_id: user.id, news_id: id });
         if (error) throw error;
       }
-    } catch (err: any) {
-      console.error("[BookmarkToggle Error]", err.message);
-      // 4. 롤백
+    } catch (err: unknown) { // [수정] 4. any -> unknown
+      console.error("[BookmarkToggle Error]", err instanceof Error ? err.message : JSON.stringify(err));
+      // 롤백
       setIsBookmarked(currentlyBookmarked);
     } finally {
       setBookmarking(false);
     }
-  };
+  }, [bookmarking, supabase, isBookmarked, id]); // [수S정] 3. 의존성 배열 추가
 
 
-  // [수정] Post.tsx/NewsItem.tsx의 버튼 스타일 적용
   return (
     <div className="flex justify-center gap-30 text-[#717182] py-6">
       <button
