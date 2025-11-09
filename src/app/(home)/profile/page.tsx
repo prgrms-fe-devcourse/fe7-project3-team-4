@@ -1,7 +1,9 @@
 export default function Page() {
   return (
     <>
-      <section className="max-w-2xl mx-auto"></section>
+      <div className="mt-6">
+        <h3>프로필</h3>
+      </div>
     </>
   );
 }
