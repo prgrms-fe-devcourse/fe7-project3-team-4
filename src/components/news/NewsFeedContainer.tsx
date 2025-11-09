@@ -5,7 +5,7 @@ import { useNewsUpload } from "@/hooks/news/useNewsUpload";
 import NewsHeader from "@/components/news/NewsHeader";
 import NewsFeed from "@/components/news/NewsFeed";
 import FeedStatus from "@/components/news/FeedStatus";
-import LastedNewsCarousel from "@/components/news/LatestNewsCarousel";
+import LatestNewsCarousel from "@/components/news/LatestNewsCarousel";
 import { FadeLoader } from "react-spinners";
 
 export default function NewsFeedContainer() {
@@ -23,7 +23,7 @@ export default function NewsFeedContainer() {
     handleBookmarkToggle,
     loadMoreTriggerRef,
     refreshFeed, // 피드 새로고침 함수
-    lastedNews, // 인기 뉴스 목록 (useMemo)
+    latestNews, // 인기 뉴스 목록 (useMemo)
   } = useNewsFeed("published_at"); // 기본 정렬 '최신순'
 
   // 2. 파일 업로드 로직 가져오기
@@ -56,8 +56,8 @@ export default function NewsFeedContainer() {
       />
 
       {/* 최신 뉴스 캐러셀 - 우측 상단 고정 */}
-      {lastedNews.length > 0 && (
-        <LastedNewsCarousel newsList={lastedNews} />
+      {latestNews.length > 0 && (
+        <LatestNewsCarousel newsList={latestNews} />
       )}
 
       {/* 메인 피드 영역 */}
