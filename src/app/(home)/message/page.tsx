@@ -1,7 +1,7 @@
 export default function Page() {
   return (
     <>
-      <h1>Page</h1>
+      <h3>채팅</h3>
     </>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import ModelToggle from "./ModelToggle";
+import ModelToggle from "./post/ModelToggle";
 import TextWeekly from "./weekly/TextWeekly";
 import ImgWeekly from "./weekly/ImgWeekly";
 

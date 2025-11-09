@@ -8,7 +8,7 @@ import Prompt from "@/components/home/Prompt";
 import TopBar from "@/components/home/TobBar";
 import Free from "@/components/home/Free";
 import Weekly from "@/components/home/Weekly";
-import PostDetail from "@/components/home/PostDetail";
+import PostDetail from "@/components/home/post/PostDetail";
 
 // [추가] (news) 관련 컴포넌트 및 컨텍스트 임포트
 import { useNewsFeedContext } from "@/context/NewsFeedContext";
@@ -263,7 +263,7 @@ export default function Page() {
   );
 
   return (
-    <section className="max-w-2xl mx-auto">
+    <>
       {/* [추가] useNewsUpload 훅이 참조할 숨겨진 input */}
       <input
         type="file"
@@ -337,6 +337,6 @@ export default function Page() {
           </div>
         </>
       )}
-    </section>
+    </>
   );
 }
