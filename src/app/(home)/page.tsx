@@ -112,6 +112,7 @@ const MOCKUP_DATA: Post[] = [
   {
     id: 7,
     type: "weekly",
+    model: "이미지",
     author: "ALGO Weekly Bot",
     email: "weekly@algo.news",
     createdAt: "2025-11-03T09:00:00+09:00",
@@ -128,6 +129,7 @@ const MOCKUP_DATA: Post[] = [
   {
     id: 8,
     type: "weekly",
+    model: "텍스트",
     author: "ALGO Weekly Bot",
     email: "weekly@algo.news",
     createdAt: "2025-10-27T09:00:00+09:00",

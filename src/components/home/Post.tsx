@@ -2,7 +2,7 @@ import { Bookmark, Heart, MessageSquare } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function NewsPost({ data }: { data: Post }) {
+export default function Post({ data }: { data: Post }) {
   return (
     <>
       <div className="bg-white/40 border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl">
@@ -30,8 +30,12 @@ export default function NewsPost({ data }: { data: Post }) {
                 {data.model && (
                   <div
                     className={`h-[22px] text-xs font-semibold text-white px-3 py-1 ${
-                      data.model === "GPT" ? "bg-[#74AA9C]" : "bg-[#2FBAD2]"
-                    } rounded-full`}
+                      (data.model === "GPT" && "bg-[#74AA9C]") ||
+                      (data.model === "Gemini" && "bg-[#2FBAD2]") ||
+                      (data.model === "텍스트" && "bg-[#6758FF]") ||
+                      (data.model === "이미지" && "bg-[#FF569B]")
+                    } 
+                     rounded-full`}
                   >
                     {data.model}
                   </div>
@@ -41,7 +45,8 @@ export default function NewsPost({ data }: { data: Post }) {
               <div className="my-5">
                 {/* 제목 */}
                 <div className="mb-6 space-y-4">
-                  <div className="text-[18px]">{data.title}</div>
+                  <p className="text-[18px] font-medium">{data.title}</p>
+                  <p>{data.content}</p>
                 </div>
                 {/* 썸네일(이미지) */}
                 {data.image && (
