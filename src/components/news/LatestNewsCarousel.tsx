@@ -37,7 +37,6 @@ export default function LatestNewsCarousel({
     // 2. 'active' 또는 'count' 상태가 변경되어 effect가 다시 실행되기 직전에
     //    이전 타이머를 제거합니다.
     return () => clearInterval(interval);
-    
   }, [active, count]); // 'active'가 변경될 때마다 타이머를 리셋합니다.
 
   if (count === 0) return null;
@@ -55,12 +54,12 @@ export default function LatestNewsCarousel({
           // 버튼 클릭 시 setActive가 호출되고,
           // 'active' 상태가 변경되면 위의 useEffect가 리셋됩니다.
           onClick={() => setActive((i) => (i - 1 + count) % count)}
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-30
+          className="cursor-pointer absolute left-4 top-1/2 -translate-y-1/2 z-30
                        w-10 h-10 rounded-full flex items-center justify-center
                        transition-all
-                       bg-white/[.15] backdrop-blur-md 
-                       border border-white/[.25]
-                       shadow-lg hover:bg-white/[.25] hover:shadow-xl"
+                       bg-white/15 backdrop-blur-md 
+                       border border-white/25
+                       shadow-lg hover:bg-white/25 hover:shadow-xl"
           aria-label="이전 뉴스"
         >
           <Image
@@ -74,16 +73,16 @@ export default function LatestNewsCarousel({
       )}
 
       {/* 3D 캐러셀 무대 */}
-      <div className="relative w-[9.375rem] h-[9.125rem]">
+      <div className="relative w-37.5 h-36.5">
         {/* 카드들 */}
         {newsList.map((news, i) => {
           let rawDiff = active - i;
-          
-          if (count > MAX_VISIBILITY) { 
+
+          if (count > MAX_VISIBILITY) {
             if (rawDiff > count / 2) {
-              rawDiff -= count; 
+              rawDiff -= count;
             } else if (rawDiff < -count / 2) {
-              rawDiff += count; 
+              rawDiff += count;
             }
           }
 
@@ -115,16 +114,14 @@ export default function LatestNewsCarousel({
             >
               <Link href={`/news/${news.id}`}>
                 <div
-                  className="group w-full h-full rounded-xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow cursor-pointer border border-gray-100"
+                  className="group w-full h-full rounded-xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow cursor-pointer"
                   style={{
-                    backgroundColor: `hsl(280, 40%, ${
-                      100 - absOffset * 30
-                    }%)`,
+                    backgroundColor: `hsl(280, 40%, ${100 - absOffset * 30}%)`,
                     transition: "all 0.3s ease-out",
                   }}
                 >
                   {/* 썸네일 */}
-                  <div className="w-full h-full bg-gradient-to-br from-blue-100 to-purple-100 relative overflow-hidden">
+                  <div className="w-full h-full bg-linear-to-br from-blue-100 to-purple-100 relative overflow-hidden">
                     {news.images?.[0] ? (
                       <img
                         src={news.images[0]}
@@ -157,7 +154,7 @@ export default function LatestNewsCarousel({
 
                     {/* 마우스 호버 시 뉴스 타이틀 표시 */}
                     <div
-                      className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent
+                      className="absolute bottom-0 left-0 right-0 p-3 bg-linear-to-t from-black/80 to-transparent
                                    opacity-0 group-hover:opacity-100
                                    translate-y-2 group-hover:translate-y-0
                                    transition-all duration-300 ease-in-out"
@@ -180,12 +177,12 @@ export default function LatestNewsCarousel({
           // 버튼 클릭 시 setActive가 호출되고,
           // 'active' 상태가 변경되면 위의 useEffect가 리셋됩니다.
           onClick={() => setActive((i) => (i + 1) % count)}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-30
+          className="cursor-pointer absolute right-4 top-1/2 -translate-y-1/2 z-30
                        w-10 h-10 rounded-full flex items-center justify-center
                        transition-all
-                       bg-white/[.15] backdrop-blur-md 
-                       border border-white/[.25]
-                       shadow-lg hover:bg-white/[.25] hover:shadow-xl"
+                       bg-white/15 backdrop-blur-md 
+                       border border-white/25
+                       shadow-lg hover:bg-white/25 hover:shadow-xl"
           aria-label="다음 뉴스"
         >
           <Image
