@@ -3,14 +3,23 @@
 import { useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import All from "@/components/home/All";
-import News from "@/components/home/News";
+// import News from "@/components/home/News"; // [제거]
 import Prompt from "@/components/home/Prompt";
 import TopBar from "@/components/home/TobBar";
 import Free from "@/components/home/Free";
 import Weekly from "@/components/home/Weekly";
 import PostDetail from "@/components/home/PostDetail";
 
+// [추가] (news) 관련 컴포넌트 및 컨텍스트 임포트
+import { useNewsFeedContext } from "@/context/NewsFeedContext";
+import NewsFeed from "@/components/news/NewsFeed";
+import FeedStatus from "@/components/news/FeedStatus";
+import { FadeLoader } from "react-spinners";
+import { SortKey } from "@/types";
+
 const MOCKUP_DATA: Post[] = [
+  // [수정] 'news' 타입 Mock 데이터는 제거해도 됩니다 (ID: 1, 2, 9).
+  // 여기서는 편의상 그대로 두되, 'all' 탭에서만 사용합니다.
   {
     id: 1,
     type: "news",
@@ -222,10 +231,29 @@ export default function Page() {
     }
   };
 
+  // [수정] 컨텍스트에서 뉴스 관련 모든 상태와 핸들러를 가져옵니다.
+  const {
+    isLoading,
+    isLoadingMore,
+    newsList,
+    message,
+    hasNextPage,
+    sortBy,
+    handleSortChange,
+    handleLikeToggle,
+    handleBookmarkToggle,
+    loadMoreTriggerRef,
+    fileInputRef,
+    loadingUpload,
+    handleFileChange,
+    triggerFileInput,
+  } = useNewsFeedContext();
+
+  // 'all' 탭과 'news' 탭을 제외한 나머지 탭은 Mock 데이터를 사용합니다.
   const postsByType = useMemo(
     () => ({
       all: MOCKUP_DATA,
-      news: MOCKUP_DATA.filter((post) => post.type === "news"),
+      // 'news'는 newsList가 대체하므로 여기서 제외
       prompt: MOCKUP_DATA.filter((post) => post.type === "prompt"),
       free: MOCKUP_DATA.filter((post) => post.type === "free"),
       weekly: MOCKUP_DATA.filter((post) => post.type === "weekly"),
@@ -235,8 +263,26 @@ export default function Page() {
 
   return (
     <section className="max-w-2xl mx-auto">
-      <div className="mb-5">
-        <TopBar activeTab={activeTab} onTabChange={handleTabChange} />
+      {/* [추가] useNewsUpload 훅이 참조할 숨겨진 input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept=".html,.htm"
+        onChange={handleFileChange}
+        className="hidden"
+        aria-hidden="true"
+      />
+
+      <div className="mb-5 sticky top-0 z-20">
+        {/* [수정] TopBar에 Context에서 가져온 props 전달 */}
+        <TopBar
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          sortBy={sortBy}
+          onSortChange={handleSortChange}
+          loadingUpload={loadingUpload}
+          onAddPostClick={triggerFileInput}
+        />
       </div>
 
       {selectedPost ? (
@@ -245,7 +291,45 @@ export default function Page() {
         <>
           <div className="space-y-8 pb-6">
             {activeTab === "전체" && <All data={postsByType.all} />}
-            {activeTab === "뉴스" && <News data={postsByType.news} />}
+
+            {/* [수정] '뉴스' 탭을 실제 NewsFeed로 교체 */}
+            {activeTab === "뉴스" && (
+              <section aria-label="뉴스 피드">
+                <FeedStatus
+                  isLoading={isLoading}
+                  listLength={newsList.length}
+                  message={loadingUpload ? "업로드 중..." : message}
+                />
+                <NewsFeed
+                  newsList={newsList}
+                  onLikeToggle={handleLikeToggle}
+                  onBookmarkToggle={handleBookmarkToggle}
+                  isLoading={isLoading}
+                />
+                <div
+                  className="flex justify-center items-center py-6"
+                  role="status"
+                >
+                  {isLoadingMore && (
+                    <>
+                      <span className="sr-only">추가 로딩 중...</span>
+                      <FadeLoader color="#808080" />
+                    </>
+                  )}
+                  {!isLoadingMore && !hasNextPage && newsList.length > 0 && (
+                    <p className="text-center text-gray-500">
+                      모든 뉴스를 불러왔습니다.
+                    </p>
+                  )}
+                </div>
+                <div
+                  ref={loadMoreTriggerRef}
+                  style={{ height: "1px" }}
+                  aria-hidden="true"
+                />
+              </section>
+            )}
+
             {activeTab === "프롬프트" && <Prompt data={postsByType.prompt} />}
             {activeTab === "자유" && <Free data={postsByType.free} />}
             {activeTab === "주간" && <Weekly data={postsByType.weekly} />}

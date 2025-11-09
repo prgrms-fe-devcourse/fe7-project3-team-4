@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { createClient } from "@/utils/supabase/client"; 
+import { createClient } from "@/utils/supabase/client";
 import { SortKey, NewsItemWithState, NewsRow } from "@/types";
 
 // [수정] PAGE_SIZE 상수를 파일 내부에 다시 정의
-export const PAGE_SIZE = 10; 
+export const PAGE_SIZE = 10;
 
 // type NewsQueryData = NewsRow & {
 //   user_news_likes: { user_id: string }[];
@@ -30,7 +30,7 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
     async (
       currentSortBy: SortKey,
       pageToFetch: number,
-      isInitialLoad = false
+      isInitialLoad = false,
     ) => {
       await Promise.resolve();
 
@@ -40,7 +40,9 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
       setMessage("");
 
       // 1. 현재 로그인한 사용자 ID 가져오기
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       const userId = user?.id;
 
       const from = pageToFetch * PAGE_SIZE;
@@ -54,21 +56,20 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
           id, title, site_name, created_at, published_at, images, like_count, view_count, tags,
           user_news_likes!left(user_id),
           user_news_bookmarks!left(user_id)
-        `
+        `,
         )
         // 3. Join된 테이블을 현재 사용자 ID로 필터링
         .filter(
           "user_news_likes.user_id",
           "eq",
-          userId || "00000000-0000-0000-0000-000000000000" // 로그아웃 시 dummy UUID
+          userId || "00000000-0000-0000-0000-000000000000", // 로그아웃 시 dummy UUID
         )
         .filter(
           "user_news_bookmarks.user_id",
           "eq",
-          userId || "00000000-0000-0000-0000-000000000000" // 로그아웃 시 dummy UUID
+          userId || "00000000-0000-0000-0000-000000000000", // 로그아웃 시 dummy UUID
         )
         .range(from, to);
-
 
       // 정렬 쿼리
       if (currentSortBy === "published_at") {
@@ -85,17 +86,20 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
       const { data, error } = await query;
 
       if (!error && data) {
-         // 4. isLiked, isBookmarked 초기 상태 설정
-         // (Supabase 타입 추론이 Join을 완벽히 못할 수 있으므로 any[]로 캐스팅)
-        const dataWithState: NewsItemWithState[] = (data as any[]).map((item) => ({
-          ...item,
-          // join된 배열의 길이가 0보다 크면 true
-          isLiked: item.user_news_likes && item.user_news_likes.length > 0,
-          isBookmarked: item.user_news_bookmarks && item.user_news_bookmarks.length > 0,
-          // join으로 생성된 임시 배열 제거
-          user_news_likes: undefined, 
-          user_news_bookmarks: undefined,
-        }));
+        // 4. isLiked, isBookmarked 초기 상태 설정
+        // (Supabase 타입 추론이 Join을 완벽히 못할 수 있으므로 any[]로 캐스팅)
+        const dataWithState: NewsItemWithState[] = (data as any[]).map(
+          (item) => ({
+            ...item,
+            // join된 배열의 길이가 0보다 크면 true
+            isLiked: item.user_news_likes && item.user_news_likes.length > 0,
+            isBookmarked:
+              item.user_news_bookmarks && item.user_news_bookmarks.length > 0,
+            // join으로 생성된 임시 배열 제거
+            user_news_likes: undefined,
+            user_news_bookmarks: undefined,
+          }),
+        );
 
         if (isInitialLoad) {
           setNewsList(dataWithState);
@@ -106,14 +110,18 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
         setPage(pageToFetch);
         setHasNextPage(data.length === PAGE_SIZE);
       } else {
-        console.error(error);
+        // [수정] 에러가 {}로 표시되지 않도록 .message 또는 JSON.stringify 사용
+        console.error(
+          "Supabase fetch error:",
+          error?.message || JSON.stringify(error),
+        );
         setMessage("❌ 목록을 불러오는 중 오류가 발생했습니다.");
       }
 
       if (isInitialLoad) setIsLoading(false);
       else setIsLoadingMore(false);
     },
-    [] // 의존성 배열이 비어있으므로 fetchNews 함수 자체는 재생성되지 않음.
+    [], // 의존성 배열이 비어있으므로 fetchNews 함수 자체는 재생성되지 않음.
   );
 
   // 정렬 변경 또는 목록 초기화 시 데이터 로드
@@ -140,7 +148,7 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
 
       if (node) observerRef.current.observe(node);
     },
-    [isLoading, isLoadingMore, hasNextPage, fetchNews, sortBy, page]
+    [isLoading, isLoadingMore, hasNextPage, fetchNews, sortBy, page],
   );
 
   // 정렬 변경 핸들러
@@ -155,7 +163,9 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
   // [수정] 좋아요 토글 (새 스키마 적용)
   const handleLikeToggle = async (id: string) => {
     // 1. 사용자 로그인 상태 확인
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       alert("로그인이 필요합니다.");
       // TODO: router.push('/auth/login') 등 라우팅 로직 추가
@@ -203,7 +213,11 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
       }
       // like_count는 DB 트리거가 자동으로 업데이트합니다.
     } catch (err: unknown) {
-      console.error("[LikeToggle Error]", err instanceof Error ? err.message : String(err));
+      // [수정] 에러가 [object Object]로 표시되지 않도록 JSON.stringify 사용
+      console.error(
+        "[LikeToggle Error]",
+        err instanceof Error ? err.message : JSON.stringify(err),
+      );
       // 4. 롤백: 오류 발생 시 원래 목록으로 되돌림
       setMessage("❌ 좋아요 처리에 실패했습니다.");
       setNewsList(originalList); // 저장해둔 원본 목록으로 롤백
@@ -213,7 +227,9 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
   // [수정] 북마크 토글 (새 스키마 적용)
   const handleBookmarkToggle = async (id: string) => {
     // 1. 사용자 로그인 상태 확인
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       alert("로그인이 필요합니다.");
       // TODO: router.push('/auth/login') 등 라우팅 로직 추가
@@ -256,13 +272,16 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
         if (error) throw error;
       }
     } catch (err: any) {
-      console.error("[BookmarkToggle Error]", err.message);
+      // [수정] 에러가 [object Object]로 표시되지 않도록 JSON.stringify 사용
+      console.error(
+        "[BookmarkToggle Error]",
+        err instanceof Error ? err.message : JSON.stringify(err),
+      );
       // 4. 롤백: 오류 발생 시 원래 목록으로 되돌림
       setMessage("❌ 북마크 처리에 실패했습니다.");
       setNewsList(originalList); // 저장해둔 원본 목록으로 롤백
     }
   };
-
 
   // 피드 강제 새로고침 (업로드 성공 시 호출)
   const refreshFeed = () => {
@@ -273,7 +292,7 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
   };
 
   // 최신 뉴스 계산
-  const lastedNews = useMemo(() => {
+  const latestNews = useMemo(() => {
     return [...newsList]
       .sort((a, b) => {
         const dateA = new Date(a.published_at || a.created_at).getTime();
@@ -298,6 +317,5 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
     handleBookmarkToggle,
     loadMoreTriggerRef,
     refreshFeed,
-    lastedNews,
   };
 }

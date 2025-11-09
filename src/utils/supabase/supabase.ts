@@ -1,41 +1,8 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
-
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
-  }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
   }
   public: {
     Tables: {
@@ -240,97 +207,54 @@ export type Database = {
       }
       news: {
         Row: {
-          comment_count: number | null
+          audios: string[] | null
           content: string | null
-          created_at: string | null
+          created_at: string
           id: string
-          like_count: number | null
-          source_url: string | null
-          title: string | null
-          updated_at: string | null
-          view_count: number | null
+          images: string[] | null
+          like_count: number
+          metadata: JSON | null
+          published_at: string | null
+          site_name: string | null
+          tags: string[] | null
+          title: string
+          url: string | null
+          videos: string[] | null
+          view_count: number
         }
         Insert: {
-          comment_count?: number | null
+          audios?: string[] | null
           content?: string | null
-          created_at?: string | null
+          created_at?: string
           id?: string
-          like_count?: number | null
-          source_url?: string | null
-          title?: string | null
-          updated_at?: string | null
-          view_count?: number | null
+          images?: string[] | null
+          like_count?: number
+          metadata?: JSON | null
+          published_at?: string | null
+          site_name?: string | null
+          tags?: string[] | null
+          title: string
+          url?: string | null
+          videos?: string[] | null
+          view_count?: number
         }
         Update: {
-          comment_count?: number | null
+          audios?: string[] | null
           content?: string | null
-          created_at?: string | null
+          created_at?: string
           id?: string
-          like_count?: number | null
-          source_url?: string | null
-          title?: string | null
-          updated_at?: string | null
-          view_count?: number | null
+          images?: string[] | null
+          like_count?: number
+          metadata?: JSON | null
+          published_at?: string | null
+          site_name?: string | null
+          tags?: string[] | null
+          title?: string
+          url?: string | null
+          videos?: string[] | null
+          view_count?: number
         }
         Relationships: []
-      }
-      news_images: {
-        Row: {
-          created_at: string
-          id: string
-          news_id: string | null
-          url: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          news_id?: string | null
-          url?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          news_id?: string | null
-          url?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "news_images_news_id_fkey"
-            columns: ["news_id"]
-            isOneToOne: false
-            referencedRelation: "news"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      news_videos: {
-        Row: {
-          created_at: string
-          id: number
-          news_id: string | null
-          url: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: number
-          news_id?: string | null
-          url?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: number
-          news_id?: string | null
-          url?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "news_videos_news_id_fkey"
-            columns: ["news_id"]
-            isOneToOne: false
-            referencedRelation: "news"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       notifications: {
         Row: {
@@ -516,12 +440,82 @@ export type Database = {
         }
         Relationships: []
       }
+      user_news_bookmarks: {
+        Row: {
+          created_at: string
+          news_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          news_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          news_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_news_bookmarks_news_id_fkey"
+            columns: ["news_id"]
+            isOneToOne: false
+            referencedRelation: "news"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_news_bookmarks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_news_likes: {
+        Row: {
+          created_at: string
+          news_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          news_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          news_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_news_likes_news_id_fkey"
+            columns: ["news_id"]
+            isOneToOne: false
+            referencedRelation: "news"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_news_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      decrement_like_count: { Args: { post_id: string }; Returns: undefined }
+      increment_like_count: { Args: { post_id: string }; Returns: undefined }
+      increment_view_count: { Args: { post_id: string }; Returns: undefined }
+      news_increment_like: { Args: { p_id: string }; Returns: undefined }
+      news_increment_view: { Args: { p_id: string }; Returns: undefined }
     }
     Enums: {
       comment_target_type: "posts" | "news"
@@ -660,9 +654,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       comment_target_type: ["posts", "news"],

@@ -5,7 +5,7 @@ import { useNewsUpload } from "@/hooks/news/useNewsUpload";
 import NewsHeader from "@/components/news/NewsHeader";
 import NewsFeed from "@/components/news/NewsFeed";
 import FeedStatus from "@/components/news/FeedStatus";
-import LastedNewsCarousel from "@/components/news/LastedNewsCarousel";
+import LastedNewsCarousel from "@/components/news/LatestNewsCarousel";
 import { FadeLoader } from "react-spinners";
 
 export default function NewsFeedContainer() {
