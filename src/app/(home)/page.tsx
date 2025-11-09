@@ -15,7 +15,6 @@ import { useNewsFeedContext } from "@/context/NewsFeedContext";
 import NewsFeed from "@/components/news/NewsFeed";
 import FeedStatus from "@/components/news/FeedStatus";
 import { FadeLoader } from "react-spinners";
-import { SortKey } from "@/types";
 
 const MOCKUP_DATA: Post[] = [
   // [수정] 'news' 타입 Mock 데이터는 제거해도 됩니다 (ID: 1, 2, 9).
