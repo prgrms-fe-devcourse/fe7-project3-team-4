@@ -89,7 +89,7 @@ export default function TopBar({
         {/* [수정] 새 게시글 버튼 (뉴스 탭일 때만 업로드 기능) */}
         {activeTab === "뉴스" && onAddPostClick ? (
           <button
-            className="hidden lg:flex items-center gap-0.5 px-2 py-1.5 rounded-lg bg-linear-to-b from-[#8B8B8B] to-[#2C2C2E] shadow-[0px_1px_2px_rgba(0,0,0,0.1)] hover:translate-y-[-1.5px] disabled:opacity-50"
+            className="hidden lg:flex items-center gap-0.5 px-2 py-1.5 rounded-lg bg-linear-to-b from-[#8B8B8B] to-[#2C2C2E] shadow hover:shadow-lg hover:translate-y-[-1.5px] disabled:opacity-50"
             disabled={loadingUpload}
             onClick={onAddPostClick}
           >
@@ -100,7 +100,7 @@ export default function TopBar({
           </button>
         ) : (
           <Link className="hidden lg:block" href="/write">
-            <div className="flex items-center gap-0.5 px-2 py-1.5 rounded-lg bg-linear-to-b from-[#8B8B8B] to-[#2C2C2E] shadow-[0px_1px_2px_rgba(0,0,0,0.1)] hover:translate-y-[-1.5px]">
+            <div className="flex items-center gap-0.5 px-2 py-1.5 rounded-lg bg-linear-to-b from-[#8B8B8B] to-[#2C2C2E] shadow hover:shadow-lg hover:translate-y-[-1.5px] ">
               <Plus size={14} color="#AEAEAE" />
               <span className="text-white text-[10px] leading-none">
                 새 게시글

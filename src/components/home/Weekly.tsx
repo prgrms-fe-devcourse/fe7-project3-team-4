@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import ModelToggle from "./ModelToggle";
-import Post from "./Post";
 import TextWeekly from "./weekly/TextWeekly";
 import ImgWeekly from "./weekly/ImgWeekly";
 
@@ -14,9 +13,7 @@ export default function Weekly({ data }: { data: Post[] }) {
   const filtered = useMemo(
     () =>
       data.filter(
-        (post) =>
-          post.type === "prompt" &&
-          post.model?.toLowerCase() === activeModel.toLowerCase()
+        (post) => post.model?.toLowerCase() === activeModel.toLowerCase()
       ),
     [data, activeModel]
   );

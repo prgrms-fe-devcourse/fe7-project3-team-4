@@ -13,9 +13,7 @@ export default function Prompt({ data }: { data: Post[] }) {
   const filtered = useMemo(
     () =>
       data.filter(
-        (post) =>
-          post.type === "prompt" &&
-          post.model?.toLowerCase() === activeModel.toLowerCase()
+        (post) => post.model?.toLowerCase() === activeModel.toLowerCase()
       ),
     [data, activeModel]
   );

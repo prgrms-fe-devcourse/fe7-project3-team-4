@@ -101,7 +101,8 @@ export default function PostDetail({
           <div className="my-5">
             {/* 제목 */}
             <div className="mb-6 space-y-4">
-              <div className="text-[18px]">{post.title}</div>
+              <p className="text-[18px] font-medium">{post.title}</p>
+              <p>{post.content}</p>
             </div>
             {/* 썸네일(이미지) */}
             {post.image && (

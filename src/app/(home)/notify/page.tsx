@@ -1,7 +1,7 @@
 export default function Page() {
   return (
     <>
-      <h1>Page</h1>
+      <section className="max-w-2xl mx-auto"></section>
     </>
   );
 }
