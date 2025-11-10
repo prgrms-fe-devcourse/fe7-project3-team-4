@@ -166,12 +166,15 @@ const SECTION_TITLE_MAP: Record<"prompt" | "free" | "weekly", string> = {
 export default async function Page({
   searchParams,
 }: {
-  searchParams?: {
+  searchParams: Promise<{
     q?: string;
-  };
+  }>;
 }) {
   const supabase = await createClient();
-  const searchTerm = searchParams?.q?.toLowerCase() || ""; // 소문자로 통일, 없으면 빈 문자열
+  const search = await searchParams;
+
+  const searchQuery = typeof search.q === "string" ? search.q : "";
+  const searchTerm = searchQuery.trim().toLowerCase();
   const searchedPosts = MOCKUP_DATA.filter(
     (post) =>
       post.title.toLowerCase().includes(searchTerm) || // 제목에서 검색
@@ -200,7 +203,7 @@ export default async function Page({
           type="text"
           placeholder="검색하기..."
           className="flex-1 outline-none"
-          defaultValue={searchTerm}
+          defaultValue={searchQuery}
         />
         <button type="submit" className="cursor-pointer text-[#D1D5DB]">
           <SendHorizonal size={20} />
