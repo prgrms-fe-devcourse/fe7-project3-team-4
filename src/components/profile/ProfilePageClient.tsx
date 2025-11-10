@@ -7,6 +7,9 @@ import { ProfileEditModal } from "@/components/profile/ProfileEditModal";
 import { ImgEditModal } from "./ImgEditModal";
 
 const MOCKUP_POSTS: Post[] = [
+  // [수정] 'news' 타입 Mock 데이터는 제거해도 됩니다 (ID: 1, 2, 9).
+  // 여기서는 편의상 그대로 두되, 'all' 탭에서만 사용합니다.
+
   {
     id: "1",
     comment_count: 5,

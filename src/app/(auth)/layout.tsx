@@ -18,5 +18,11 @@ export default async function AuthLayout({
     redirect("/");
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <html lang="ko">
+        <body>{children}</body>
+      </html>
+    </>
+  );
 }

@@ -81,7 +81,7 @@ export default function PostDetail({
               <div className="w-11 h-11 bg-gray-300 rounded-full"></div>
               {/* 이름, 이메일, 작성 시간?날짜? */}
               <div className="space-y-1 leading-none">
-                <p>{post.id}</p>
+                <p>{post.user_id}</p>
                 <p className="text-[#717182] text-sm">
                   {post.email} · {post.created_at.slice(0, 10)}
                 </p>
