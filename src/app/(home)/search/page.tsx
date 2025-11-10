@@ -1,6 +1,8 @@
+import NoPosts from "@/components/home/post/NoPosts";
 import Post from "@/components/home/post/Post";
+import FormClient from "@/components/home/search/FormClient";
 import { createClient } from "@/utils/supabase/server";
-import { Search, SendHorizonal } from "lucide-react";
+import Link from "next/link";
 
 const MOCKUP_DATA: Post[] = [
   // [수정] 'news' 타입 Mock 데이터는 제거해도 됩니다 (ID: 1, 2, 9).
@@ -21,7 +23,7 @@ const MOCKUP_DATA: Post[] = [
     email: "react_master@example.com",
     image:
       "https://cdn.pixabay.com/photo/2025/11/05/20/57/monastery-9939590_1280.jpg",
-    hashtags: ["React", "JavaScript", "Frontend", "StateManagement"],
+    hashtags: ["develop", "script", "education"],
     isBookmarked: true,
     model: "GPT",
   },
@@ -37,7 +39,7 @@ const MOCKUP_DATA: Post[] = [
     user_id: "user_def_456",
     view_count: 55,
     email: "next_fan@example.com",
-    hashtags: ["NextJS", "ISR", "WebDev"],
+    hashtags: ["develop", "education"],
     isBookmarked: false,
     model: "Gemini",
   },
@@ -55,7 +57,7 @@ const MOCKUP_DATA: Post[] = [
     email: "algo_king@example.com",
     image:
       "https://cdn.pixabay.com/photo/2025/11/05/20/57/monastery-9939590_1280.jpg",
-    hashtags: ["Algorithm", "Challenge", "DP", "Optimization"],
+    hashtags: ["develop", "education", "script"],
     isBookmarked: true,
   },
   {
@@ -70,7 +72,7 @@ const MOCKUP_DATA: Post[] = [
     user_id: "user_jkl_101",
     view_count: 80,
     email: "gemini_dev@example.com",
-    hashtags: ["Gemini", "AI", "Translation", "API"],
+    hashtags: ["script", "develop", "content"],
     isBookmarked: false,
     model: "Gemini",
   },
@@ -86,7 +88,7 @@ const MOCKUP_DATA: Post[] = [
     user_id: "user_mno_202",
     view_count: 60,
     email: "supabase_newbie@example.com",
-    hashtags: ["Supabase", "Database", "RLS", "Auth"],
+    hashtags: ["develop"],
     isBookmarked: false,
   },
   {
@@ -103,7 +105,7 @@ const MOCKUP_DATA: Post[] = [
     email: "senior_dev@example.com",
     image:
       "https://cdn.pixabay.com/photo/2024/09/28/20/09/city-9082149_640.jpg",
-    hashtags: ["GPT", "CodeReview", "Persona", "Productivity"],
+    hashtags: ["script", "develop", "education"],
     isBookmarked: true,
     model: "GPT",
   },
@@ -120,7 +122,7 @@ const MOCKUP_DATA: Post[] = [
     user_id: "user_stu_404",
     view_count: 45,
     email: "css_lover@example.com",
-    hashtags: ["TailwindCSS", "CSS", "DarkMode"],
+    hashtags: ["develop", "script", "art"],
     isBookmarked: false,
   },
   {
@@ -135,7 +137,7 @@ const MOCKUP_DATA: Post[] = [
     user_id: "user_vwx_505",
     view_count: 190,
     email: "design_ai@example.com",
-    hashtags: ["AI", "ImageProcessing", "JSON", "Challenge", "Gemini"],
+    hashtags: ["develop", "education", "script", "art"],
     isBookmarked: true,
     model: "Gemini",
   },
@@ -162,67 +164,107 @@ const SECTION_TITLE_MAP: Record<"prompt" | "free" | "weekly", string> = {
   weekly: "주간",
 };
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    q?: string;
+    tag?: string;
+  }>;
+}) {
   const supabase = await createClient();
+  const { q, tag } = await searchParams;
+  const searchTerm = q?.toLowerCase() ?? "";
+  const tagTerm = tag?.toLowerCase() ?? "";
+
+  const searchedPosts = MOCKUP_DATA.filter(
+    (post) =>
+      post.title.toLowerCase().includes(searchTerm) || // 제목에서 검색
+      post.content.toLowerCase().includes(searchTerm) // 내용에서 검색 (필요에 따라 추가)
+  );
+
+  const filteredPosts = tagTerm
+    ? searchedPosts.filter((post) =>
+        post.hashtags.some((hashtag) => hashtag.toLowerCase() === tagTerm)
+      )
+    : searchedPosts;
+
   const { data: tagData } = await supabase.from("hashtags").select("*");
   if (!tagData) return null;
 
   const postsByType = {
-    prompt: MOCKUP_DATA.filter((post) => post.post_type === "prompt"),
-    free: MOCKUP_DATA.filter((post) => post.post_type === "free"),
-    weekly: MOCKUP_DATA.filter((post) => post.post_type === "weekly"),
+    prompt: filteredPosts.filter((post) => post.post_type === "prompt"),
+    free: filteredPosts.filter((post) => post.post_type === "free"),
+    weekly: filteredPosts.filter((post) => post.post_type === "weekly"),
   };
 
   return (
     <>
       {/* 검색 입력 창 */}
-      <form className="mt-6 p-4 flex gap-3 bg-white border border-[#F6F6F8] rounded-xl shadow mb-4">
-        <Search size={20} className="text-[#D1D5DB]" />
-        <input
-          type="text"
-          placeholder="검색하기..."
-          className="flex-1 outline-none"
-        />
-        <button type="submit" className="cursor-pointer text-[#D1D5DB]">
-          <SendHorizonal size={20} />
-        </button>
-      </form>
+      <FormClient searchTerm={searchTerm} tagTerm={tagTerm} />
       {/* 인기 해시태그 */}
-      <div className="space-y-2 px-6 py-4 bg-white/40 border-white/20 rounded-xl shadow-xl mb-8">
+      <div className="space-y-2 px-6 py-4 mb-6">
         <p>인기 해시태그</p>
         <div className="flex gap-2.5 flex-wrap">
+          <Link
+            href={searchTerm ? `?q=${searchTerm}` : "/search"}
+            className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg 
+              ${
+                !tagTerm
+                  ? "bg-[#9787ff] font-bold text-white"
+                  : "hover:bg-[#ECE9FF]"
+              }`} // tagTerm이 없을 때 "활성화"
+          >
+            #전체
+          </Link>
           {tagData.map((tag) => {
             if (!tag.name) return null;
             const label = TAG_LABEL_MAP[tag.name] ?? tag.name;
+            // 현재 URL의 tagTerm과 이 태그의 이름이 같은지 확인 (활성 상태)
+            const isActive = tagTerm === tag.name.toLowerCase();
+
+            const params = new URLSearchParams(); // 링크 URL 동적으로 생성
+            params.set("tag", tag.name); // 'tag'를 설정
+            //'searchTerm'이 있다면 URL에 보존
+            if (searchTerm) {
+              params.set("q", searchTerm);
+            }
             return (
-              <button
+              <Link
                 key={tag.id}
-                className="cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg hover:bg-[#ECE9FF]"
+                href={`?tag=${tag.name}`}
+                className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg 
+                  ${
+                    isActive
+                      ? "bg-[#9787ff] font-bold text-white"
+                      : "hover:bg-[#ECE9FF]"
+                  }`}
               >
                 #{label}
-              </button>
+              </Link>
             );
           })}
         </div>
       </div>
-      {/* 검색 영역 */}
 
       {/* 타입별 섹션 렌더링 */}
       {(Object.keys(postsByType) as Array<keyof typeof postsByType>).map(
         (type) => {
           const posts = postsByType[type];
-          if (!posts.length) return null;
-
           const title = SECTION_TITLE_MAP[type];
 
           return (
             <div key={type} className="space-y-4 mb-8">
               <p className="ml-6 text-xl">{title}</p>
-              <div className="space-y-8 pb-6">
-                {posts.map((post) => (
-                  <Post key={post.id} data={post} />
-                ))}
-              </div>
+              {posts.length > 0 ? (
+                <div className="space-y-8 pb-6">
+                  {posts.map((post) => (
+                    <Post key={post.id} data={post} />
+                  ))}
+                </div>
+              ) : (
+                <NoPosts />
+              )}
             </div>
           );
         }
