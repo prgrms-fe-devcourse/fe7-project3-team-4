@@ -1,16 +1,52 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       comments: {
         Row: {
+          content: string | null
           created_at: string | null
           id: string
+          like_count: number | null
           parent_id: string | null
+          reply_count: number | null
           target_id: string
           target_type: Database["public"]["Enums"]["target_type_enum"]
           updated_at: string | null
@@ -213,7 +249,7 @@ export type Database = {
           id: string
           images: string[] | null
           like_count: number
-          metadata: JSON | null
+          metadata: Json | null
           published_at: string | null
           site_name: string | null
           tags: string[] | null
@@ -229,7 +265,7 @@ export type Database = {
           id?: string
           images?: string[] | null
           like_count?: number
-          metadata?: JSON | null
+          metadata?: Json | null
           published_at?: string | null
           site_name?: string | null
           tags?: string[] | null
@@ -245,7 +281,7 @@ export type Database = {
           id?: string
           images?: string[] | null
           like_count?: number
-          metadata?: JSON | null
+          metadata?: Json | null
           published_at?: string | null
           site_name?: string | null
           tags?: string[] | null
@@ -304,76 +340,17 @@ export type Database = {
           },
         ]
       }
-      post_hashtags: {
-        Row: {
-          hashtag_id: string | null
-          id: string
-          post_id: string | null
-        }
-        Insert: {
-          hashtag_id?: string | null
-          id?: string
-          post_id?: string | null
-        }
-        Update: {
-          hashtag_id?: string | null
-          id?: string
-          post_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "post_hashtags_hashtag_id_fkey"
-            columns: ["hashtag_id"]
-            isOneToOne: false
-            referencedRelation: "hashtags"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "post_hashtags_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      post_images: {
-        Row: {
-          created_at: string
-          id: number
-          post_id: string | null
-          url: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: number
-          post_id?: string | null
-          url?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: number
-          post_id?: string | null
-          url?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "post_images_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       posts: {
         Row: {
           comment_count: number | null
-          content: string | null
+          content: Json | null
           created_at: string | null
+          email: string | null
+          hashtags: string[] | null
           id: string
           like_count: number | null
-          post_type: Database["public"]["Enums"]["post_type_enum"] | null
+          model: string | null
+          post_type: string | null
           title: string | null
           updated_at: string | null
           user_id: string | null
@@ -381,11 +358,14 @@ export type Database = {
         }
         Insert: {
           comment_count?: number | null
-          content?: string | null
+          content?: Json | null
           created_at?: string | null
+          email?: string | null
+          hashtags?: string[] | null
           id?: string
           like_count?: number | null
-          post_type?: Database["public"]["Enums"]["post_type_enum"] | null
+          model?: string | null
+          post_type?: string | null
           title?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -393,11 +373,14 @@ export type Database = {
         }
         Update: {
           comment_count?: number | null
-          content?: string | null
+          content?: Json | null
           created_at?: string | null
+          email?: string | null
+          hashtags?: string[] | null
           id?: string
           like_count?: number | null
-          post_type?: Database["public"]["Enums"]["post_type_enum"] | null
+          model?: string | null
+          post_type?: string | null
           title?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -506,6 +489,78 @@ export type Database = {
           },
         ]
       }
+      user_post_bookmarks: {
+        Row: {
+          created_at: string | null
+          id: number
+          post_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          post_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          post_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_post_bookmarks_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_post_bookmarks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_post_likes: {
+        Row: {
+          created_at: string | null
+          id: number
+          post_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          post_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          post_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_post_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -513,6 +568,7 @@ export type Database = {
     Functions: {
       decrement_like_count: { Args: { post_id: string }; Returns: undefined }
       increment_like_count: { Args: { post_id: string }; Returns: undefined }
+      increment_view: { Args: { post_id: string }; Returns: undefined }
       increment_view_count: { Args: { post_id: string }; Returns: undefined }
       news_increment_like: { Args: { p_id: string }; Returns: undefined }
       news_increment_view: { Args: { p_id: string }; Returns: undefined }
@@ -527,7 +583,7 @@ export type Database = {
         | "message"
       notification_type: "follow" | "comment" | "like" | "message"
       notification_type_enum: "like" | "comment" | "follow" | "message"
-      post_type_enum: "prompt" | "free" | "challenge"
+      post_type_enum: "prompt" | "free" | "weekly" | "news" | "all"
       target_type_enum: "post" | "news"
     }
     CompositeTypes: {
@@ -654,6 +710,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       comment_target_type: ["posts", "news"],
@@ -666,7 +725,7 @@ export const Constants = {
       ],
       notification_type: ["follow", "comment", "like", "message"],
       notification_type_enum: ["like", "comment", "follow", "message"],
-      post_type_enum: ["prompt", "free", "challenge"],
+      post_type_enum: ["prompt", "free", "weekly", "news", "all"],
       target_type_enum: ["post", "news"],
     },
   },

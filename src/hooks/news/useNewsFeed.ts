@@ -306,7 +306,7 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
         if (status === "SUBSCRIBED") {
           console.log(`[useNewsFeed] ✅ SUBSCRIBED successfully for user: ${userId || "anon"}`);
         } else if (status === "CHANNEL_ERROR") {
-          console.error(`[useNewsFeed] ❌ CHANNEL_ERROR:`, err);
+          console.error(`[useNewsFeed] ❌ CHANNEL_ERROR:`, err ?? "(no error payload)");
         } else if (status === "TIMED_OUT") {
           console.error(`[useNewsFeed] ⏱️ TIMED_OUT`);
         }
