@@ -203,6 +203,7 @@ export default async function Page({
           type="text"
           placeholder="검색하기..."
           className="flex-1 outline-none"
+          defaultValue={searchQuery}
         />
         <button type="submit" className="cursor-pointer text-[#D1D5DB]">
           <SendHorizonal size={20} />
@@ -227,6 +228,12 @@ export default async function Page({
         </div>
       </div>
       {/* 검색 영역 */}
+      {/* [수정/추가] 검색 결과가 없을 때 피드백 UI */}
+      {searchQuery && filteredData.length === 0 && (
+        <div className="text-center my-10 text-gray-500">
+          <p>`${searchQuery}`에 대한 검색 결과가 없습니다.</p>
+        </div>
+      )}
 
       {/* 타입별 섹션 렌더링 */}
       {(Object.keys(postsByType) as Array<keyof typeof postsByType>).map(
