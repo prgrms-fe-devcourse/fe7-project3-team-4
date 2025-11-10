@@ -7,7 +7,7 @@ export default function Post({ data }: { data: Post }) {
     <>
       <div className="bg-white/40 border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl">
         <Link
-          href={`/?type=${data.type}&id=${data.id}`}
+          href={`/?type=${data.post_type}&id=${data.id}`}
           scroll={false}
           className="block"
         >
@@ -21,9 +21,9 @@ export default function Post({ data }: { data: Post }) {
                   <div className="w-11 h-11 bg-gray-300 rounded-full"></div>
                   {/* 이름, 이메일, 작성 시간?날짜? */}
                   <div className="space-y-1 leading-none">
-                    <p>{data.author}</p>
+                    <p>{data.user_id}</p>
                     <p className="text-[#717182] text-sm">
-                      {data.email} · {data.createdAt.slice(0, 10)}
+                      {data.email} · {data.created_at.slice(0, 10)}
                     </p>
                   </div>
                 </div>
@@ -73,13 +73,13 @@ export default function Post({ data }: { data: Post }) {
           <button className="cursor-pointer py-1 px-2 rounded-md hover:text-[#FF569B] hover:bg-[#F7E6ED]">
             <div className="flex gap-2 text-sm items-center ">
               <Heart size={18} />
-              <span>{data.likes}</span>
+              <span>{data.like_count}</span>
             </div>
           </button>
           <button className="cursor-pointer py-1 px-2 rounded-md hover:bg-gray-200">
             <div className="flex gap-2 text-sm items-center">
               <MessageSquare size={18} />
-              <span>{data.comments}</span>
+              <span>{data.comment_count}</span>
             </div>
           </button>
           <button
