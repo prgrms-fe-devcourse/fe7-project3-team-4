@@ -15,6 +15,7 @@ import { useNewsFeedContext } from "@/context/NewsFeedContext";
 import NewsFeed from "@/components/news/NewsFeed";
 import FeedStatus from "@/components/news/FeedStatus";
 import { FadeLoader } from "react-spinners";
+import IntroAnimation from "@/components/intro/IntroAnimation";
 
 const MOCKUP_DATA: Post[] = [
   // [수정] 'news' 타입 Mock 데이터는 제거해도 됩니다 (ID: 1, 2, 9).
@@ -264,6 +265,7 @@ export default function Page() {
 
   return (
     <>
+      <IntroAnimation />
       {/* [추가] useNewsUpload 훅이 참조할 숨겨진 input */}
       <input
         type="file"
