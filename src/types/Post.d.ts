@@ -8,6 +8,7 @@ type Post = {
   post_type: "prompt" | "free" | "weekly";
   title: string;
   user_id: string;
+  image?: string | null;
   view_count: number;
   email: string;
   hashtags: string[];
