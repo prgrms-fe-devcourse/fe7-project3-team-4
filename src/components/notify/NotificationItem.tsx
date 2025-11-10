@@ -10,32 +10,32 @@ const TYPE_CONFIG: Record<
   NotificationType,
   {
     icon: React.ComponentType<{ size?: number; className?: string }>;
-    iconColor: string;
+    iconColorClass: string;
     message: string;
     showContent: boolean;
   }
 > = {
   like: {
     icon: Heart,
-    iconColor: "#FF569B",
+    iconColorClass: "text-[#FF569B]",
     message: "님이 회원님의 게시물을 좋아합니다",
     showContent: true, // 게시글 제목 등
   },
   comment: {
     icon: MessageSquareText,
-    iconColor: "#FF6658",
+    iconColorClass: "text-[#FF6658]",
     message: "님이 회원님의 게시물에 댓글을 남겼습니다",
     showContent: true, // 댓글 내용
   },
   follow: {
     icon: UserPlus,
-    iconColor: "#00C950",
+    iconColorClass: "text-[#00C950] ml-0.5",
     message: "님이 회원님을 팔로우하기 시작했습니다",
     showContent: false,
   },
   message: {
     icon: MessageCircle,
-    iconColor: "#6758FF",
+    iconColorClass: "text-[#6758FF]",
     message: "님이 메시지를 보냈습니다",
     showContent: true, // DM 내용 프리뷰
   },
@@ -52,7 +52,7 @@ export function NotificationItem({ data }: { data: Notify }) {
         <div className="relative w-11 h-11 bg-gray-300 rounded-full">
           {/* 타입별 아이콘 */}
           <div className="absolute -right-1.5 -bottom-1.5 w-7 h-7 bg-white rounded-full flex items-center justify-center">
-            <Icon size={20} className={`text-[${config.iconColor}]`} />
+            <Icon size={20} className={config.iconColorClass} />
           </div>
         </div>
 
