@@ -1,7 +1,20 @@
-export default function Page() {
+import { redirect } from "next/navigation";
+import { createClient } from "@/utils/supabase/server";
+import { WritePostForm } from "@/components/write/WritePostForm";
+
+export default async function Page() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/auth/login");
+  }
+
   return (
-    <>
-      <h1>Page</h1>
-    </>
+    <div className="max-w-3xl mx-auto">
+      <WritePostForm />
+    </div>
   );
 }
