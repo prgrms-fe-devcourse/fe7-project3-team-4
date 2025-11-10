@@ -34,7 +34,8 @@ const MOCKUP_DATA: Post[] = [
     user_id: "user_abc_123",
     view_count: 102,
     email: "react_master@example.com",
-    image: "https://example.com/images/react_logo.png",
+    image:
+      "https://cdn.pixabay.com/photo/2025/11/05/20/57/monastery-9939590_1280.jpg",
     hashtags: ["React", "JavaScript", "Frontend", "StateManagement"],
     isBookmarked: true,
     model: "GPT",
@@ -67,7 +68,8 @@ const MOCKUP_DATA: Post[] = [
     user_id: "user_ghi_789",
     view_count: 230,
     email: "algo_king@example.com",
-    image: "https://example.com/images/challenge_icon.png",
+    image:
+      "https://cdn.pixabay.com/photo/2025/11/05/20/57/monastery-9939590_1280.jpg",
     hashtags: ["Algorithm", "Challenge", "DP", "Optimization"],
     isBookmarked: true,
   },
@@ -114,7 +116,8 @@ const MOCKUP_DATA: Post[] = [
     user_id: "user_pqr_303",
     view_count: 175,
     email: "senior_dev@example.com",
-    image: "https://example.com/images/codereview.png",
+    image:
+      "https://cdn.pixabay.com/photo/2024/09/28/20/09/city-9082149_640.jpg",
     hashtags: ["GPT", "CodeReview", "Persona", "Productivity"],
     isBookmarked: true,
     model: "GPT",
