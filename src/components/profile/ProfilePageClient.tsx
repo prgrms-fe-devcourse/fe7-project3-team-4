@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ProfileActivityTabs } from "@/components/profile/ProfileActivityTabs";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileEditModal } from "@/components/profile/ProfileEditModal";
+import { ImgEditModal } from "./ImgEditModal";
 
 const MOCKUP_POSTS: Post[] = [
   {
@@ -114,18 +115,27 @@ const MOCKUP_POSTS: Post[] = [
 ];
 
 export default function ProfilePageClient() {
-  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [isEditImgOpen, setIsEditImgOpen] = useState(false);
 
   return (
     <>
       <div className="relative">
-        <ProfileHeader onEditClick={() => setIsEditOpen(true)} />
+        <ProfileHeader
+          onAvatarClick={() => setIsEditImgOpen(true)}
+          onEditClick={() => setIsEditProfileOpen(true)}
+        />
         <ProfileActivityTabs posts={MOCKUP_POSTS} />
       </div>
 
       <ProfileEditModal
-        isOpen={isEditOpen}
-        onClose={() => setIsEditOpen(false)}
+        isOpen={isEditProfileOpen}
+        onClose={() => setIsEditProfileOpen(false)}
+      />
+
+      <ImgEditModal
+        isOpen={isEditImgOpen}
+        onClose={() => setIsEditImgOpen(false)}
       />
     </>
   );

@@ -3,16 +3,20 @@
 import { Calendar, Pencil, SquarePen } from "lucide-react";
 
 type ProfileHeaderProps = {
-  onEditClick: () => void;
+  onAvatarClick?: () => void;
+  onEditClick?: () => void;
 };
 
-export function ProfileHeader({ onEditClick }: ProfileHeaderProps) {
+export function ProfileHeader({
+  onAvatarClick,
+  onEditClick,
+}: ProfileHeaderProps) {
   return (
     <div className="mt-6 relative pt-10">
       {/* 프로필 이미지 (클릭 시 수정 모달 오픈) */}
       <div
         className="group absolute top-0 left-6 z-10 w-24 h-24 rounded-full bg-gray-300 border-2 flex items-center justify-center border-white hover:bg-black/60 cursor-pointer"
-        onClick={onEditClick}
+        onClick={onAvatarClick}
       >
         <Pencil
           size={20}
