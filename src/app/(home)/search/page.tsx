@@ -203,13 +203,17 @@ export default async function Page({
       {/* 검색 입력 창 */}
       <FormClient searchTerm={searchTerm} tagTerm={tagTerm} />
       {/* 인기 해시태그 */}
-      <div className="space-y-2 px-6 py-4 ...">
+      <div className="space-y-2 px-6 py-4 mb-6">
         <p>인기 해시태그</p>
         <div className="flex gap-2.5 flex-wrap">
           <Link
             href={searchTerm ? `?q=${searchTerm}` : "/search"}
             className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg 
-              ${!tagTerm ? "bg-[#ECE9FF] font-bold" : "hover:bg-[#ECE9FF]"}`} // tagTerm이 없을 때 "활성화"
+              ${
+                !tagTerm
+                  ? "bg-[#9787ff] font-bold text-white"
+                  : "hover:bg-[#ECE9FF]"
+              }`} // tagTerm이 없을 때 "활성화"
           >
             #전체
           </Link>
@@ -231,7 +235,9 @@ export default async function Page({
                 href={`?tag=${tag.name}`}
                 className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg 
                   ${
-                    isActive ? "bg-[#ECE9FF] font-bold" : "hover:bg-[#ECE9FF]"
+                    isActive
+                      ? "bg-[#9787ff] font-bold text-white"
+                      : "hover:bg-[#ECE9FF]"
                   }`}
               >
                 #{label}
