@@ -4,7 +4,6 @@ import LeftSidebar from "@/components/sidebar/Left/LeftSidebar";
 import RightSidebar from "@/components/sidebar/Right/RightSidebar";
 import { NewsFeedProvider } from "@/context/NewsFeedContext";
 import "react-loading-skeleton/dist/skeleton.css";
-
 export default function RootLayout({
   children,
 }: {
