@@ -1,6 +1,7 @@
 import Post from "@/components/home/post/Post";
 import { createClient } from "@/utils/supabase/server";
 import { Search, SendHorizonal } from "lucide-react";
+export const dynamic = "force-dynamic";
 
 const MOCKUP_DATA: Post[] = [
   // [수정] 'news' 타입 Mock 데이터는 제거해도 됩니다 (ID: 1, 2, 9).
@@ -162,26 +163,44 @@ const SECTION_TITLE_MAP: Record<"prompt" | "free" | "weekly", string> = {
   weekly: "주간",
 };
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams?: {
+    q?: string;
+  };
+}) {
   const supabase = await createClient();
+  const searchTerm = searchParams?.q?.toLowerCase() || ""; // 소문자로 통일, 없으면 빈 문자열
+  const searchedPosts = MOCKUP_DATA.filter(
+    (post) =>
+      post.title.toLowerCase().includes(searchTerm) || // 제목에서 검색
+      post.content.toLowerCase().includes(searchTerm) // 내용에서 검색 (필요에 따라 추가)
+  );
+
   const { data: tagData } = await supabase.from("hashtags").select("*");
   if (!tagData) return null;
 
   const postsByType = {
-    prompt: MOCKUP_DATA.filter((post) => post.post_type === "prompt"),
-    free: MOCKUP_DATA.filter((post) => post.post_type === "free"),
-    weekly: MOCKUP_DATA.filter((post) => post.post_type === "weekly"),
+    prompt: searchedPosts.filter((post) => post.post_type === "prompt"),
+    free: searchedPosts.filter((post) => post.post_type === "free"),
+    weekly: searchedPosts.filter((post) => post.post_type === "weekly"),
   };
 
   return (
     <>
       {/* 검색 입력 창 */}
-      <form className="mt-6 p-4 flex gap-3 bg-white border border-[#F6F6F8] rounded-xl shadow mb-4">
+      <form
+        method="GET"
+        className="mt-6 p-4 flex gap-3 bg-white border border-[#F6F6F8] rounded-xl shadow mb-4"
+      >
         <Search size={20} className="text-[#D1D5DB]" />
         <input
+          name="q"
           type="text"
           placeholder="검색하기..."
           className="flex-1 outline-none"
+          defaultValue={searchTerm}
         />
         <button type="submit" className="cursor-pointer text-[#D1D5DB]">
           <SendHorizonal size={20} />
