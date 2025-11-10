@@ -2,7 +2,13 @@ import { Bookmark, Heart, MessageSquare } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function Post({ data, isPriority = false }: { data: Post, isPriority?: boolean; }) {
+export default function Post({
+  data,
+  isPriority = false,
+}: {
+  data: Post;
+  isPriority?: boolean;
+}) {
   return (
     <>
       <div className="bg-white/40 border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl">
@@ -23,7 +29,7 @@ export default function Post({ data, isPriority = false }: { data: Post, isPrior
                   <div className="space-y-1 leading-none">
                     <p>{data.user_id}</p>
                     <p className="text-[#717182] text-sm">
-                      {data.email} · {data.created_at.slice(0, 10)}
+                      {data.email} · {data.created_at?.slice(0, 10)}
                     </p>
                   </div>
                 </div>
@@ -35,7 +41,7 @@ export default function Post({ data, isPriority = false }: { data: Post, isPrior
                       (data.model === "텍스트" && "bg-[#6758FF]") ||
                       (data.model === "이미지" && "bg-[#FF569B]")
                     } 
-                     rounded-full`}
+                    rounded-full`}
                   >
                     {data.model}
                   </div>
