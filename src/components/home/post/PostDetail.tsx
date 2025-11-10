@@ -118,7 +118,7 @@ export default function PostDetail({
           {/* 태그들 */}
           <div className="space-x-2 text-sm text-[#248AFF]">
             {post.hashtags.map((tag, i) => (
-              <span key={i}>{tag}</span>
+              <span key={i}>#{tag}</span>
             ))}
           </div>
         </div>
