@@ -2,7 +2,13 @@ import { Bookmark, Heart, MessageSquare } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function Post({ data, isPriority = false }: { data: Post, isPriority?: boolean; }) {
+export default function Post({
+  data,
+  isPriority = false,
+}: {
+  data: Post;
+  isPriority?: boolean;
+}) {
   return (
     <>
       <div className="bg-white/40 border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl">
@@ -63,7 +69,7 @@ export default function Post({ data, isPriority = false }: { data: Post, isPrior
               {/* 태그들 */}
               <div className="space-x-2 text-sm text-[#248AFF]">
                 {data.hashtags.map((tag, i) => (
-                  <span key={i}>{tag}</span>
+                  <span key={i}>#{tag}</span>
                 ))}
               </div>
             </div>
