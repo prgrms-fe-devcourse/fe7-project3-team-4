@@ -29,7 +29,7 @@ export default function Post({
                   <div className="space-y-1 leading-none">
                     <p>{data.user_id}</p>
                     <p className="text-[#717182] text-sm">
-                      {data.email} · {data.created_at.slice(0, 10)}
+                      {data.email} · {data.created_at?.slice(0, 10)}
                     </p>
                   </div>
                 </div>
@@ -41,7 +41,7 @@ export default function Post({
                       (data.model === "텍스트" && "bg-[#6758FF]") ||
                       (data.model === "이미지" && "bg-[#FF569B]")
                     } 
-                     rounded-full`}
+                    rounded-full`}
                   >
                     {data.model}
                   </div>
