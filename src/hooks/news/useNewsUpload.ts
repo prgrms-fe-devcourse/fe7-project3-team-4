@@ -1,10 +1,9 @@
+"use client";
 // src/hooks/useNewsUpload.ts
 // [기능]: HTML 파일 업로드 로직을 담당하는 커스텀 훅
 // - 숨겨진 <input type="file">을 참조(ref)하고 트리거
 // - 파일 선택 시 /api/parse API로 업로드 (POST)
 // - 업로드 상태(시작, 성공, 오류)에 따라 콜백 함수를 호출
-
-"use client";
 
 import { useState, useRef, useCallback } from "react"; // useCallback 임포트
 
@@ -44,7 +43,8 @@ export function useNewsUpload({
         } else {
           throw new Error(result.error || "파싱 오류 발생");
         }
-      } catch (err: unknown) { // [수정] any -> unknown
+      } catch (err: unknown) {
+        // [수정] any -> unknown
         console.error("[uploadAndRefresh Error]", err);
         // [수정] 타입 가드 추가
         let message = "알 수 없는 오류가 발생했습니다.";
@@ -56,7 +56,7 @@ export function useNewsUpload({
         setLoadingUpload(false);
       }
     },
-    [onUploadStart, onUploadSuccess, onUploadError], // 콜백 함수 의존성 추가
+    [onUploadStart, onUploadSuccess, onUploadError] // 콜백 함수 의존성 추가
   );
 
   // 파일 input 변경 시 (파일 선택 완료)
@@ -70,7 +70,7 @@ export function useNewsUpload({
       // [클린 코드] 동일한 파일 재업로드를 위해 input 값 초기화
       e.target.value = "";
     },
-    [uploadAndRefresh], // uploadAndRefresh 의존성 추가
+    [uploadAndRefresh] // uploadAndRefresh 의존성 추가
   );
 
   // "새 게시글" 버튼 클릭 시 input을 프로그래매틱하게 클릭

@@ -1,4 +1,3 @@
-// components/write/MainEditorSection.tsx
 "use client";
 
 import { Image as ImageIcon, XIcon } from "lucide-react";

@@ -30,7 +30,7 @@ const theme = createTheme({
 });
 
 export default function M3Checkbox({
-  label = "옵션",
+  label,
   defaultChecked = false,
   disabled = false,
   checked, // 있으면 제어형, 없으면 내부 상태 사용
@@ -59,7 +59,7 @@ export default function M3Checkbox({
               "&.Mui-checked": { color: blue[500] }, // 체크 상태
               "&.MuiCheckbox-indeterminate": { color: blue[400] },
               // 포커스/호버 상태 살짝 강조
-              "&:hover": { backgroundColor: "rgba(25,118,210,0.08)" }, // blue[500]의 알파
+              "&:hover": { backgroundColor: "rgba(25,118,210,0.08)" },
             }}
           />
         }

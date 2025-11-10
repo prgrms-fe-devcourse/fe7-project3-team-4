@@ -10,7 +10,7 @@ export default function RightSidebar() {
   const { latestNews } = useNewsFeedContext();
 
   return (
-    <aside className="hidden lg:block h-full space-y-6">
+    <aside className="hidden lg:flex flex-col h-full justify-between gap-6">
       {/* [수정] SideNews 안에 LatestNewsCarousel을 자식으로 렌더링 */}
       {latestNews.length > 0 && (
         <SideNews>
