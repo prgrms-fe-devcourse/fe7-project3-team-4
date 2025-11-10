@@ -1,9 +1,5 @@
-export default function Page() {
-  return (
-    <>
-      <div className="mt-6">
-        <h3>프로필</h3>
-      </div>
-    </>
-  );
+import ProfilePageClient from "@/components/profile/ProfilePageClient";
+
+export default async function Page() {
+  return <ProfilePageClient />;
 }
