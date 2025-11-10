@@ -2,7 +2,7 @@ import { Bookmark, Heart, MessageSquare } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function Post({ data }: { data: Post }) {
+export default function Post({ data, isPriority = false }: { data: Post, isPriority?: boolean; }) {
   return (
     <>
       <div className="bg-white/40 border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl">
@@ -56,6 +56,7 @@ export default function Post({ data }: { data: Post }) {
                     width={800}
                     height={800}
                     className="object-cover w-full h-auto bg-gray-300 rounded-lg"
+                    priority={isPriority}
                   ></Image>
                 )}
               </div>

@@ -54,7 +54,7 @@ export default function LatestNewsCarousel({
           // 버튼 클릭 시 setActive가 호출되고,
           // 'active' 상태가 변경되면 위의 useEffect가 리셋됩니다.
           onClick={() => setActive((i) => (i - 1 + count) % count)}
-          className="cursor-pointer absolute left-4 top-1/2 -translate-y-1/2 z-30
+          className="cursor-pointer absolute left-5 top-1/2 -translate-y-1/2 z-30
                        w-10 h-10 rounded-full flex items-center justify-center
                        transition-all
                        bg-white/15 backdrop-blur-md 
@@ -191,7 +191,7 @@ export default function LatestNewsCarousel({
           // 버튼 클릭 시 setActive가 호출되고,
           // 'active' 상태가 변경되면 위의 useEffect가 리셋됩니다.
           onClick={() => setActive((i) => (i + 1) % count)}
-          className="cursor-pointer absolute right-4 top-1/2 -translate-y-1/2 z-30
+          className="cursor-pointer absolute right-5 top-1/2 -translate-y-1/2 z-30
                        w-10 h-10 rounded-full flex items-center justify-center
                        transition-all
                        bg-white/15 backdrop-blur-md 

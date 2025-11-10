@@ -8,8 +8,8 @@ export default function All({ data }: { data: Post[] }) {
 
   return (
     <div className="space-y-8">
-      {data.map((post) => (
-        <Post key={post.id} data={post} />
+      {data.map((post, index) => (
+        <Post key={post.id} data={post} isPriority={index === 0}/>
       ))}
     </div>
   );
