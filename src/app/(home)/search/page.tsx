@@ -162,23 +162,44 @@ const SECTION_TITLE_MAP: Record<"prompt" | "free" | "weekly", string> = {
   weekly: "주간",
 };
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
   const supabase = await createClient();
   const { data: tagData } = await supabase.from("hashtags").select("*");
   if (!tagData) return null;
 
+  // 검색어 추출
+  const searchQuery = searchParams.q?.toString() ?? "";
+
+  // 검색어로 MOCKUP_DATA를 필터링.
+  const filteredData = searchQuery
+    ? MOCKUP_DATA.filter(
+        (post) =>
+          // 대소문자 구분 X
+          post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          post.content.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : MOCKUP_DATA; // 검색어가 없으면 전체 데이터를 사용
+
   const postsByType = {
-    prompt: MOCKUP_DATA.filter((post) => post.post_type === "prompt"),
-    free: MOCKUP_DATA.filter((post) => post.post_type === "free"),
-    weekly: MOCKUP_DATA.filter((post) => post.post_type === "weekly"),
+    prompt: filteredData.filter((post) => post.post_type === "prompt"),
+    free: filteredData.filter((post) => post.post_type === "free"),
+    weekly: filteredData.filter((post) => post.post_type === "weekly"),
   };
 
   return (
     <>
       {/* 검색 입력 창 */}
-      <form className="mt-6 p-4 flex gap-3 bg-white border border-[#F6F6F8] rounded-xl shadow mb-4">
+      <form
+        method="get"
+        className="mt-6 p-4 flex gap-3 bg-white border border-[#F6F6F8] rounded-xl shadow mb-4"
+      >
         <Search size={20} className="text-[#D1D5DB]" />
         <input
+          name="q"
           type="text"
           placeholder="검색하기..."
           className="flex-1 outline-none"
