@@ -8,11 +8,10 @@ import ProfileDataLoader from "@/components/profile/ProfileDataLoader";
 
 import ProfilePageSkeleton from "@/components/profile/ProfilePageSkeleton";
 
-
 export default async function Page({
   searchParams,
 }: {
-  searchParams: { tab?: string };
+  searchParams: Promise<{ tab?: string }>;
 }) {
   const supabase = await createClient();
 
@@ -25,7 +24,9 @@ export default async function Page({
     redirect("/auth/login");
   }
 
-  const initialTab = searchParams.tab || "posts";
+  const search = await searchParams;
+
+  const initialTab = search.tab || "posts";
 
   async function updateProfile(
     prevState: FormState,
@@ -69,7 +70,10 @@ export default async function Page({
       .update({ avatar_url: url })
       .eq("id", user.id);
     if (updateErrors) {
-      return { success: false, error: "아바타 URL 저장 중 문제가 발생했습니다." };
+      return {
+        success: false,
+        error: "아바타 URL 저장 중 문제가 발생했습니다.",
+      };
     }
     revalidatePath("/profile", "page");
     return { success: true, error: null };
@@ -108,7 +112,7 @@ export default async function Page({
     <Suspense fallback={<ProfilePageSkeleton />}>
       <ProfileDataLoader
         userId={user.id}
-        initialTab={initialTab} 
+        initialTab={initialTab}
         updateProfile={updateProfile}
         updateAvatarUrl={updateAvatarUrl}
         togglePostBookmark={togglePostBookmark}
