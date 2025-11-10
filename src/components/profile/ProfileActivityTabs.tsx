@@ -1,11 +1,21 @@
+// src/components/profile/ProfileActivityTabs.tsx
+
 "use client";
 
-import { useState } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import MyPosts from "@/components/profile/MyPosts";
 import MyComments from "@/components/profile/MyComments";
 import MyBookMark from "@/components/profile/MyBookMark";
+import { NewsItemWithState, Post } from "@/types";
+import { Database } from "@/utils/supabase/supabase";
 
-type TabKey = "posts" | "comments" | "bookmarks";
+type DbCommentRow = Database["public"]["Tables"]["comments"]["Row"] & {
+  content: string | null;
+  like_count: number | null;
+  reply_count: number | null;
+};
+
+export type TabKey = "posts" | "comments" | "bookmarks";
 
 const TAB_LABEL: Record<TabKey, string> = {
   posts: "게시글",
@@ -13,12 +23,40 @@ const TAB_LABEL: Record<TabKey, string> = {
   bookmarks: "북마크",
 };
 
+type BookmarkedItem =
+  | (Post & { type: "post" })
+  | (NewsItemWithState & { type: "news" });
+
 type ProfileActivityTabsProps = {
-  posts: Post[];
+  initialTab: TabKey;
+  myPosts: Post[];
+  myComments: DbCommentRow[];
+  myBookmarks: BookmarkedItem[];
+  onLikeToggle: (id: string) => void;
+  onBookmarkToggle: (id: string, type: "post" | "news") => void;
+  onPostLikeToggle: (id: string) => void;
 };
 
-export function ProfileActivityTabs({ posts }: ProfileActivityTabsProps) {
-  const [activeTab, setActiveTab] = useState<TabKey>("posts");
+export function ProfileActivityTabs({
+  initialTab, 
+  myPosts,
+  myComments,
+  myBookmarks,
+  onLikeToggle,
+  onBookmarkToggle,
+  onPostLikeToggle,
+}: ProfileActivityTabsProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const activeTab = (searchParams.get("tab") as TabKey) || initialTab;
+
+  const handleTabChange = (tab: TabKey) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tab);
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   const baseBtn =
     "cursor-pointer flex-1 py-4 rounded-xl text-sm transition-colors";
@@ -34,7 +72,7 @@ export function ProfileActivityTabs({ posts }: ProfileActivityTabsProps) {
             className={`${baseBtn} ${
               activeTab === "posts" ? activeClass : inactiveClass
             }`}
-            onClick={() => setActiveTab("posts")}
+            onClick={() => handleTabChange("posts")}
           >
             {TAB_LABEL.posts}
           </button>
@@ -42,7 +80,7 @@ export function ProfileActivityTabs({ posts }: ProfileActivityTabsProps) {
             className={`${baseBtn} ${
               activeTab === "comments" ? activeClass : inactiveClass
             }`}
-            onClick={() => setActiveTab("comments")}
+            onClick={() => handleTabChange("comments")}
           >
             {TAB_LABEL.comments}
           </button>
@@ -50,7 +88,7 @@ export function ProfileActivityTabs({ posts }: ProfileActivityTabsProps) {
             className={`${baseBtn} ${
               activeTab === "bookmarks" ? activeClass : inactiveClass
             }`}
-            onClick={() => setActiveTab("bookmarks")}
+            onClick={() => handleTabChange("bookmarks")}
           >
             {TAB_LABEL.bookmarks}
           </button>
@@ -59,9 +97,18 @@ export function ProfileActivityTabs({ posts }: ProfileActivityTabsProps) {
 
       {/* 탭 콘텐츠 */}
       <div className="mt-4 lg:mt-6">
-        {activeTab === "posts" && <MyPosts posts={posts} />}
-        {activeTab === "comments" && <MyComments />}
-        {activeTab === "bookmarks" && <MyBookMark posts={posts} />}
+        {activeTab === "posts" && (
+          <MyPosts posts={myPosts} onLikeToggle={onPostLikeToggle} />
+        )}
+        {activeTab === "comments" && <MyComments comments={myComments} />}
+        {activeTab === "bookmarks" && (
+          <MyBookMark
+            items={myBookmarks}
+            onLikeToggle={onLikeToggle}
+            onBookmarkToggle={onBookmarkToggle}
+            onPostLikeToggle={onPostLikeToggle}
+          />
+        )}
       </div>
     </>
   );
