@@ -1,11 +1,12 @@
-import Post from "@/components/home/post/Post";
-import { createClient } from "@/utils/supabase/server";
-import { Search, SendHorizonal } from "lucide-react";
+"use client";
 
-const MOCKUP_DATA: Post[] = [
-  // [수정] 'news' 타입 Mock 데이터는 제거해도 됩니다 (ID: 1, 2, 9).
-  // 여기서는 편의상 그대로 두되, 'all' 탭에서만 사용합니다.
+import { useState } from "react";
+import { ProfileActivityTabs } from "@/components/profile/ProfileActivityTabs";
+import { ProfileHeader } from "@/components/profile/ProfileHeader";
+import { ProfileEditModal } from "@/components/profile/ProfileEditModal";
+import { ImgEditModal } from "./ImgEditModal";
 
+const MOCKUP_POSTS: Post[] = [
   {
     id: "1",
     comment_count: 5,
@@ -141,92 +142,29 @@ const MOCKUP_DATA: Post[] = [
   },
 ];
 
-const TAG_LABEL_MAP: Record<string, string> = {
-  education: "교육",
-  writing: "글쓰기",
-  business: "비즈니스",
-  script: "스크립트",
-  marketing: "마케팅",
-  content: "콘텐츠",
-  research: "조사",
-  play: "놀이",
-  sns: "SNS",
-  art: "디자인",
-  develop: "개발",
-  summary: "요약",
-};
-
-const SECTION_TITLE_MAP: Record<"prompt" | "free" | "weekly", string> = {
-  prompt: "프롬프트",
-  free: "자유",
-  weekly: "주간",
-};
-
-export default async function Page() {
-  const supabase = await createClient();
-  const { data: tagData } = await supabase.from("hashtags").select("*");
-  if (!tagData) return null;
-
-  const postsByType = {
-    prompt: MOCKUP_DATA.filter((post) => post.post_type === "prompt"),
-    free: MOCKUP_DATA.filter((post) => post.post_type === "free"),
-    weekly: MOCKUP_DATA.filter((post) => post.post_type === "weekly"),
-  };
+export default function ProfilePageClient() {
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [isEditImgOpen, setIsEditImgOpen] = useState(false);
 
   return (
     <>
-      {/* 검색 입력 창 */}
-      <form className="mt-6 p-4 flex gap-3 bg-white border border-[#F6F6F8] rounded-xl shadow mb-4">
-        <Search size={20} className="text-[#D1D5DB]" />
-        <input
-          type="text"
-          placeholder="검색하기..."
-          className="flex-1 outline-none"
+      <div className="relative">
+        <ProfileHeader
+          onAvatarClick={() => setIsEditImgOpen(true)}
+          onEditClick={() => setIsEditProfileOpen(true)}
         />
-        <button type="submit" className="cursor-pointer text-[#D1D5DB]">
-          <SendHorizonal size={20} />
-        </button>
-      </form>
-      {/* 인기 해시태그 */}
-      <div className="space-y-2 px-6 py-4 bg-white/40 border-white/20 rounded-xl shadow-xl mb-8">
-        <p>인기 해시태그</p>
-        <div className="flex gap-2.5 flex-wrap">
-          {tagData.map((tag) => {
-            if (!tag.name) return null;
-            const label = TAG_LABEL_MAP[tag.name] ?? tag.name;
-            return (
-              <button
-                key={tag.id}
-                className="cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg hover:bg-[#ECE9FF]"
-              >
-                #{label}
-              </button>
-            );
-          })}
-        </div>
+        <ProfileActivityTabs posts={MOCKUP_POSTS} />
       </div>
-      {/* 검색 영역 */}
 
-      {/* 타입별 섹션 렌더링 */}
-      {(Object.keys(postsByType) as Array<keyof typeof postsByType>).map(
-        (type) => {
-          const posts = postsByType[type];
-          if (!posts.length) return null;
+      <ProfileEditModal
+        isOpen={isEditProfileOpen}
+        onClose={() => setIsEditProfileOpen(false)}
+      />
 
-          const title = SECTION_TITLE_MAP[type];
-
-          return (
-            <div key={type} className="space-y-4 mb-8">
-              <p className="ml-6 text-xl">{title}</p>
-              <div className="space-y-8 pb-6">
-                {posts.map((post) => (
-                  <Post key={post.id} data={post} />
-                ))}
-              </div>
-            </div>
-          );
-        }
-      )}
+      <ImgEditModal
+        isOpen={isEditImgOpen}
+        onClose={() => setIsEditImgOpen(false)}
+      />
     </>
   );
 }

@@ -1,7 +1,5 @@
-export default function Page() {
-  return (
-    <>
-      <h1>Page</h1>
-    </>
-  );
+import ProfilePageClient from "@/components/profile/ProfilePageClient";
+
+export default async function Page() {
+  return <ProfilePageClient />;
 }

@@ -1,13 +1,23 @@
 "use client";
 
 import MenuBtn from "./MenuBtn";
-import { Bell, House, MessageCircle, Search, User } from "lucide-react";
+import {
+  Bell,
+  House,
+  LogIn,
+  LogOut,
+  MessageCircle,
+  Search,
+  User,
+} from "lucide-react";
 import Gemini from "../../../assets/svg/Gemini";
 import GPT from "../../../assets/svg/GPT";
 import Write from "../../../assets/svg/Write";
 import Logo from "../../../assets/svg/Logo";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
 
 const MENU_ITEMS = [
   { title: "홈", icon: <House />, url: "/" },
@@ -41,7 +51,29 @@ function isActivePath(pathname: string, url: string): boolean {
 }
 
 export default function LeftSidebar() {
+  const router = useRouter();
   const pathname = usePathname();
+  const [isLogin, setIsLogin] = useState(false);
+
+  useEffect(() => {
+    const run = async () => {
+      const supabase = await createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setIsLogin(!!user);
+    };
+    run();
+  }, []);
+
+  const handleLogout = async () => {
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+    setIsLogin(false);
+    router.refresh(); // Supabase 세션 반영된 서버 컴포넌트들 새로고침
+    router.push("/auth/login"); // 원하는 경로로 이동
+  };
+
   return (
     <>
       <aside className="hidden lg:block h-full p-6 box-border bg-white/40 border border-white/20 rounded-xl shadow-xl">
@@ -59,6 +91,26 @@ export default function LeftSidebar() {
               active={isActivePath(pathname, menu.url)}
             />
           ))}
+          <li className="flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer hover:bg-white hover:shadow-xl">
+            {!isLogin ? (
+              <Link
+                href={"auth/login"}
+                className="flex items-center gap-4 flex-1 "
+              >
+                <LogIn />
+                <span>로그인</span>
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="cursor-pointer flex items-center gap-4 flex-1 "
+              >
+                <LogOut />
+                <span>로그아웃</span>
+              </button>
+            )}
+          </li>
         </ul>
       </aside>
     </>

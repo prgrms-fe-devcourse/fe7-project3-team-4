@@ -40,7 +40,7 @@ export default function EditForm({ newsItem }: { newsItem: NewsItem }) {
         headers: {
           'Content-Type': 'application/json',
         },
-       body: JSON.stringify({ title, content, tags: tagsArray }),
+        body: JSON.stringify({ title, content, tags: tagsArray }),
       })
 
       const result = await res.json()
@@ -61,8 +61,13 @@ export default function EditForm({ newsItem }: { newsItem: NewsItem }) {
       } else {
         throw new Error(result.error || '저장 중 오류가 발생했습니다.')
       }
-    } catch (err: any) {
-      setMessage(`❌ 오류: ${err.message}`)
+    } catch (err: unknown) { // [수정] 1. any -> unknown
+      // [수정] 2. 타입 가드 추가
+      let errorMessage = '알 수 없는 오류가 발생했습니다.';
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      setMessage(`❌ 오류: ${errorMessage}`)
     } finally {
       setLoading(false)
     }
@@ -144,13 +149,13 @@ export default function EditForm({ newsItem }: { newsItem: NewsItem }) {
 
       {/* 상태 메시지 */}
       {message && (
-         <p 
-           className={`text-base ${message.startsWith('❌') ? 'text-red-600' : 'text-green-700'}`}
-           role="status"
-           aria-live="polite"
-         >
-           {message}
-         </p>
+          <p 
+            className={`text-base ${message.startsWith('❌') ? 'text-red-600' : 'text-green-700'}`}
+            role="status"
+            aria-live="polite"
+          >
+            {message}
+          </p>
       )}
     </form>
   )

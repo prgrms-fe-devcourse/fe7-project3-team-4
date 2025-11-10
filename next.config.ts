@@ -66,5 +66,6 @@ const nextConfig: NextConfig = {
     ],
     unoptimized: process.env.NODE_ENV === "development",
   },
+  reactStrictMode: false,
 };
 export default nextConfig;

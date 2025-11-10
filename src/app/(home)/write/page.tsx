@@ -7,19 +7,20 @@ import M3Checkbox from "@/components/ui/M3CheckBox";
 import { useState } from "react";
 
 type PostType = "prompt" | "free" | "weekly";
+
 export default function Page() {
   const [postType, setPostType] = useState<PostType>("prompt");
   return (
-    <div className="max-w-2xl mx-auto w-full">
+    <>
       <div className="grid gap-y-10">
-        <div className="flex justify-between mb-6">
+        <div className="flex justify-between items-center mb-6">
           <span className="text-[#0A0A0A] text-[20px] font-semibold">
             게시글 작성
           </span>
           <select
             value={postType}
             onChange={(e) => setPostType(e.target.value as PostType)}
-            className="min-w-[118px] h-[26px] px-6 py-1.5 rounded-lg border border-black/20 bg-white/40 text-[#0A0A0A]"
+            className="px-6 py-1.5 rounded-lg border border-black/20 bg-white/40 text-[#0A0A0A]"
           >
             <option value="prompt">프롬프트</option>
             <option value="free">자유</option>
@@ -55,7 +56,12 @@ export default function Page() {
           </div>
         </div>
 
-        <div className="flex justify-center">텍스트/이미지</div>
+        <div className="flex p-0.5 bg-[#248AFF]/20">
+          <button className="cursor-pointer py-1 px-3 leading-none rounded-lg bg-white">
+            텍스트
+          </button>
+          <button>이미지</button>
+        </div>
 
         <div className="grid bg-white/40 shadow-lg rounded-xl p-6">
           <div className="flex justify-between">
@@ -80,7 +86,7 @@ export default function Page() {
           <p className="font-semibold text-[20px]">자가진단 문항</p>
           <div className="grid ml-20">
             <div className="flex items-center">
-              <M3Checkbox checked />
+              <M3Checkbox />
               <p>
                 프롬프트를 올리기 전에 프롬프트의 성능을 충분히 검증하였나요?
               </p>
@@ -103,6 +109,6 @@ export default function Page() {
           </button>
         </div>
       </div>
-    </div>
+    </>
   );
 }

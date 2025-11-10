@@ -81,9 +81,9 @@ export default function PostDetail({
               <div className="w-11 h-11 bg-gray-300 rounded-full"></div>
               {/* 이름, 이메일, 작성 시간?날짜? */}
               <div className="space-y-1 leading-none">
-                <p>{post.author}</p>
+                <p>{post.id}</p>
                 <p className="text-[#717182] text-sm">
-                  {post.email} · {post.createdAt.slice(0, 10)}
+                  {post.email} · {post.created_at.slice(0, 10)}
                 </p>
               </div>
             </div>
@@ -101,7 +101,8 @@ export default function PostDetail({
           <div className="my-5">
             {/* 제목 */}
             <div className="mb-6 space-y-4">
-              <div className="text-[18px]">{post.title}</div>
+              <p className="text-[18px] font-medium">{post.title}</p>
+              <p>{post.content}</p>
             </div>
             {/* 썸네일(이미지) */}
             {post.image && (
@@ -117,7 +118,7 @@ export default function PostDetail({
           {/* 태그들 */}
           <div className="space-x-2 text-sm text-[#248AFF]">
             {post.hashtags.map((tag, i) => (
-              <span key={i}>{tag}</span>
+              <span key={i}>#{tag}</span>
             ))}
           </div>
         </div>
@@ -126,13 +127,13 @@ export default function PostDetail({
           <button className="cursor-pointer py-1 px-2 rounded-md hover:text-[#FF569B] hover:bg-[#F7E6ED]">
             <div className="flex gap-2 text-sm items-center ">
               <Heart size={18} />
-              <span>{post.likes}</span>
+              <span>{post.like_count}</span>
             </div>
           </button>
           <button className="cursor-pointer py-1 px-2 rounded-md hover:bg-gray-200">
             <div className="flex gap-2 text-sm items-center">
               <MessageSquare size={18} />
-              <span>{post.comments}</span>
+              <span>{post.comment_count}</span>
             </div>
           </button>
           <button
@@ -153,7 +154,7 @@ export default function PostDetail({
               {/* 이름, 이메일, 작성 시간?날짜? */}
               <div className="flex-1 space-y-1 leading-none">
                 <p>
-                  {post.author}
+                  {post.user_id}
                   <span className="text-[#717182] text-sm ml-1">
                     {post.email}
                   </span>

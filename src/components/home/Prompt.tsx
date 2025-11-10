@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Gemini from "./prompt/Gemini";
 import Gpt from "./prompt/Gpt";
-import ModelToggle from "./ModelToggle";
+import ModelToggle from "./post/ModelToggle";
 
 type PromptModel = "GPT" | "Gemini";
 
@@ -13,9 +13,7 @@ export default function Prompt({ data }: { data: Post[] }) {
   const filtered = useMemo(
     () =>
       data.filter(
-        (post) =>
-          post.type === "prompt" &&
-          post.model?.toLowerCase() === activeModel.toLowerCase()
+        (post) => post.model?.toLowerCase() === activeModel.toLowerCase()
       ),
     [data, activeModel]
   );

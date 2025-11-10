@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import Image from "next/image"; // Image 임포트 확인
 
 type LatestNews = {
   id: string;
@@ -37,7 +37,6 @@ export default function LatestNewsCarousel({
     // 2. 'active' 또는 'count' 상태가 변경되어 effect가 다시 실행되기 직전에
     //    이전 타이머를 제거합니다.
     return () => clearInterval(interval);
-    
   }, [active, count]); // 'active'가 변경될 때마다 타이머를 리셋합니다.
 
   if (count === 0) return null;
@@ -45,7 +44,7 @@ export default function LatestNewsCarousel({
   return (
     <div
       className="flex-1 relative flex items-center justify-center
-                   perspective-500 overflow-hidden"
+                 perspective-500 overflow-hidden"
       style={{ transformStyle: "preserve-3d" }}
       aria-label="인기 뉴스 캐러셀"
     >
@@ -55,12 +54,12 @@ export default function LatestNewsCarousel({
           // 버튼 클릭 시 setActive가 호출되고,
           // 'active' 상태가 변경되면 위의 useEffect가 리셋됩니다.
           onClick={() => setActive((i) => (i - 1 + count) % count)}
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-30
+          className="cursor-pointer absolute left-5 top-1/2 -translate-y-1/2 z-30
                        w-10 h-10 rounded-full flex items-center justify-center
                        transition-all
-                       bg-white/[.15] backdrop-blur-md 
-                       border border-white/[.25]
-                       shadow-lg hover:bg-white/[.25] hover:shadow-xl"
+                       bg-white/15 backdrop-blur-md 
+                       border border-white/25
+                       shadow-lg hover:bg-white/25 hover:shadow-xl"
           aria-label="이전 뉴스"
         >
           <Image
@@ -74,16 +73,16 @@ export default function LatestNewsCarousel({
       )}
 
       {/* 3D 캐러셀 무대 */}
-      <div className="relative w-[9.375rem] h-[9.125rem]">
+      <div className="relative w-37.5 h-36.5">
         {/* 카드들 */}
         {newsList.map((news, i) => {
           let rawDiff = active - i;
-          
-          if (count > MAX_VISIBILITY) { 
+
+          if (count > MAX_VISIBILITY) {
             if (rawDiff > count / 2) {
-              rawDiff -= count; 
+              rawDiff -= count;
             } else if (rawDiff < -count / 2) {
-              rawDiff += count; 
+              rawDiff += count;
             }
           }
 
@@ -115,23 +114,26 @@ export default function LatestNewsCarousel({
             >
               <Link href={`/news/${news.id}`}>
                 <div
-                  className="group w-full h-full rounded-xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow cursor-pointer border border-gray-100"
+                  className="group w-full h-full rounded-xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow cursor-pointer"
                   style={{
-                    backgroundColor: `hsl(280, 40%, ${
-                      100 - absOffset * 30
-                    }%)`,
+                    backgroundColor: `hsl(280, 40%, ${100 - absOffset * 30}%)`,
                     transition: "all 0.3s ease-out",
                   }}
                 >
                   {/* 썸네일 */}
-                  <div className="w-full h-full bg-gradient-to-br from-blue-100 to-purple-100 relative overflow-hidden">
+                  <div className="w-full h-full bg-linear-to-br from-blue-100 to-purple-100 relative overflow-hidden">
                     {news.images?.[0] ? (
-                      <img
+                      // ============= [수정됨] =============
+                      <Image
                         src={news.images[0]}
                         alt={news.title}
-                        className="w-full h-full object-cover"
+                        fill // 1. fill 속성 사용
+                        className="object-cover" // 2. w-full, h-full 제거
                         loading="lazy"
+                        // 3. (권장) fill 사용 시 sizes 추가
+                        sizes="10vw" 
                       />
+                      // ====================================
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-400">
                         <svg
@@ -156,16 +158,25 @@ export default function LatestNewsCarousel({
                     </div>
 
                     {/* 마우스 호버 시 뉴스 타이틀 표시 */}
-                    <div
-                      className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent
-                                   opacity-0 group-hover:opacity-100
-                                   translate-y-2 group-hover:translate-y-0
-                                   transition-all duration-300 ease-in-out"
+                    {/* <div
+                      className="absolute bottom-0 left-0 right-0 p-3 bg-linear-to-t from-black/80 to-transparent
+                                 opacity-0 group-hover:opacity-100
+                                 translate-y-2 group-hover:translate-y-0
+                                 transition-all duration-300 ease-in-out"
                     >
                       <p className="text-white text-xs font-semibold line-clamp-2">
                         {news.title}
                       </p>
-                    </div>
+                    </div> */}  
+                  {/* 뉴스 타이틀 표시 */}
+                  <div
+                    className="absolute bottom-0 left-0 right-0 p-3 bg-linear-to-t from-black/80 to-transparent
+                               transition-all duration-300 ease-in-out"
+                  >
+                    <p className="text-white text-xs font-semibold line-clamp-2">
+                      {news.title}
+                    </p>
+                  </div>
                   </div>
                 </div>
               </Link>
@@ -180,12 +191,12 @@ export default function LatestNewsCarousel({
           // 버튼 클릭 시 setActive가 호출되고,
           // 'active' 상태가 변경되면 위의 useEffect가 리셋됩니다.
           onClick={() => setActive((i) => (i + 1) % count)}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-30
+          className="cursor-pointer absolute right-5 top-1/2 -translate-y-1/2 z-30
                        w-10 h-10 rounded-full flex items-center justify-center
                        transition-all
-                       bg-white/[.15] backdrop-blur-md 
-                       border border-white/[.25]
-                       shadow-lg hover:bg-white/[.25] hover:shadow-xl"
+                       bg-white/15 backdrop-blur-md 
+                       border border-white/25
+                       shadow-lg hover:bg-white/25 hover:shadow-xl"
           aria-label="다음 뉴스"
         >
           <Image

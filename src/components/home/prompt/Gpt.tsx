@@ -1,5 +1,5 @@
-import NoPosts from "../NoPosts";
-import Post from "../Post";
+import NoPosts from "../post/NoPosts";
+import Post from "../post/Post";
 
 export default function Gpt({ data }: { data: Post[] }) {
   if (!data || data.length === 0) {
