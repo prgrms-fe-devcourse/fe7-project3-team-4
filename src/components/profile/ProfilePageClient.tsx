@@ -113,7 +113,7 @@ const MOCKUP_POSTS: Post[] = [
   },
 ];
 
-export default function ProfileClient() {
+export default function ProfilePageClient() {
   const [isEditOpen, setIsEditOpen] = useState(false);
 
   return (
