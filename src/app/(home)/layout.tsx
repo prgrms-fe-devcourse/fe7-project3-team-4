@@ -5,11 +5,6 @@ import RightSidebar from "@/components/sidebar/Right/RightSidebar";
 import { NewsFeedProvider } from "@/context/NewsFeedContext";
 import "react-loading-skeleton/dist/skeleton.css";
 
-export const metadata = {
-  title: "ALGO | AI PROMPT",
-  description: "ALGO | AI PROMPT",
-};
-
 export default function RootLayout({
   children,
 }: {
