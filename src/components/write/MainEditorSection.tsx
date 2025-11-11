@@ -1,9 +1,9 @@
 "use client";
 
 import { Hashtag } from "@/types";
-import { Image as X } from "lucide-react";
+import { X } from "lucide-react";
 import Image from "next/image";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useRef, useState } from "react";
 
 export function MainEditorSection({ hashtags }: { hashtags: Hashtag[] }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -11,19 +11,25 @@ export function MainEditorSection({ hashtags }: { hashtags: Hashtag[] }) {
     []
   );
 
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const handleImgFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
 
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
   };
 
   const removeImgFile = () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const toggleHashtag = (name: Hashtag["name"]) => {
@@ -39,6 +45,17 @@ export function MainEditorSection({ hashtags }: { hashtags: Hashtag[] }) {
         name="title"
         placeholder="제목"
         className="placeholder-[#A8A8A8] border border-[#D9D9D9] rounded-lg pl-4 py-1.5 outline-none"
+      />
+
+      {/* 파일 input: 항상 존재 */}
+      <input
+        ref={fileInputRef}
+        id="writeImg"
+        accept="image/*"
+        className="hidden"
+        type="file"
+        name="mainImage"
+        onChange={handleImgFileUpload}
       />
 
       <div className="relative flex flex-col items-center py-8 rounded-lg bg-[#D9D9D9]/20 border border-dashed border-[#D9D9D9]">
@@ -63,14 +80,6 @@ export function MainEditorSection({ hashtags }: { hashtags: Hashtag[] }) {
           </>
         ) : (
           <>
-            <input
-              id="writeImg"
-              accept="image/*"
-              className="hidden"
-              type="file"
-              name="mainImage"
-              onChange={handleImgFileUpload}
-            />
             <p className="text-[#404040] mb-4">Upload image</p>
             <label
               htmlFor="writeImg"

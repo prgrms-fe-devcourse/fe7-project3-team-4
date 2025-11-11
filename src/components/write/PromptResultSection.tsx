@@ -2,13 +2,15 @@
 
 import { X } from "lucide-react";
 import Image from "next/image";
-import { useState, ChangeEvent, useId } from "react";
+import { useState, ChangeEvent, useId, useRef } from "react";
 
 export function PromptResultSection() {
   const inputId = useId();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [resultMode, setResultMode] = useState<ResultMode>("text");
   const [model, setModel] = useState<ModelType>("GPT");
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleImgFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -19,10 +21,12 @@ export function PromptResultSection() {
   };
 
   const removeImgFile = () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   return (
