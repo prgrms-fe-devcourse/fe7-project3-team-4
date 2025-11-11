@@ -7,17 +7,12 @@ import { MainEditorSection } from "./MainEditorSection";
 import { PromptResultSection } from "./PromptResultSection";
 import { SelfCheckList } from "./SelfCheckList";
 import { createClient } from "@/utils/supabase/client";
-import { Hashtag } from "@/types";
 import type { FormEvent } from "react";
-
-/** 스토리지 업로드용 */
-async function uploadPostImage(file: File): Promise<string> {
-  return "";
-}
-
-async function uploadPromptResultImage(file: File): Promise<string> {
-  return "";
-}
+import {
+  uploadPostMainImage,
+  uploadPromptResultImage,
+} from "@/utils/supabase/storage/posts";
+import { Hashtag } from "@/types";
 
 export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
   const [postType, setPostType] = useState<PostType>("prompt");
@@ -36,16 +31,24 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
     const formData = new FormData(form);
 
     try {
+      console.log("[WritePostForm] submit start");
+
       const {
         data: { user },
+        error: userError,
       } = await supabase.auth.getUser();
+
+      if (userError) {
+        console.error("[WritePostForm] getUser error", userError);
+      }
+
       if (!user) {
         alert("로그인 후 이용 가능합니다.");
         router.push("/auth/login");
         return;
       }
 
-      const type = (formData.get("postType") as PostType) ?? postType;
+      const type = (formData.get("postType") as PostType) || postType;
       const title = (formData.get("title") as string)?.trim();
       const content = (formData.get("content") as string)?.trim();
       const rawHashtags = (formData.get("hashtags") as string) || "";
@@ -56,21 +59,34 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
 
       const mainImageFile = formData.get("mainImage") as File | null;
 
+      console.log("[WritePostForm] parsed:", {
+        type,
+        title,
+        content,
+        selectedHashtags,
+        hasMainImage: !!mainImageFile,
+      });
+
       if (!title || !content) {
         alert("제목과 내용을 입력해주세요.");
-        setIsSubmitting(false);
         return;
       }
 
       const isPromptLikePost = type === "prompt" || type === "weekly";
 
-      // 3. 대표 이미지 업로드
+      // 대표 이미지 업로드
       let mainImageUrl: string | null = null;
       if (mainImageFile && mainImageFile.size > 0) {
-        mainImageUrl = await uploadPostImage(mainImageFile);
+        console.log("[WritePostForm] uploading main image");
+        mainImageUrl = await uploadPostMainImage(
+          supabase,
+          user.id,
+          mainImageFile
+        );
+        console.log("[WritePostForm] main image url:", mainImageUrl);
       }
 
-      // 4. 프롬프트 관련 필드
+      // 프롬프트 관련
       let resultMode: ResultMode | null = null;
       let model: ModelType | null = null;
       let promptInput: string | null = null;
@@ -81,6 +97,7 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
       if (isPromptLikePost) {
         resultMode = formData.get("resultMode") as ResultMode;
         model = formData.get("model") as ModelType;
+
         promptInput =
           ((formData.get("promptInput") as string) || "").trim() || null;
         resultLink =
@@ -95,17 +112,28 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
           const resultImgFile = formData.get(
             "promptResultImage"
           ) as File | null;
+
           if (resultImgFile && resultImgFile.size > 0) {
-            promptResultImageUrl = await uploadPromptResultImage(resultImgFile);
+            console.log("[WritePostForm] uploading prompt result image");
+            promptResultImageUrl = await uploadPromptResultImage(
+              supabase,
+              user.id,
+              resultImgFile
+            );
+            console.log(
+              "[WritePostForm] prompt result image url:",
+              promptResultImageUrl
+            );
           }
         }
       }
 
-      // 5. Supabase 추가
+      console.log("[WritePostForm] inserting post row");
+
       const { data, error } = await supabase
         .from("posts")
         .insert({
-          user_id: user?.id,
+          user_id: user.id,
           post_type: type,
           title,
           content: {
@@ -125,14 +153,15 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
         .single();
 
       if (error) {
-        console.log(error);
+        console.error("[WritePostForm] insert error", error);
         alert("게시글 등록에 실패했습니다.");
         return;
       }
 
+      console.log("[WritePostForm] insert success", data);
       router.push(`/?type=${data.post_type}&id=${data.id}`);
     } catch (err) {
-      console.log(err);
+      console.error("[WritePostForm] catch error", err);
       alert("알 수 없는 오류가 발생했습니다.");
     } finally {
       setIsSubmitting(false);
@@ -142,16 +171,13 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-10">
       <PostTypeSelect postType={postType} onChange={setPostType} />
-
       <MainEditorSection hashtags={hashtags} />
-
       {isPromptLike && (
         <>
           <PromptResultSection />
           <SelfCheckList />
         </>
       )}
-
       <div className="flex justify-center mb-10">
         <button
           type="submit"
