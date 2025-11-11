@@ -56,12 +56,10 @@ export default function Post({
             )}
           </div>
           {/* 중간: 제목, 텍스트 미리보기 */}
-          <div className="my-5">
-            <h3 className="text-[18px] font-semibold hover:underline">
-              {data.title}
-            </h3>
+          <div className="my-5 space-y-4">
+            <h3 className="text-[18px] font-semibold">{data.title}</h3>
             {/* 텍스트 미리보기 (이미지 제외, 3줄 제한) */}
-            <div className="line-clamp-3 text-gray-700">
+            <div className="line-clamp-3 text-gray-700 mb-6">
               <RichTextRenderer content={data.content} showImage={false} />
             </div>
             {/* 이미지 렌더링 - 이미지가 있을 때만 표시 */}
