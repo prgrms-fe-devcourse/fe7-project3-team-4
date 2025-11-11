@@ -15,3 +15,5 @@ type Post = {
   model?: "GPT" | "Gemini" | "텍스트" | "이미지";
   isBookmarked?: boolean;
 };
+
+type WeeklyModel = "텍스트" | "이미지";

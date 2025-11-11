@@ -95,7 +95,7 @@ export function ProfileHeader({
         className="group absolute top-0 left-6 z-10 w-24 h-24 rounded-full bg-gray-300 border-2 flex items-center justify-center border-white hover:bg-black/60 cursor-pointer"
         onClick={onAvatarClick}
       >
-      {profile?.avatar_url ? (
+        {profile?.avatar_url ? (
           <Image
             src={profile.avatar_url}
             alt="프로필 이미지"
@@ -114,7 +114,7 @@ export function ProfileHeader({
       </div>
 
       {/* 프로필 정보 박스 */}
-      <div className="bg-white/40 border-white/20 rounded-xl shadow-xl">
+      <div className="bg-white/40 border border-white/20 rounded-xl shadow-xl">
         <div className="px-6 pb-6 pt-3">
           <div className="w-full flex justify-end mb-8">
             <button
