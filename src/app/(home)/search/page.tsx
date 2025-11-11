@@ -1,106 +1,148 @@
 import NoPosts from "@/components/home/post/NoPosts";
-import Post from "@/components/home/post/Post"; // [수정] Post 컴포넌트만 가져옵니다.
+import Post from "@/components/home/post/Post";
 import FormClient from "@/components/home/search/FormClient";
 import { createClient } from "@/utils/supabase/server";
-import { Json } from "@/utils/supabase/supabase";
 import Link from "next/link";
 
-// [삭제] MOCKUP_DATA 변수 전체를 삭제합니다.
+const MOCKUP_DATA: Post[] = [
+  // [수정] 'news' 타입 Mock 데이터는 제거해도 됩니다 (ID: 1, 2, 9).
+  // 여기서는 편의상 그대로 두되, 'all' 탭에서만 사용합니다.
 
-// [추가] Tiptap/ProseMirror JSON 구조를 위한 타입 (간소화)
-// 실제 Tiptap/Prosemirror 타입 정의를 사용하고 있다면 대체해도 됩니다.
-type TiptapNode = {
-  type: string;
-  content?: TiptapNode[];
-  text?: string;
-  attrs?: {
-    src?: string;
-    [key: string]: string | undefined;
-  };
-};
+  {
+    id: "1",
+    comment_count: 5,
+    content:
+      "const [state, setState] = useState(initialState);\n// React에서 상태를 관리하는 가장 기본적인 방법입니다.\n// ... (더 많은 예시 코드)",
+    created_at: "2025-11-01T10:00:00Z",
+    updated_at: "2025-11-01T12:30:00Z",
+    like_count: 15,
+    post_type: "prompt",
+    title: "React state 관리 마스터 프롬프트",
+    user_id: "user_abc_123",
+    view_count: 102,
+    email: "react_master@example.com",
+    image:
+      "https://cdn.pixabay.com/photo/2025/11/05/20/57/monastery-9939590_1280.jpg",
+    hashtags: ["develop", "script", "education"],
+    isBookmarked: true,
+    model: "GPT",
+  },
+  {
+    id: "2",
+    comment_count: 2,
+    content:
+      "Next.js 14 버전에서 ISR을 설정하는 방법입니다. revalidate 옵션을 사용하세요...",
+    created_at: "2025-11-02T14:20:00Z",
+    like_count: 8,
+    post_type: "free",
+    title: "Next.js ISR 질문 있습니다.",
+    user_id: "user_def_456",
+    view_count: 55,
+    email: "next_fan@example.com",
+    hashtags: ["develop", "education"],
+    isBookmarked: false,
+    model: "Gemini",
+  },
+  {
+    id: "3",
+    comment_count: 10,
+    content:
+      "가장 효율적인 피보나치 수열 알고리즘을 작성하는 챌린지입니다. 재귀, DP, 반복문 등 다양한 방법을 시도해보세요.",
+    created_at: "2025-11-03T09:00:00Z",
+    like_count: 25,
+    post_type: "weekly",
+    title: "챌린지: 피보나치 수열 최적화",
+    user_id: "user_ghi_789",
+    view_count: 230,
+    email: "algo_king@example.com",
+    image:
+      "https://cdn.pixabay.com/photo/2025/11/05/20/57/monastery-9939590_1280.jpg",
+    hashtags: ["develop", "education", "script"],
+    isBookmarked: true,
+  },
+  {
+    id: "4",
+    comment_count: 0,
+    content:
+      "Gemini API를 사용하여 실시간 번역 기능을 구현하는 프롬프트를 공유합니다. 'Translate this text to [Language]: [Text]'...",
+    created_at: "2025-11-04T11:00:00Z",
+    like_count: 12,
+    post_type: "prompt",
+    title: "Gemini 실시간 번역 프롬프트",
+    user_id: "user_jkl_101",
+    view_count: 80,
+    email: "gemini_dev@example.com",
+    hashtags: ["script", "develop", "content"],
+    isBookmarked: false,
+    model: "Gemini",
+  },
+  {
+    id: "5",
+    comment_count: 3,
+    content:
+      "Supabase RLS 설정하다가 막혔는데, authenticated 유저에게만 'select' 권한을 주려면 어떻게 해야 하나요?",
+    created_at: "2025-11-05T16:45:00Z",
+    like_count: 4,
+    post_type: "free",
+    title: "Supabase RLS 관련 질문",
+    user_id: "user_mno_202",
+    view_count: 60,
+    email: "supabase_newbie@example.com",
+    hashtags: ["develop"],
+    isBookmarked: false,
+  },
+  {
+    id: "6",
+    comment_count: 7,
+    content:
+      "'당신은 10년차 시니어 개발자입니다. 주니어 개발자의 코드 리뷰를 도와주세요.' 이 프롬프트 하나면 코드 퀄리티가 달라집니다.",
+    created_at: "2025-11-06T08:30:00Z",
+    like_count: 30,
+    post_type: "prompt",
+    title: "코드 리뷰 효율 올려주는 GPT 페르소나",
+    user_id: "user_pqr_303",
+    view_count: 175,
+    email: "senior_dev@example.com",
+    image:
+      "https://cdn.pixabay.com/photo/2024/09/28/20/09/city-9082149_640.jpg",
+    hashtags: ["script", "develop", "education"],
+    isBookmarked: true,
+    model: "GPT",
+  },
+  {
+    id: "7",
+    comment_count: 1,
+    content:
+      "Tailwind CSS로 다크 모드 구현하는 가장 쉬운 방법은 무엇일까요? `dark:` 클래스를 사용하는 것 외에 팁이 있나요?",
+    created_at: "2025-11-07T13:10:00Z",
+    updated_at: "2025-11-07T13:15:00Z",
+    like_count: 6,
+    post_type: "free",
+    title: "Tailwind 다크 모드 질문",
+    user_id: "user_stu_404",
+    view_count: 45,
+    email: "css_lover@example.com",
+    hashtags: ["develop", "script", "art"],
+    isBookmarked: false,
+  },
+  {
+    id: "8",
+    comment_count: 15,
+    content:
+      "주어진 이미지 URL을 분석하여 이미지의 주요 색상 팔레트를 JSON 형태로 반환하는 AI 프롬프트를 작성해보세요.",
+    created_at: "2025-11-08T10:00:00Z",
+    like_count: 22,
+    post_type: "weekly",
+    title: "챌린지: 이미지 색상 추출 프롬프트",
+    user_id: "user_vwx_505",
+    view_count: 190,
+    email: "design_ai@example.com",
+    hashtags: ["develop", "education", "script", "art"],
+    isBookmarked: true,
+    model: "Gemini",
+  },
+];
 
-// [추가] content(jsonb)에서 텍스트만 추출하는 헬퍼 함수
-// [가정] Tiptap/Prosemirror 구조라고 가정합니다.
-const extractTextFromContent = (content: Json | null): string => {
-  if (
-    !content ||
-    typeof content !== "object" ||
-    !("content" in content) ||
-    !Array.isArray(content.content)
-  ) {
-    return ""; // 혹은 "내용 없음"
-  }
-
-  let text = "";
-  const nodes = content.content as TiptapNode[];
-
-  function traverse(nodes: TiptapNode[]) {
-    for (const node of nodes) {
-      if (node.type === "text" && node.text) {
-        text += node.text + " "; // 텍스트 노드 순회
-      }
-      // paragraph, codeBlock 등 하위 content를 가진 노드들을 재귀적으로 순회
-      if (node.content && Array.isArray(node.content)) {
-        traverse(node.content);
-      }
-    }
-  }
-
-  traverse(nodes);
-  return text.trim(); // "React에서 상태를 관리하는..."
-};
-
-// [추가] content(jsonb)에서 첫 번째 이미지 URL을 추출하는 헬퍼 함수
-// [가정] Tiptap/Prosemirror 구조라고 가정합니다.
-const extractImageFromContent = (content: Json | null): string | undefined => {
-  if (
-    !content ||
-    typeof content !== "object" ||
-    !("content" in content) ||
-    !Array.isArray(content.content)
-  ) {
-    return undefined;
-  }
-
-  const nodes = content.content as TiptapNode[];
-
-  function findImage(nodes: TiptapNode[]): string | undefined {
-    for (const node of nodes) {
-      if (node.type === "image" && node.attrs?.src) {
-        return node.attrs.src; // 이미지 노드의 src 반환
-      }
-      if (node.content && Array.isArray(node.content)) {
-        const found = findImage(node.content);
-        if (found) return found; // 하위 노드에서 찾으면 즉시 반환
-      }
-    }
-    return undefined;
-  }
-
-  return findImage(nodes);
-};
-
-// [추가] Supabase 데이터 변환 후의 Post 타입 (Mock 데이터 구조와 일치)
-// "@/components/home/post/Post"에서 export type Post가 있다면 그걸 사용해도 됩니다.
-type ProcessedPost = {
-  id: string;
-  comment_count: number;
-  content: string; // 텍스트로 변환된 content
-  created_at: string;
-  updated_at?: string;
-  like_count: number;
-  post_type: "prompt" | "free" | "weekly";
-  title: string;
-  user_id: string;
-  view_count: number;
-  email: string;
-  image?: string; // 이미지 URL (선택적)
-  hashtags: string[];
-  isBookmarked: boolean;
-  model?: string;
-};
-
-// --- 기존 상수 ---
 const TAG_LABEL_MAP: Record<string, string> = {
   education: "교육",
   writing: "글쓰기",
@@ -121,7 +163,6 @@ const SECTION_TITLE_MAP: Record<"prompt" | "free" | "weekly", string> = {
   free: "자유",
   weekly: "주간",
 };
-// --- ---
 
 export default async function Page({
   searchParams,
@@ -136,102 +177,27 @@ export default async function Page({
   const searchTerm = q?.toLowerCase() ?? "";
   const tagTerm = tag?.toLowerCase() ?? "";
 
-  // [추가] 현재 사용자 정보 가져오기 (북마크 확인용)
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const searchedPosts = MOCKUP_DATA.filter(
+    (post) =>
+      post.title.toLowerCase().includes(searchTerm) || // 제목에서 검색
+      post.content.toLowerCase().includes(searchTerm) // 내용에서 검색 (필요에 따라 추가)
+  );
 
-  // [추가] Supabase 쿼리 빌더 시작
-  let query = supabase
-    .from("posts")
-    .select(
-      `
-      *,
-      user_id ( email ),
-      user_post_bookmarks ( user_id, post_id )
-    `
-    )
-    .neq("post_type", "news") // 'news' 타입 제외 (Mock 데이터 주석 참고)
-    .order("created_at", { ascending: false });
+  const filteredPosts = tagTerm
+    ? searchedPosts.filter((post) =>
+        post.hashtags.some((hashtag) => hashtag.toLowerCase() === tagTerm)
+      )
+    : searchedPosts;
 
-  // [추가] 북마크 필터링: 현재 유저 ID로 user_post_bookmarks를 필터링
-  // RLS(정책)가 이미 user_id 기반으로 user_post_bookmarks를 필터링한다면
-  // 이 .eq() 조건은 생략하고, map 로직에서 length만 체크해도 됩니다.
-  // 여기서는 명시적으로 RLS가 없다고 가정하고 JS에서 필터링합니다.
-  if (user) {
-    query = query.eq("user_post_bookmarks.user_id", user.id);
-  }
-
-  // [추가] 검색어(q) 필터링
-  if (searchTerm) {
-    // title 또는 content(jsonb를 text로 변환)에서 검색
-    query = query.or(
-      `title.ilike.%${searchTerm}%,content::text.ilike.%${searchTerm}%`
-    );
-  }
-
-  // [추가] 태그(tag) 필터링
-  if (tagTerm) {
-    // hashtags 배열(hashtag_type[])이 tagTerm을 포함하는지 확인
-    query = query.contains("hashtags", [tagTerm]);
-  }
-
-  // [추가] 쿼리 실행
-  const { data: supabasePosts, error } = await query;
-
-  // [수정] 해시태그 데이터 가져오기 (기존 코드)
   const { data: tagData } = await supabase.from("hashtags").select("*");
-  if (!tagData) return null; // tagData가 없으면 UI가 깨질 수 있으므로 null 반환
+  if (!tagData) return null;
 
-  // [추가] 쿼리 에러 처리
-  if (error || !supabasePosts) {
-    console.error("Error fetching posts:", error);
-    // TODO: 사용자에게 보여줄 에러 컴포넌트
-    return <p className="p-6">게시물을 불러오는 데 실패했습니다.</p>;
-  }
-
-  // [추가] Supabase 데이터를 컴포넌트 Props 타입(ProcessedPost)으로 변환
-  const processedPosts: ProcessedPost[] = supabasePosts.map((post) => {
-    // profiles는 객체 (1:N 관계의 N쪽에서 select)
-    const email = post.user_id?.email;
-
-    // user_post_bookmarks는 배열. 길이가 0보다 크면 북마크한 것.
-    // (위에서 user.id로 .eq() 필터링을 했기 때문)
-    const isBookmarked = (post.user_post_bookmarks?.length ?? 0) > 0;
-
-    return {
-      // DB에서 직접 가져오는 필드들
-      id: post.id,
-      user_id: post.user_id ?? "unknown_user",
-      title: post.title ?? "제목 없음",
-      // post_type이 'news'가 아님은 위에서 필터링함
-      post_type: post.post_type as "prompt" | "free" | "weekly",
-      model: post.model ?? undefined,
-      hashtags: (post.hashtags as string[]) ?? [], // DB의 hashtag_type[]을 string[]로
-      like_count: post.like_count ?? 0,
-      comment_count: post.comment_count ?? 0,
-      view_count: post.view_count ?? 0,
-      created_at: post.created_at ?? new Date().toISOString(),
-      updated_at: post.updated_at ?? undefined,
-
-      // Join 또는 헬퍼 함수로 가공하는 필드들
-      email: email ?? "unknown@example.com",
-      isBookmarked: isBookmarked,
-      content: extractTextFromContent(post.content), // [중요] 헬퍼 함수 사용
-      image: extractImageFromContent(post.content), // [중요] 헬퍼 함수 사용
-    };
-  });
-
-  // [삭제] 기존 searchedPosts, filteredPosts 로직을 삭제합니다.
-
-  // [수정] processedPosts를 사용하여 타입별로 분류
   const postsByType = {
-    prompt: processedPosts.filter((post) => post.post_type === "prompt"),
-    free: processedPosts.filter((post) => post.post_type === "free"),
-    weekly: processedPosts.filter((post) => post.post_type === "weekly"),
+    prompt: filteredPosts.filter((post) => post.post_type === "prompt"),
+    free: filteredPosts.filter((post) => post.post_type === "free"),
+    weekly: filteredPosts.filter((post) => post.post_type === "weekly"),
   };
 
-  // --- 기존 Return JSX (수정 없음) ---
   return (
     <>
       {/* 검색 입력 창 */}
@@ -242,12 +208,10 @@ export default async function Page({
         <div className="flex gap-2.5 flex-wrap">
           <Link
             href={searchTerm ? `?q=${searchTerm}` : "/search"}
-            className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg
-              ${
-                !tagTerm
-                  ? "bg-[#9787ff] font-bold text-white"
-                  : "hover:bg-[#ECE9FF]"
-              }`} // tagTerm이 없을 때 "활성화"
+            className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg 
+       ${
+         !tagTerm ? "bg-[#9787ff] font-bold text-white" : "hover:bg-[#ECE9FF]"
+       }`} // tagTerm이 없을 때 "활성화"
           >
             #전체
           </Link>
@@ -257,25 +221,20 @@ export default async function Page({
             // 현재 URL의 tagTerm과 이 태그의 이름이 같은지 확인 (활성 상태)
             const isActive = tagTerm === tag.name.toLowerCase();
 
-            // [수정] 링크 URL 생성 로직 수정 (기존 코드 오류 수정)
-            const params = new URLSearchParams();
+            const params = new URLSearchParams(); // 링크 URL 동적으로 생성
+            params.set("tag", tag.name); // 'tag'를 설정
+            //'searchTerm'이 있다면 URL에 보존
             if (searchTerm) {
               params.set("q", searchTerm);
             }
-            // 'tag'는 현재 태그로 설정
-            params.set("tag", tag.name.toLowerCase());
-
             return (
               <Link
                 key={tag.id}
-                // [수정] href 동적 생성
-                href={`/search?${params.toString()}`}
-                className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg
-                  ${
-                    isActive
-                      ? "bg-[#9787ff] font-bold text-white"
-                      : "hover:bg-[#ECE9FF]"
-                  }`}
+                href={`?tag=${tag.name}`}
+                className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg 
+         ${
+           isActive ? "bg-[#9787ff] font-bold text-white" : "hover:bg-[#ECE9FF]"
+         }`}
               >
                 #{label}
               </Link>
@@ -296,7 +255,6 @@ export default async function Page({
               {posts.length > 0 ? (
                 <div className="space-y-8 pb-6">
                   {posts.map((post) => (
-                    // [수정] data props에 ProcessedPost 타입 전달
                     <Post key={post.id} data={post} />
                   ))}
                 </div>
