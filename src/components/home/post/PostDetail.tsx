@@ -5,6 +5,7 @@ import { PostType } from "@/types/Post";
 import Image from "next/image";
 import CommentForm from "./CommentForm";
 import PostActions from "./PostAction";
+import PromptDetail from "./PromptDetail";
 
 export const MOCK_COMMENTS: PostComment[] = [
   // ... 기존 MOCK_COMMENTS 내용 ...
@@ -78,9 +79,9 @@ export default function PostDetail({
             )}
           </div>
           {/* 게시글 내용 */}
-          <div className="my-5">
+          <div className="mt-5">
             {/* 제목 */}
-            <div className="mb-6 space-y-4">
+            <div className="space-y-4">
               <p className="text-[18px] font-semibold">{post.title}</p>
               {/* 전체 콘텐츠 렌더링 (텍스트 + 이미지 모두) */}
               <div className="mt-4 space-y-6">
@@ -94,17 +95,17 @@ export default function PostDetail({
               </div>
             </div>
           </div>
+          {/* 프롬프트 or 주간 챌린지 */}
+          <PromptDetail />
           {/* 태그들 */}
           {post.hashtags && post.hashtags.length > 0 && (
-            <div className="flex flex-row flex-wrap gap-2 text-sm text-[#248AFF]">
+            <div className="flex flex-row flex-wrap gap-2 mt-5 text-sm text-[#248AFF]">
               {post.hashtags.map((tag, i) => (
                 <span key={i}>{tag.startsWith("#") ? tag : `#${tag}`}</span>
               ))}
             </div>
           )}
         </div>
-        {/* 프롬프트 or 주간 챌린지 */}
-        <div></div>
         {/* 액션 버튼 */}
         <PostActions
           postId={post.id}
