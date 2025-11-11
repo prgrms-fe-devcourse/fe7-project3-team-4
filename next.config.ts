@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+
 const nextConfig: NextConfig = {
   reactCompiler: true,
   images: {
@@ -63,9 +64,23 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "drdoamgazuhwktmqfoxb.supabase.co",
+        port: "",
+        pathname: "/**",
+      },
+      // ✅ Naver 이미지 허용
+      {
+        protocol: "https",
+        hostname: "search.pstatic.net",
+        port: "",
+        pathname: "/**",
+      },
     ],
     unoptimized: process.env.NODE_ENV === "development",
   },
   reactStrictMode: false,
 };
+
 export default nextConfig;
