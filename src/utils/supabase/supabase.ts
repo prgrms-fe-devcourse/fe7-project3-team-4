@@ -43,30 +43,39 @@ export type Database = {
         Row: {
           content: string | null
           created_at: string | null
+          has_reply: boolean
           id: string
           like_count: number | null
           parent_id: string | null
           reply_count: number | null
-          target_id: string
-          target_type: Database["public"]["Enums"]["target_type_enum"]
+          target_id: string | null
+          target_type: Database["public"]["Enums"]["target_type_enum"] | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
+          content?: string | null
           created_at?: string | null
+          has_reply?: boolean
           id?: string
+          like_count?: number | null
           parent_id?: string | null
-          target_id: string
-          target_type: Database["public"]["Enums"]["target_type_enum"]
+          reply_count?: number | null
+          target_id?: string | null
+          target_type?: Database["public"]["Enums"]["target_type_enum"] | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
+          content?: string | null
           created_at?: string | null
+          has_reply?: boolean
           id?: string
+          like_count?: number | null
           parent_id?: string | null
-          target_id?: string
-          target_type?: Database["public"]["Enums"]["target_type_enum"]
+          reply_count?: number | null
+          target_id?: string | null
+          target_type?: Database["public"]["Enums"]["target_type_enum"] | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -76,6 +85,13 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
             referencedColumns: ["id"]
           },
           {
@@ -345,8 +361,7 @@ export type Database = {
           comment_count: number | null
           content: Json | null
           created_at: string | null
-          email: string | null
-          hashtags: string[] | null
+          hashtags: Database["public"]["Enums"]["hashtag_type"][] | null
           id: string
           like_count: number | null
           model: string | null
@@ -360,8 +375,7 @@ export type Database = {
           comment_count?: number | null
           content?: Json | null
           created_at?: string | null
-          email?: string | null
-          hashtags?: string[] | null
+          hashtags?: Database["public"]["Enums"]["hashtag_type"][] | null
           id?: string
           like_count?: number | null
           model?: string | null
@@ -375,8 +389,7 @@ export type Database = {
           comment_count?: number | null
           content?: Json | null
           created_at?: string | null
-          email?: string | null
-          hashtags?: string[] | null
+          hashtags?: Database["public"]["Enums"]["hashtag_type"][] | null
           id?: string
           like_count?: number | null
           model?: string | null
@@ -492,21 +505,18 @@ export type Database = {
       user_post_bookmarks: {
         Row: {
           created_at: string | null
-          id: number
-          post_id: string | null
-          user_id: string | null
+          post_id: string
+          user_id: string
         }
         Insert: {
           created_at?: string | null
-          id?: number
-          post_id?: string | null
-          user_id?: string | null
+          post_id: string
+          user_id: string
         }
         Update: {
           created_at?: string | null
-          id?: number
-          post_id?: string | null
-          user_id?: string | null
+          post_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -528,21 +538,18 @@ export type Database = {
       user_post_likes: {
         Row: {
           created_at: string | null
-          id: number
-          post_id: string | null
-          user_id: string | null
+          post_id: string
+          user_id: string
         }
         Insert: {
           created_at?: string | null
-          id?: number
-          post_id?: string | null
-          user_id?: string | null
+          post_id: string
+          user_id: string
         }
         Update: {
           created_at?: string | null
-          id?: number
-          post_id?: string | null
-          user_id?: string | null
+          post_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -575,6 +582,19 @@ export type Database = {
     }
     Enums: {
       comment_target_type: "posts" | "news"
+      hashtag_type:
+        | "education"
+        | "writing"
+        | "business"
+        | "script"
+        | "marketing"
+        | "content"
+        | "research"
+        | "play"
+        | "sns"
+        | "art"
+        | "develop"
+        | "summary"
       notification_target_type:
         | "post"
         | "news"
@@ -716,6 +736,20 @@ export const Constants = {
   public: {
     Enums: {
       comment_target_type: ["posts", "news"],
+      hashtag_type: [
+        "education",
+        "writing",
+        "business",
+        "script",
+        "marketing",
+        "content",
+        "research",
+        "play",
+        "sns",
+        "art",
+        "develop",
+        "summary",
+      ],
       notification_target_type: [
         "post",
         "news",

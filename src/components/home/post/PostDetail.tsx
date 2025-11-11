@@ -2,15 +2,14 @@ import {
   ArrowLeft,
   ArrowUpDown,
   Bookmark,
-  CircleArrowUp,
   Heart,
   MessageSquare,
-  Smile,
 } from "lucide-react";
 import Comments from "./Comments";
 import RichTextRenderer from "@/components/common/RichTextRenderer";
 import { PostType } from "@/types/Post";
 import Image from "next/image";
+import CommentForm from "./CommentForm";
 
 export const MOCK_COMMENTS: PostComment[] = [
   // ... 기존 MOCK_COMMENTS 내용 ...
@@ -147,24 +146,7 @@ export default function PostDetail({
           </div>
         </div>
         {/* 댓글 입력 창 */}
-        <div className="flex items-center gap-2 my-6">
-          <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
-          <form className="flex-1 flex items-center justify-between px-3 py-2 bg-white border-black/10 self-center rounded-lg gap-2">
-            <input
-              type="text"
-              placeholder="댓글을 입력하세요..."
-              className="flex-1 outline-none"
-            />
-            <div className="flex items-center gap-2">
-              <button className="block cursor-pointer text-[#ADA4FF]">
-                <Smile />
-              </button>
-              <button type="submit" className="block cursor-pointer">
-                <CircleArrowUp />
-              </button>
-            </div>
-          </form>
-        </div>
+        <CommentForm postId={post.id} />
         {/* 댓글 영역 */}
         <div className="space-y-5">
           {/* 최신순 인기순 버튼 */}

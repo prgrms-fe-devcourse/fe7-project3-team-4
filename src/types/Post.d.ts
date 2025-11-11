@@ -1,6 +1,4 @@
-// types/Post.ts
 import { Json } from "@/utils/supabase/supabase";
-
 export interface PostType {
   id: string;
   title: string;
@@ -13,16 +11,19 @@ export interface PostType {
   view_count: number;
   isLiked?: boolean;
   isBookmarked?: boolean;
+  model?: string;
+  profiles?: {
+    display_name: string | null;
+    email: string | null;
+    avatar_url?: string | null;
+  };
 }
-
 // WeeklyModel 타입 정의
 export type WeeklyModel = "텍스트" | "이미지";
-
 // WeeklyPostType 예시 (PostType 확장 + 추가 필드)
 export interface WeeklyPostType extends PostType {
   model?: WeeklyModel;
   user_id: string;
-
   // profiles 테이블에서 조회한 데이터
   profiles?: {
     display_name: string | null;
