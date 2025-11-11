@@ -1,8 +1,11 @@
 type PostComment = {
-  id: number;
-  nickname: string;
-  email: string;
+  id: string;
   content: string;
-  createdAt: string;
-  hasReply?: boolean;
+  created_at: string;
+  parent_id?: string | null;
+  updated_at: string | null;
+  //조인으로 가져오는 유저 정보
+  display_name: string | null;
+  email: string;
+  has_reply: boolean;
 };
