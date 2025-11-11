@@ -166,7 +166,26 @@ export default function Page() {
     };
 
     fetchPosts();
-  }, [supabase, sortBy]);
+  const channel = supabase
+    .channel('posts-changes')
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'posts',
+    }, (payload) => {
+      const updatedPost = payload.new as { id: string; comment_count: number; like_count?: number; };
+      setPosts(prev => prev.map(post => 
+        post.id === updatedPost.id 
+          ? { ...post, comment_count: updatedPost.comment_count, like_count: updatedPost.like_count ?? post.like_count }
+          : post
+      ));
+    })
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [supabase, sortBy]);
 
   const postsByType = useMemo(
     () => ({
@@ -373,7 +392,10 @@ export default function Page() {
       </div>
 
       {selectedPost ? (
-        <PostDetail post={selectedPost} onBack={handleBack} />
+        <PostDetail post={selectedPost} onBack={handleBack}   
+        onLikeToggle={handlePostLikeToggle} // ✅ 추가
+        onBookmarkToggle={handlePostBookmarkToggle} // ✅ 추가
+        />
       ) : (
         <>
           <div className="space-y-8 pb-6">

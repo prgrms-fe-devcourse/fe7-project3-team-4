@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       comments: {
@@ -187,32 +162,38 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          user1_id: string | null
-          user2_id: string | null
+          last_message_at: string | null
+          last_message_text: string | null
+          pair_max: string | null
+          pair_min: string | null
         }
         Insert: {
           created_at?: string
           id?: string
-          user1_id?: string | null
-          user2_id?: string | null
+          last_message_at?: string | null
+          last_message_text?: string | null
+          pair_max?: string | null
+          pair_min?: string | null
         }
         Update: {
           created_at?: string
           id?: string
-          user1_id?: string | null
-          user2_id?: string | null
+          last_message_at?: string | null
+          last_message_text?: string | null
+          pair_max?: string | null
+          pair_min?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "message_rooms_user1_id_fkey"
-            columns: ["user1_id"]
+            foreignKeyName: "message_rooms_pair_max_fkey"
+            columns: ["pair_max"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "message_rooms_user2_id_fkey"
-            columns: ["user2_id"]
+            foreignKeyName: "message_rooms_pair_min_fkey"
+            columns: ["pair_min"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -247,15 +228,7 @@ export type Database = {
           room_id?: string
           sender_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "messages_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "message_rooms"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       news: {
         Row: {
@@ -363,6 +336,7 @@ export type Database = {
           created_at: string | null
           hashtags: Database["public"]["Enums"]["hashtag_type"][] | null
           id: string
+          is_prompt_like: boolean | null
           like_count: number | null
           model: string | null
           post_type: string | null
@@ -377,6 +351,7 @@ export type Database = {
           created_at?: string | null
           hashtags?: Database["public"]["Enums"]["hashtag_type"][] | null
           id?: string
+          is_prompt_like?: boolean | null
           like_count?: number | null
           model?: string | null
           post_type?: string | null
@@ -391,6 +366,7 @@ export type Database = {
           created_at?: string | null
           hashtags?: Database["public"]["Enums"]["hashtag_type"][] | null
           id?: string
+          is_prompt_like?: boolean | null
           like_count?: number | null
           model?: string | null
           post_type?: string | null
@@ -574,11 +550,28 @@ export type Database = {
     }
     Functions: {
       decrement_like_count: { Args: { post_id: string }; Returns: undefined }
-      increment_like_count: { Args: { post_id: string }; Returns: undefined }
+      decrement_reply_count: {
+        Args: { p_comment_id: string }
+        Returns: undefined
+      }
+      ensure_direct_room: { Args: { other_user_id: string }; Returns: string }
+      increment_like_count: {
+        Args: { p_comment_id: string }
+        Returns: undefined
+      }
+      increment_post_like: { Args: { p_post_id: string }; Returns: undefined }
+      increment_reply_count: {
+        Args: { p_comment_id: string }
+        Returns: undefined
+      }
       increment_view: { Args: { post_id: string }; Returns: undefined }
       increment_view_count: { Args: { post_id: string }; Returns: undefined }
       news_increment_like: { Args: { p_id: string }; Returns: undefined }
       news_increment_view: { Args: { p_id: string }; Returns: undefined }
+      update_post_comment_count: {
+        Args: { delta: number; post_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       comment_target_type: "posts" | "news"
@@ -730,9 +723,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       comment_target_type: ["posts", "news"],
