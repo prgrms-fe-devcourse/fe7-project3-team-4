@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "update:supabase": "npx supabase gen types typescript --project-id drdoamgazuhwktmqfoxb --schema public > src/utils/supabase/supabase.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -54,6 +55,7 @@
     "react-dom": "19.2.0",
     "react-hot-toast": "^2.6.0",
     "react-hotkeys-hook": "^5.2.1",
+    "react-intersection-observer": "^10.0.0",
     "react-loading-skeleton": "^3.5.0",
     "react-spinners": "^0.17.0"
   },
@@ -69,7 +71,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
     "sass": "^1.94.0",
-    "supabase": "^2.54.11",
+    "supabase": "^2.58.5",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

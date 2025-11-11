@@ -1,4 +1,5 @@
 import { Trophy, Zap } from "lucide-react";
+import { WeeklyModel } from "@/types/Post";
 
 export default function WeeklyNotice({ active }: { active: WeeklyModel }) {
   return (

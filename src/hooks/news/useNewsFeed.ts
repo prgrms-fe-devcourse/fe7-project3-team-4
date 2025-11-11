@@ -135,6 +135,8 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
   const lastSubscribedUserIdRef = useRef<string | null>(null);
   const setupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const initialLoadDoneRef = useRef(false);
+  const retryCountRef = useRef(0);
+  const maxRetries = 5;
 
   const fetchNews = useCallback(
     async (
@@ -143,7 +145,7 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
       isInitialLoad = false
     ) => {
       console.log(
-        `[useNewsFeed] 📥 fetchNews called - page: ${pageToFetch}, initial: ${isInitialLoad}`
+        `[useNewsFeed] 🔥 fetchNews called - page: ${pageToFetch}, initial: ${isInitialLoad}`
       );
 
       if (isInitialLoad) setIsLoading(true);
@@ -253,7 +255,7 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
     fetchNews(sortBy, 0, true);
   }, [fetchNews, sortBy]);
 
-  // ✅ Realtime 구독 설정 (에러 처리 개선)
+  // ✅ Realtime 구독 설정 (exponential backoff 추가)
   useEffect(() => {
     let isSubscribed = true;
 
@@ -335,24 +337,51 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
               userId || "anon"
             }`
           );
+          retryCountRef.current = 0; // 성공 시 재시도 카운트 리셋
         } else if (status === "CHANNEL_ERROR") {
-          console.error(`[useNewsFeed] ❌ CHANNEL_ERROR:`, err);
-          // 재연결 시도
-          setTimeout(() => {
-            if (isSubscribed) {
-              console.log("[useNewsFeed] 🔄 Retrying connection...");
-              setupRealtime(userId);
-            }
-          }, 3000);
+          console.error(`[useNewsFeed] ❌ CHANNEL_ERROR:`, err || "Unknown error");
+          
+          // Exponential backoff으로 재연결
+          if (retryCountRef.current < maxRetries) {
+            const delay = Math.min(1000 * Math.pow(2, retryCountRef.current), 30000);
+            retryCountRef.current++;
+            console.log(
+              `[useNewsFeed] 🔄 Retrying connection in ${delay}ms (attempt ${retryCountRef.current}/${maxRetries})...`
+            );
+            
+            setTimeout(() => {
+              if (isSubscribed) {
+                setupRealtime(userId);
+              }
+            }, delay);
+          } else {
+            console.error(
+              `[useNewsFeed] ❌ Max retries (${maxRetries}) reached. Giving up.`
+            );
+          }
         } else if (status === "TIMED_OUT") {
-          console.error(`[useNewsFeed] ⏱️ TIMED_OUT:`, err);
-          // 재연결 시도
-          setTimeout(() => {
-            if (isSubscribed) {
-              console.log("[useNewsFeed] 🔄 Retrying after timeout...");
-              setupRealtime(userId);
-            }
-          }, 3000);
+          console.error(`[useNewsFeed] ⏱️ TIMED_OUT:`, err || "Connection timeout");
+          
+          // Timeout 시에도 재시도
+          if (retryCountRef.current < maxRetries) {
+            const delay = Math.min(1000 * Math.pow(2, retryCountRef.current), 30000);
+            retryCountRef.current++;
+            console.log(
+              `[useNewsFeed] 🔄 Retrying after timeout in ${delay}ms (attempt ${retryCountRef.current}/${maxRetries})...`
+            );
+            
+            setTimeout(() => {
+              if (isSubscribed) {
+                setupRealtime(userId);
+              }
+            }, delay);
+          } else {
+            console.error(
+              `[useNewsFeed] ❌ Max retries (${maxRetries}) reached after timeout. Giving up.`
+            );
+          }
+        } else if (status === "CLOSED") {
+          console.log(`[useNewsFeed] 🔒 Channel closed`);
         }
       });
 
@@ -393,6 +422,7 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
       setupTimeoutRef.current = setTimeout(() => {
         if (!isSubscribed) return;
         console.log(`[useNewsFeed] 🔄 User changed, re-subscribing...`);
+        retryCountRef.current = 0; // 사용자 변경 시 재시도 카운트 리셋
         setupRealtime(newUserId);
       }, 300);
     });
@@ -412,6 +442,7 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
       }
 
       lastSubscribedUserIdRef.current = null;
+      retryCountRef.current = 0;
     };
   }, [supabase, refreshFeed]);
 
@@ -434,7 +465,7 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
 
       observerRef.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && hasNextPage && !isLoadingMore) {
-          console.log("[useNewsFeed] 📄 Loading more...");
+          console.log("[useNewsFeed] 🔄 Loading more...");
           fetchNews(sortBy, page + 1, false);
         }
       });
@@ -535,7 +566,7 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
 
   const handleBookmarkToggle = useCallback(
     async (id: string) => {
-      console.log(`[useNewsFeed] 🔖 handleBookmarkToggle for ID: ${id}`);
+      console.log(`[useNewsFeed] 📖 handleBookmarkToggle for ID: ${id}`);
       const {
         data: { user },
       } = await supabase.auth.getUser();
