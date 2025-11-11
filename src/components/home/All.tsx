@@ -91,7 +91,7 @@ export default function All({
     // [수정] div 대신 React Fragment 사용
     <>
       <div className="space-y-8">
-        {combinedData.map((item, index) => {
+        {combinedData.map((item) => {
           if (item.itemType === "post") {
             return (
               <Post

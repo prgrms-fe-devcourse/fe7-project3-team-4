@@ -1,6 +1,6 @@
 "use client";
 
-import { Bookmark, Heart, MessageSquare } from "lucide-react"; // [수정] Bookmark 임포트
+import { Bookmark, BookmarkCheck, Heart, MessageSquare } from "lucide-react"; // [수정] Bookmark 임포트
 import React from "react"; // [추가] React 임포트
 
 // [수정] Props 인터페이스 확장
@@ -54,6 +54,7 @@ export default function PostActions({
           <span>{likeCount}</span>
         </div>
       </button>
+      {/* 댓글 버튼 누르면 댓글창으로 focusing 되도록(예정) */}
       <button className="cursor-pointer py-1 px-2 rounded-md hover:bg-gray-200">
         <div className="flex gap-2 text-sm items-center">
           <MessageSquare size={18} />
@@ -72,7 +73,11 @@ export default function PostActions({
         aria-pressed={isBookmarked}
         aria-label="북마크"
       >
-        <Bookmark size={18} fill={"none"} />
+        {isBookmarked ? (
+          <BookmarkCheck size={18} fill={"none"} />
+        ) : (
+          <Bookmark size={18} fill={"none"} />
+        )}
       </button>
     </div>
   );

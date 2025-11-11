@@ -28,9 +28,9 @@ const editorExtensions = [
 // 이미지 URL 추출
 function extractImages(content: any): string[] {
   if (!content || typeof content !== "object") return [];
-  
+
   const images: string[] = [];
-  
+
   const traverse = (node: any) => {
     if (node.type === "image" && node.attrs?.src) {
       images.push(node.attrs.src);
@@ -39,11 +39,11 @@ function extractImages(content: any): string[] {
       node.content.forEach(traverse);
     }
   };
-  
+
   if (content.type === "doc" && content.content) {
     content.content.forEach(traverse);
   }
-  
+
   return images;
 }
 
@@ -62,10 +62,10 @@ function filterOutImages(content: any): any {
       const filteredContent = node.content
         .map(filterNode)
         .filter((n: any) => n !== null);
-      
+
       return {
         ...node,
-        content: filteredContent.length > 0 ? filteredContent : undefined
+        content: filteredContent.length > 0 ? filteredContent : undefined,
       };
     }
 
@@ -79,7 +79,7 @@ function filterOutImages(content: any): any {
 
     return {
       type: "doc",
-      content: filteredContent
+      content: filteredContent,
     };
   }
 

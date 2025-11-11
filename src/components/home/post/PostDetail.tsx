@@ -36,6 +36,8 @@ interface PostDetailProps {
 
 export default function PostDetail({
   post,
+  onLikeToggle,
+  onBookmarkToggle,
   onBack,
   onLikeToggle,
   onBookmarkToggle,
@@ -223,7 +225,7 @@ export default function PostDetail({
 
           {/* 태그 */}
           {post.hashtags && post.hashtags.length > 0 && (
-            <div className="space-x-2 text-sm text-[#248AFF]">
+            <div className="flex flex-row flex-wrap gap-2 mt-5 text-sm text-[#248AFF]">
               {post.hashtags.map((tag, i) => (
                 <span key={i}>{tag.startsWith("#") ? tag : `#${tag}`}</span>
               ))}
@@ -243,7 +245,7 @@ export default function PostDetail({
         />
 
         {/* 작성자 소개 */}
-        <div className="mt-7">
+        <div>
           <p className="ml-2 mb-2 text-ms font-medium">작성자 소개</p>
           <div className="flex justify-between items-start gap-3 p-3 bg-white rounded-lg">
             <div className="flex-1 flex gap-3">
@@ -275,7 +277,7 @@ export default function PostDetail({
                 </p>
               </div>
             </div>
-            <button className="cursor-pointer leading-none text-[#4888FF] bg-[#EBF2FF] rounded-lg py-1.5 px-2 text-sm">
+            <button className="cursor-pointer leading-none text-[#6758FF] bg-[#6758FF]/10 rounded-lg py-1.5 px-2 text-sm">
               + 팔로우
             </button>
           </div>

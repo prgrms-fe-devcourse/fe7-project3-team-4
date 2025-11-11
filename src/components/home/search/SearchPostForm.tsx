@@ -1,9 +1,9 @@
 import NoPosts from "@/components/home/post/NoPosts";
-import Post from "@/components/home/post/Post";
 import FormClient from "@/components/home/search/FormClient";
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 import { Tables } from "@/utils/supabase/supabase";
+import PostWrapper from "../post/PostWrapper";
 
 // [수정] Supabase 쿼리 결과의 타입을 정의합니다. (Join 포함)
 type PostQueryData = Tables<"posts"> & {
@@ -186,11 +186,11 @@ export default async function SearchPostForm({
                 key={tag.id}
                 href={href} // 수정된 href
                 className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg
-           ${
-             isActive
-               ? "bg-[#9787ff] font-bold text-white"
-               : "hover:bg-[#ECE9FF]"
-           }`}
+          ${
+            isActive
+              ? "bg-[#9787ff] font-bold text-white"
+              : "hover:bg-[#ECE9FF]"
+          }`}
               >
                 #{label}
               </Link>
@@ -211,7 +211,7 @@ export default async function SearchPostForm({
               {posts.length > 0 ? (
                 <div className="space-y-8 pb-6">
                   {posts.map((post) => (
-                    <Post key={post.id} data={post} />
+                    <PostWrapper key={post.id} data={post} />
                   ))}
                 </div>
               ) : (
