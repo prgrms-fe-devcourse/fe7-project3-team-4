@@ -45,6 +45,15 @@ export default function Post({
                 </p>
               </div>
             </div>
+            {data.model && (
+              <div
+                className={`h-[22px] text-xs font-semibold text-white px-3 py-1 ${
+                  data.model === "GPT" ? "bg-[#74AA9C]" : "bg-[#2FBAD2]"
+                } rounded-full`}
+              >
+                {data.model}
+              </div>
+            )}
           </div>
           {/* 중간: 제목, 텍스트 미리보기 */}
           <div className="my-5">
@@ -66,7 +75,7 @@ export default function Post({
           </div>
           {/* 해시태그 */}
           {data.hashtags && data.hashtags.length > 0 && (
-            <div className="space-x-2 text-sm text-[#248AFF]">
+            <div className="flex flex-row flex-wrap gap-2 text-sm text-[#248AFF]">
               {data.hashtags.map((tag, i) => (
                 <span key={i}>{tag.startsWith("#") ? tag : `#${tag}`}</span>
               ))}
