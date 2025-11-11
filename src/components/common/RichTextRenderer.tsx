@@ -8,14 +8,14 @@ import { useEffect } from "react";
 import NextImage from "next/image";
 import Link from "next/link";
 
-export default function RichTextRenderer({ 
-  content, 
+export default function RichTextRenderer({
+  content,
   imageOnly = false,
   showImage = true, // 이미지 표시 여부
   postId,
   postType,
-  title
-}: { 
+  title,
+}: {
   content: Json | null;
   imageOnly?: boolean; // true면 이미지만, false면 전체 콘텐츠
   showImage?: boolean; // 이미지를 렌더링할지 여부
@@ -26,7 +26,7 @@ export default function RichTextRenderer({
   // 이미지만 표시하는 경우
   if (imageOnly) {
     const images = extractImages(content);
-    
+
     if (images.length === 0) {
       return null; // 이미지 없으면 아무것도 렌더링 안함
     }
@@ -95,9 +95,9 @@ export default function RichTextRenderer({
 // 이미지 URL 추출
 function extractImages(content: any): string[] {
   if (!content || typeof content !== "object") return [];
-  
+
   const images: string[] = [];
-  
+
   const traverse = (node: any) => {
     if (node.type === "image" && node.attrs?.src) {
       images.push(node.attrs.src);
@@ -106,11 +106,11 @@ function extractImages(content: any): string[] {
       node.content.forEach(traverse);
     }
   };
-  
+
   if (content.type === "doc" && content.content) {
     content.content.forEach(traverse);
   }
-  
+
   return images;
 }
 
@@ -129,10 +129,10 @@ function filterOutImages(content: any): any {
       const filteredContent = node.content
         .map(filterNode)
         .filter((n: any) => n !== null);
-      
+
       return {
         ...node,
-        content: filteredContent.length > 0 ? filteredContent : undefined
+        content: filteredContent.length > 0 ? filteredContent : undefined,
       };
     }
 
@@ -146,7 +146,7 @@ function filterOutImages(content: any): any {
 
     return {
       type: "doc",
-      content: filteredContent
+      content: filteredContent,
     };
   }
 

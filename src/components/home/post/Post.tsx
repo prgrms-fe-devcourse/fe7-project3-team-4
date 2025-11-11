@@ -66,7 +66,7 @@ export default function Post({
           </div>
           {/* 해시태그 */}
           {data.hashtags && data.hashtags.length > 0 && (
-            <div className="space-x-2 text-sm text-[#248AFF]">
+            <div className="flex flex-row flex-wrap gap-4 text-sm text-[#248AFF]">
               {data.hashtags.map((tag, i) => (
                 <span key={i}>{tag.startsWith("#") ? tag : `#${tag}`}</span>
               ))}
