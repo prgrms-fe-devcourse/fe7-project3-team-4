@@ -12,6 +12,6 @@ type Post = {
   view_count: number;
   email: string;
   hashtags: string[];
-  model?: "GPT" | "Gemini" | "텍스트" | "이미지";
+  model?: string;
   isBookmarked?: boolean;
 };
