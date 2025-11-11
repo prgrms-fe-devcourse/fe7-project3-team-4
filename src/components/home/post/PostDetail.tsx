@@ -84,8 +84,16 @@ export default function PostDetail({
             <div className="mb-6 space-y-4">
               <p className="text-[18px] font-medium">{post.title}</p>
               {/* 전체 콘텐츠 렌더링 (텍스트 + 이미지 모두) */}
-              <div className="mt-4">
-                <RichTextRenderer content={post.content} showImage={true} />
+              <div className="mt-4 space-y-6">
+                <RichTextRenderer content={post.content} showImage={false} />
+                {/* 이미지 렌더링 - 이미지가 있을 때만 표시 */}
+                <RichTextRenderer
+                  content={post.content}
+                  imageOnly={true}
+                  postId={post.id}
+                  postType={post.post_type}
+                  title={post.title}
+                />
               </div>
             </div>
           </div>

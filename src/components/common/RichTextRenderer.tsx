@@ -6,7 +6,6 @@ import Image from "@tiptap/extension-image";
 import { Json } from "@/utils/supabase/supabase";
 import { useEffect } from "react";
 import NextImage from "next/image";
-import Link from "next/link";
 
 export default function RichTextRenderer({
   content,
