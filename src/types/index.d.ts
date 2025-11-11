@@ -7,6 +7,7 @@ import { Database } from "@/utils/supabase/supabase";
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"] | null;
 export type Post = Database["public"]["Tables"]["posts"]["Row"];
 export type Comment = Database["public"]["Tables"]["comments"]["Row"];
+export type Hashtag = Database["public"]["Tables"]["hashtags"]["Row"];
 
 export type MainDetail = Post & {
   profiles: Profile;

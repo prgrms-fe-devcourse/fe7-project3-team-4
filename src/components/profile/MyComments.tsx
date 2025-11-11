@@ -1,8 +1,8 @@
 import { Heart, MessageCircle, MessageSquareReply } from "lucide-react";
 import ContentBox from "../ContentBox";
-import { Database } from "@/types"; // [⭐️ 1. Database 타입 임포트]
 import EmptyActivity from "./EmptyActivity"; // [⭐️ 1. EmptyActivity 임포트]
 import { formatTimeAgo } from "@/utils/formatTimeAgo"; // [⭐️ 1. formatTimeAgo 임포트]
+import { Database } from "@/utils/supabase/supabase";
 
 // [⭐️ 2. DbCommentRow 타입 정의 (DataLoader와 동일)]
 type DbCommentRow = Database["public"]["Tables"]["comments"]["Row"] & {
@@ -15,7 +15,8 @@ type MyCommentsProps = {
   comments: DbCommentRow[];
 };
 
-export default function MyComments({ comments }: MyCommentsProps) { // [⭐️ 3. prop 받기]
+export default function MyComments({ comments }: MyCommentsProps) {
+  // [⭐️ 3. prop 받기]
   // [⭐️ 4. 데이터가 없을 경우 EmptyActivity 렌더링]
   if (!comments || comments.length === 0) {
     return <EmptyActivity message="작성한 댓글이 없습니다" />;
@@ -36,10 +37,12 @@ export default function MyComments({ comments }: MyCommentsProps) { // [⭐️ 3
                   DataLoader에서 복잡한 동적 JOIN 또는 RPC가 필요하므로,
                   여기서는 댓글 내용과 시간만 표시하도록 간소화합니다.
                 */}
-                
+
                 {/* 댓글 내용 */}
-                <p className="text-sm text-gray-800">{comment.content || "(내용 없음)"}</p>
-                
+                <p className="text-sm text-gray-800">
+                  {comment.content || "(내용 없음)"}
+                </p>
+
                 <div className="flex justify-between items-center">
                   {/* 좋아요/답글 수 */}
                   <div className="text-[#717182] text-sm flex gap-5">
@@ -59,7 +62,6 @@ export default function MyComments({ comments }: MyCommentsProps) { // [⭐️ 3
                     {formatTimeAgo(comment.created_at)}
                   </p>
                 </div>
-
               </div>
             </div>
           </ContentBox>
