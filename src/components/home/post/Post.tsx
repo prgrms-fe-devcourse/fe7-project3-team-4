@@ -1,5 +1,6 @@
 import Link from "next/link";
 import PostActions from "./PostAction";
+import Image from "next/image";
 
 export default function Post({
   data,
@@ -19,6 +20,16 @@ export default function Post({
               <div className="my-5">
                 <div className="mb-6 space-y-4">
                   <p className="text-[18px] font-medium">{data.title}</p>
+                  {data.image && (
+                    <div className="relative w-full aspect-video">
+                      <Image
+                        src={data.image}
+                        alt={data.title ?? "Post image"}
+                        layout="fill"
+                        objectFit="cover"
+                      />
+                    </div>
+                  )}
                   <p>{String(data.content)}</p>
                 </div>
               </div>

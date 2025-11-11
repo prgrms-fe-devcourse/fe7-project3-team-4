@@ -9,6 +9,7 @@ import { Tables } from "@/utils/supabase/supabase";
 type PostQueryData = Tables<"posts"> & {
   profiles: Pick<Tables<"profiles">, "email"> | null;
   user_post_bookmarks: Pick<Tables<"user_post_bookmarks">, "user_id">[];
+  user_post_likes: Pick<Tables<"user_post_likes">, "user_id">[];
 };
 
 // [신규] 'post.content' (Json)의 구체적인 객체 구조 정의
@@ -41,6 +42,7 @@ type TransformedPostData = {
   image?: string; // jsonb에서 'main_image_url' 등을 추출
   hashtags: string[];
   isBookmarked: boolean; // 'user_post_bookmarks'에서 계산
+  isLiked: boolean; // 'user_post_bookmarks'에서 계산
   model?: string;
 };
 
@@ -74,26 +76,28 @@ export default async function SearchPostForm({
 }) {
   const supabase = await createClient();
 
-  // 1. 북마크 여부 확인을 위해 현재 유저 정보 가져오기
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 2. Supabase 쿼리 작성
   let query = supabase.from("posts").select(
     `
     *,
     user_id ( email ),
     user_post_bookmarks!left ( user_id )
+    user_post_likes!left ( user_id )
   `
   );
 
-  // 3. (로그인 시) 북마크 필터 추가
   if (user) {
     query = query.eq("user_post_bookmarks.user_id", user.id);
   }
 
-  // 4. 'searchTerm' 필터 (4개 필드 검색)
+  if (user) {
+    query = query.eq("user_post_likes.user_id", user.id);
+  }
+
+  // 'searchTerm' 필터 (4개 필드 검색)
   if (searchTerm) {
     query = query.or(
       `title.ilike.%${searchTerm}%,` +
@@ -103,12 +107,11 @@ export default async function SearchPostForm({
     );
   }
 
-  // 5. 'tagTerm' 필터 (hashtags 배열)
+  // 'tagTerm' 필터 (hashtags 배열)
   if (tagTerm) {
     query = query.contains("hashtags", [tagTerm] as string[]);
   }
 
-  // 6. 데이터 가져오기
   const { data, error } = await query.returns<PostQueryData[]>();
 
   if (error) {
@@ -131,6 +134,7 @@ export default async function SearchPostForm({
             undefined,
           email: post.profiles?.email ?? "이메일 없음",
           isBookmarked: post.user_post_bookmarks.length > 0,
+          isLiked: post.user_post_likes.length > 0,
           // 나머지 필드 매핑
           hashtags: (post.hashtags as string[]) ?? [],
           post_type: post.post_type as "prompt" | "free" | "weekly",
@@ -146,7 +150,6 @@ export default async function SearchPostForm({
 
   const { data: tagData } = await supabase.from("hashtags").select("*");
   if (!tagData) return null;
-
   const postsByType = {
     prompt: transformedPosts.filter((post) => post.post_type === "prompt"),
     free: transformedPosts.filter((post) => post.post_type === "free"),
@@ -173,7 +176,6 @@ export default async function SearchPostForm({
             const label = TAG_LABEL_MAP[tag.name] ?? tag.name;
             const isActive = tagTerm === tag.name.toLowerCase();
 
-            // 'q' (searchTerm)를 유지하면서 'tag'를 설정
             const params = new URLSearchParams();
             params.set("tag", tag.name);
             if (searchTerm) {
@@ -186,11 +188,11 @@ export default async function SearchPostForm({
                 key={tag.id}
                 href={href} // 수정된 href
                 className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg
-           ${
-             isActive
-               ? "bg-[#9787ff] font-bold text-white"
-               : "hover:bg-[#ECE9FF]"
-           }`}
+          ${
+            isActive
+              ? "bg-[#9787ff] font-bold text-white"
+              : "hover:bg-[#ECE9FF]"
+          }`}
               >
                 #{label}
               </Link>
@@ -211,7 +213,6 @@ export default async function SearchPostForm({
               {posts.length > 0 ? (
                 <div className="space-y-8 pb-6">
                   {posts.map((post) => (
-                    // 'Post' 컴포넌트는 'TransformedPostData' 타입을 받음
                     <Post key={post.id} data={post} />
                   ))}
                 </div>
