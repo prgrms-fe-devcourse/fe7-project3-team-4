@@ -23,7 +23,6 @@ export function ProfileActivityTabsSkeleton() {
         </div>
       </div>
 
-      {/* Tab Content Skeleton (List) - MyPosts/MyBookMark의 space-y-4와 일치 */}
       <div className="mt-4 lg:mt-6 space-y-4">
         {[...Array(3)].map((_, i) => (
           <NewsItemSkeleton key={i} />

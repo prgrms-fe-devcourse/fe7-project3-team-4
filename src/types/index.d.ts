@@ -52,3 +52,6 @@ export type NewsItemWithState = NewsRow & {
   isLiked: boolean; // 현재 사용자의 좋아요 여부 (UI 상태)
   isBookmarked: boolean; // 현재 사용자의 북마크 여부 (UI 상태)
 };
+
+export { Database };
+

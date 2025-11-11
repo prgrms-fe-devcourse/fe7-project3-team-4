@@ -1,17 +1,25 @@
-type Post = {
+// types/Post.ts
+import { Json } from "@/utils/supabase/supabase";
+
+export interface PostType {
   id: string;
-  comment_count: number;
-  content: string;
-  created_at: string;
-  updated_at?: string;
-  like_count: number;
-  post_type: "prompt" | "free" | "weekly";
   title: string;
-  user_id: string;
-  image?: string | null;
+  content: Json | null;
+  created_at: string;
+  post_type: string;
+  hashtags?: string[];
+  like_count: number;
+  comment_count: number;
   view_count: number;
-  email: string;
-  hashtags: string[];
-  model?: "GPT" | "Gemini" | "텍스트" | "이미지";
+  isLiked?: boolean;
   isBookmarked?: boolean;
-};
+  model?: string;
+  user_id: string;
+  
+  // profiles 테이블에서 조회한 데이터
+  profiles?: {
+    display_name: string | null;
+    email: string | null;
+    avatar_url?: string | null; // [추가]
+  };
+}

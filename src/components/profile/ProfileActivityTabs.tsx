@@ -3,11 +3,12 @@
 "use client";
 
 import { useSearchParams, usePathname } from "next/navigation";
-import Link from "next/link"; // [수정] Link 임포트
+import Link from "next/link";
 import MyPosts from "@/components/profile/MyPosts";
 import MyComments from "@/components/profile/MyComments";
 import MyBookMark from "@/components/profile/MyBookMark";
-import { NewsItemWithState, Post } from "@/types";
+import { NewsItemWithState } from "@/types";
+import { PostType } from "@/types/Post"; // [수정] PostType import 추가
 import { Database } from "@/utils/supabase/supabase";
 
 type DbCommentRow = Database["public"]["Tables"]["comments"]["Row"] & {
@@ -24,13 +25,14 @@ const TAB_LABEL: Record<TabKey, string> = {
   bookmarks: "북마크",
 };
 
+// [수정] PostType 사용
 type BookmarkedItem =
-  | (Post & { type: "post" })
+  | (PostType & { type: "post" })
   | (NewsItemWithState & { type: "news" });
 
 type ProfileActivityTabsProps = {
   initialTab: TabKey;
-  myPosts: Post[];
+  myPosts: PostType[]; // [수정] Post → PostType
   myComments: DbCommentRow[];
   myBookmarks: BookmarkedItem[];
   onLikeToggle: (id: string) => void;
@@ -58,7 +60,6 @@ export function ProfileActivityTabs({
     return `${pathname}?${params.toString()}`;
   };
 
-  // [수정] baseBtn에 'text-center' 클래스를 추가합니다.
   const baseBtn =
     "cursor-pointer flex-1 py-4 rounded-xl text-sm transition-colors text-center";
   const activeClass = "bg-white text-[#111827] shadow-sm";

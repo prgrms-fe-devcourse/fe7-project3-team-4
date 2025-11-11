@@ -17,7 +17,6 @@ export default function NewsItem({
   onBookmarkToggle,
 }: NewsItemProps) {
   const siteName = item.site_name || "익명";
-  // [수정] Post.tsx와 같이 날짜 형식을 slice(0, 10)로 변경
   const displayDate = (item.published_at || item.created_at).slice(0, 10);
   const thumb = Array.isArray(item.images) ? item.images[0] : null;
   const likeCount = item.like_count ?? 0;
