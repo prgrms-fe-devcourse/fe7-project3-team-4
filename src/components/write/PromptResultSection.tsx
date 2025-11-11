@@ -4,14 +4,11 @@ import { X } from "lucide-react";
 import Image from "next/image";
 import { useState, ChangeEvent, useId } from "react";
 
-type ResultMode = "text" | "image";
-type ModelType = "gpt" | "gemini";
-
 export function PromptResultSection() {
   const inputId = useId();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [resultMode, setResultMode] = useState<ResultMode>("text");
-  const [model, setModel] = useState<ModelType>("gpt");
+  const [model, setModel] = useState<ModelType>("GPT");
 
   const handleImgFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -31,6 +28,7 @@ export function PromptResultSection() {
   return (
     <>
       {/* 선택한 모델 값을 form에 포함 */}
+      <input type="hidden" name="resultMode" value={resultMode} />
       <input type="hidden" name="model" value={model} />
 
       {/* 결과 타입 토글 */}
@@ -68,10 +66,10 @@ export function PromptResultSection() {
           <div className="flex items-center gap-1 p-0.5 rounded-lg text-xs bg-white/40 border border-black/20">
             <button
               type="button"
-              onClick={() => setModel("gpt")}
+              onClick={() => setModel("GPT")}
               className={
                 "cursor-pointer py-1 px-3 leading-none rounded-lg transition-shadow " +
-                (model === "gpt"
+                (model === "GPT"
                   ? "bg-[#74AA9C] text-white shadow-2xl"
                   : "text-[#9CA3AF] bg-transparent")
               }
@@ -80,10 +78,10 @@ export function PromptResultSection() {
             </button>
             <button
               type="button"
-              onClick={() => setModel("gemini")}
+              onClick={() => setModel("Gemini")}
               className={
                 "cursor-pointer py-1 px-3 leading-none rounded-lg transition-shadow " +
-                (model === "gemini"
+                (model === "Gemini"
                   ? "bg-[#4285F4] text-white shadow-2xl"
                   : "text-[#9CA3AF] bg-transparent")
               }
@@ -97,7 +95,7 @@ export function PromptResultSection() {
         <textarea
           name="promptInput"
           placeholder="입력한 프롬프트"
-          className="border border-[#D9D9D9] rounded-lg h-40 mb-10 p-4 outline-none"
+          className="border border-[#D9D9D9] rounded-lg h-40 p-4 outline-none mb-8"
         />
 
         {/* 결과 영역: 텍스트 or 이미지 */}
@@ -105,10 +103,10 @@ export function PromptResultSection() {
           <textarea
             name="promptResult"
             placeholder="프롬프트의 결과"
-            className="bg-[#D9D9D9]/20 rounded-lg h-40 p-4 outline-none border border-[#D9D9D9]"
+            className="bg-[#D9D9D9]/20 rounded-lg h-40 p-4 outline-none border border-[#D9D9D9] mb-8"
           />
         ) : (
-          <div className="relative flex flex-col items-center py-8 rounded-lg bg-[#D9D9D9]/20 border border-dashed border-[#D9D9D9]">
+          <div className="relative flex flex-col items-center py-8 rounded-lg bg-[#D9D9D9]/20 border border-dashed border-[#D9D9D9] mb-8">
             {previewUrl ? (
               <>
                 <div className="relative py-2">
@@ -152,6 +150,15 @@ export function PromptResultSection() {
             )}
           </div>
         )}
+
+        {/* 결과 링크 공유 */}
+        <input
+          type="text"
+          placeholder="결과 링크 공유"
+          className="border border-[#D9D9D9] rounded-lg p-4 outline-none"
+        />
+
+        <input type="text" />
       </div>
     </>
   );
