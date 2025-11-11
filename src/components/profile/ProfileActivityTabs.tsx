@@ -2,7 +2,8 @@
 
 "use client";
 
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
+import Link from "next/link"; // [수정] Link 임포트
 import MyPosts from "@/components/profile/MyPosts";
 import MyComments from "@/components/profile/MyComments";
 import MyBookMark from "@/components/profile/MyBookMark";
@@ -38,7 +39,7 @@ type ProfileActivityTabsProps = {
 };
 
 export function ProfileActivityTabs({
-  initialTab, 
+  initialTab,
   myPosts,
   myComments,
   myBookmarks,
@@ -46,20 +47,20 @@ export function ProfileActivityTabs({
   onBookmarkToggle,
   onPostLikeToggle,
 }: ProfileActivityTabsProps) {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const activeTab = (searchParams.get("tab") as TabKey) || initialTab;
 
-  const handleTabChange = (tab: TabKey) => {
+  const createTabHref = (tab: TabKey) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", tab);
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    return `${pathname}?${params.toString()}`;
   };
 
+  // [수정] baseBtn에 'text-center' 클래스를 추가합니다.
   const baseBtn =
-    "cursor-pointer flex-1 py-4 rounded-xl text-sm transition-colors";
+    "cursor-pointer flex-1 py-4 rounded-xl text-sm transition-colors text-center";
   const activeClass = "bg-white text-[#111827] shadow-sm";
   const inactiveClass = "text-[#9CA3AF]";
 
@@ -68,30 +69,33 @@ export function ProfileActivityTabs({
       {/* 탭 버튼 */}
       <div className="bg-white/40 border-white/20 rounded-xl shadow-xl">
         <div className="mt-6 p-1 w-full flex gap-1 leading-none">
-          <button
+          <Link
+            href={createTabHref("posts")}
+            scroll={false}
             className={`${baseBtn} ${
               activeTab === "posts" ? activeClass : inactiveClass
             }`}
-            onClick={() => handleTabChange("posts")}
           >
             {TAB_LABEL.posts}
-          </button>
-          <button
+          </Link>
+          <Link
+            href={createTabHref("comments")}
+            scroll={false}
             className={`${baseBtn} ${
               activeTab === "comments" ? activeClass : inactiveClass
             }`}
-            onClick={() => handleTabChange("comments")}
           >
             {TAB_LABEL.comments}
-          </button>
-          <button
+          </Link>
+          <Link
+            href={createTabHref("bookmarks")}
+            scroll={false}
             className={`${baseBtn} ${
               activeTab === "bookmarks" ? activeClass : inactiveClass
             }`}
-            onClick={() => handleTabChange("bookmarks")}
           >
             {TAB_LABEL.bookmarks}
-          </button>
+          </Link>
         </div>
       </div>
 
