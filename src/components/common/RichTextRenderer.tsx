@@ -32,9 +32,7 @@ export default function RichTextRenderer({
     }
 
     return (
-      <Link
-        href={`/?type=${postType}&id=${postId}`}
-        scroll={false}
+      <div
         aria-label={title}
         className="block relative w-full aspect-video rounded-lg overflow-hidden bg-gray-200"
       >
@@ -46,7 +44,7 @@ export default function RichTextRenderer({
           loading="lazy"
           sizes="(max-width: 768px) 100vw, 50vw"
         />
-      </Link>
+      </div>
     );
   }
 

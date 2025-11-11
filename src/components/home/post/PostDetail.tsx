@@ -91,7 +91,7 @@ export default function PostDetail({
           </div>
           {/* 태그들 */}
           {post.hashtags && post.hashtags.length > 0 && (
-            <div className="flex flex-row flex-wrap gap-4 text-sm text-[#248AFF]">
+            <div className="flex flex-row flex-wrap gap-2 text-sm text-[#248AFF]">
               {post.hashtags.map((tag, i) => (
                 <span key={i}>{tag.startsWith("#") ? tag : `#${tag}`}</span>
               ))}
