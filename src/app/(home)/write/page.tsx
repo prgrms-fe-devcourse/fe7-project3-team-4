@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { WritePostForm } from "@/components/write/WritePostForm";
-import { Hashtag } from "@/types";
 
 export default async function Page() {
   const supabase = await createClient();
@@ -17,8 +16,8 @@ export default async function Page() {
   if (!hashtags) return null;
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <>
       <WritePostForm hashtags={hashtags} />
-    </div>
+    </>
   );
 }

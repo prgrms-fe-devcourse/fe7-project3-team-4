@@ -5,8 +5,7 @@ import { redirect } from "next/navigation";
 import { FormState } from "@/types";
 import { revalidatePath } from "next/cache";
 import ProfileDataLoader from "@/components/profile/ProfileDataLoader";
-
-import ProfilePageSkeleton from "@/components/profile/ProfilePageSkeleton";
+import ProfilePageSkeleton from "@/components/profile/loading/ProfilePageSkeleton";
 
 export default async function Page({
   searchParams,

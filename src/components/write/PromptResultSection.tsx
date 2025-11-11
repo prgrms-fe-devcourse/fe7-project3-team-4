@@ -8,7 +8,7 @@ export function PromptResultSection() {
   const inputId = useId();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [resultMode, setResultMode] = useState<ResultMode>("text");
-  const [model, setModel] = useState<ModelType>("gpt");
+  const [model, setModel] = useState<ModelType>("GPT");
 
   const handleImgFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -66,10 +66,10 @@ export function PromptResultSection() {
           <div className="flex items-center gap-1 p-0.5 rounded-lg text-xs bg-white/40 border border-black/20">
             <button
               type="button"
-              onClick={() => setModel("gpt")}
+              onClick={() => setModel("GPT")}
               className={
                 "cursor-pointer py-1 px-3 leading-none rounded-lg transition-shadow " +
-                (model === "gpt"
+                (model === "GPT"
                   ? "bg-[#74AA9C] text-white shadow-2xl"
                   : "text-[#9CA3AF] bg-transparent")
               }
@@ -78,10 +78,10 @@ export function PromptResultSection() {
             </button>
             <button
               type="button"
-              onClick={() => setModel("gemini")}
+              onClick={() => setModel("Gemini")}
               className={
                 "cursor-pointer py-1 px-3 leading-none rounded-lg transition-shadow " +
-                (model === "gemini"
+                (model === "Gemini"
                   ? "bg-[#4285F4] text-white shadow-2xl"
                   : "text-[#9CA3AF] bg-transparent")
               }

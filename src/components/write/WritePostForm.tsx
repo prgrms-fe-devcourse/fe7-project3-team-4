@@ -10,14 +10,12 @@ import { createClient } from "@/utils/supabase/client";
 import { Hashtag } from "@/types";
 import type { FormEvent } from "react";
 
-/** 스토리지 업로드용 헬퍼 */
+/** 스토리지 업로드용 */
 async function uploadPostImage(file: File): Promise<string> {
-  // TODO: supabase.storage.from("post-images").upload(...) 후 public URL 리턴
   return "";
 }
 
 async function uploadPromptResultImage(file: File): Promise<string> {
-  // TODO: supabase.storage.from("prompt-results").upload(...) 후 public URL 리턴
   return "";
 }
 
