@@ -12,7 +12,7 @@ import {
   uploadPostMainImage,
   uploadPromptResultImage,
 } from "@/utils/supabase/storage/posts";
-import { Hashtag } from "@/types";
+import { Database, Hashtag } from "@/types";
 
 export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
   const [postType, setPostType] = useState<PostType>("prompt");
@@ -31,16 +31,9 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
     const formData = new FormData(form);
 
     try {
-      console.log("[WritePostForm] submit start");
-
       const {
         data: { user },
-        error: userError,
       } = await supabase.auth.getUser();
-
-      if (userError) {
-        console.error("[WritePostForm] getUser error", userError);
-      }
 
       if (!user) {
         alert("로그인 후 이용 가능합니다.");
@@ -50,43 +43,40 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
 
       const type = (formData.get("postType") as PostType) || postType;
       const title = (formData.get("title") as string)?.trim();
-      const content = (formData.get("content") as string)?.trim();
+
+      const rawContent = formData.get("content") as string | null;
+      const baseDoc = rawContent ? JSON.parse(rawContent) : null;
+
       const rawHashtags = (formData.get("hashtags") as string) || "";
       const selectedHashtags = rawHashtags
         .split(",")
         .map((v) => v.trim())
-        .filter(Boolean);
+        .filter(Boolean) as Database["public"]["Enums"]["hashtag_type"][];
 
-      const mainImageFile = formData.get("mainImage") as File | null;
+      if (!title) {
+        alert("제목을 입력해주세요.");
+        return;
+      }
 
-      console.log("[WritePostForm] parsed:", {
-        type,
-        title,
-        content,
-        selectedHashtags,
-        hasMainImage: !!mainImageFile,
-      });
-
-      if (!title || !content) {
-        alert("제목과 내용을 입력해주세요.");
+      if (!baseDoc || !Array.isArray(baseDoc.content)) {
+        alert("내용을 입력해주세요.");
         return;
       }
 
       const isPromptLikePost = type === "prompt" || type === "weekly";
 
-      // 대표 이미지 업로드
+      // ----- 이미지 업로드 (대표 + 결과이미지) -----
+      const mainImageFile = formData.get("mainImage") as File | null;
       let mainImageUrl: string | null = null;
+
       if (mainImageFile && mainImageFile.size > 0) {
-        console.log("[WritePostForm] uploading main image");
         mainImageUrl = await uploadPostMainImage(
           supabase,
           user.id,
           mainImageFile
         );
-        console.log("[WritePostForm] main image url:", mainImageUrl);
       }
 
-      // 프롬프트 관련
       let resultMode: ResultMode | null = null;
       let model: ModelType | null = null;
       let promptInput: string | null = null;
@@ -114,21 +104,101 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
           ) as File | null;
 
           if (resultImgFile && resultImgFile.size > 0) {
-            console.log("[WritePostForm] uploading prompt result image");
             promptResultImageUrl = await uploadPromptResultImage(
               supabase,
               user.id,
               resultImgFile
             );
-            console.log(
-              "[WritePostForm] prompt result image url:",
-              promptResultImageUrl
-            );
           }
         }
       }
 
-      console.log("[WritePostForm] inserting post row");
+      const extendedContent: any[] = [];
+
+      // 1) 대표 이미지 먼저 넣고 싶으면 여기
+      if (mainImageUrl) {
+        extendedContent.push({
+          type: "image",
+          attrs: {
+            src: mainImageUrl,
+            alt: title || "",
+          },
+        });
+      }
+
+      // 2) 기존 에디터 내용
+      extendedContent.push(...baseDoc.content);
+
+      // 3) 프롬프트 관련 블럭들 (isPromptLikePost일 때만)
+      if (isPromptLikePost) {
+        if (promptInput) {
+          extendedContent.push(
+            {
+              type: "paragraph",
+              content: [
+                { type: "text", text: "Prompt", marks: [{ type: "bold" }] },
+              ],
+            },
+            {
+              type: "paragraph",
+              content: [{ type: "text", text: promptInput }],
+            }
+          );
+        }
+
+        if (resultMode === "text" && promptResultText) {
+          extendedContent.push(
+            {
+              type: "paragraph",
+              content: [
+                { type: "text", text: "Result", marks: [{ type: "bold" }] },
+              ],
+            },
+            {
+              type: "paragraph",
+              content: [{ type: "text", text: promptResultText }],
+            }
+          );
+        }
+
+        if (resultMode === "image" && promptResultImageUrl) {
+          extendedContent.push(
+            {
+              type: "paragraph",
+              content: [
+                { type: "text", text: "Result", marks: [{ type: "bold" }] },
+              ],
+            },
+            {
+              type: "image",
+              attrs: {
+                src: promptResultImageUrl,
+                alt: "프롬프트 결과 이미지",
+              },
+            }
+          );
+        }
+
+        if (resultLink) {
+          extendedContent.push({
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: resultLink,
+                marks: [{ type: "link", attrs: { href: resultLink } }],
+              },
+            ],
+          });
+        }
+      }
+
+      const finalDoc = {
+        ...baseDoc,
+        content: extendedContent,
+      };
+
+      // ----- DB 저장: content에 doc만 -----
 
       const { data, error } = await supabase
         .from("posts")
@@ -136,18 +206,10 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
           user_id: user.id,
           post_type: type,
           title,
-          content: {
-            text: content,
-            main_image_url: mainImageUrl,
-            is_prompt_like: isPromptLikePost,
-            result_mode: resultMode,
-            prompt_input: promptInput,
-            prompt_result_text: promptResultText,
-            prompt_result_image_url: promptResultImageUrl,
-            result_link: resultLink,
-          },
+          content: finalDoc,
           hashtags: selectedHashtags,
           model,
+          is_prompt_like: isPromptLikePost,
         })
         .select()
         .single();
@@ -158,7 +220,6 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
         return;
       }
 
-      console.log("[WritePostForm] insert success", data);
       router.push(`/?type=${data.post_type}&id=${data.id}`);
     } catch (err) {
       console.error("[WritePostForm] catch error", err);
