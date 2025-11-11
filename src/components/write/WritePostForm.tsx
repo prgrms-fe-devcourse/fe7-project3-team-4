@@ -17,14 +17,21 @@ import { Database, Hashtag } from "@/types";
 export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
   const [postType, setPostType] = useState<PostType>("prompt");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selfCheck, setSelfCheck] = useState({
+    q1: false,
+    q2: false,
+    q3: false,
+  });
   const router = useRouter();
   const supabase = createClient();
 
   const isPromptLike = postType === "prompt" || postType === "weekly";
+  const isAllChecked = selfCheck.q1 && selfCheck.q2 && selfCheck.q3;
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (isSubmitting) return;
+
     setIsSubmitting(true);
 
     const form = e.currentTarget;
@@ -93,15 +100,30 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
         resultLink =
           ((formData.get("resultLink") as string) || "").trim() || null;
 
+        if (!promptInput) {
+          alert("사용한 프롬프트를 작성해주세요.");
+          return;
+        }
+
         if (resultMode === "text") {
           const result = (formData.get("promptResult") as string) || "";
           promptResultText = result.trim() || null;
+
+          if (!promptResultText) {
+            alert("프롬프트의 결과 값을 작성해주세요.");
+            return;
+          }
         }
 
         if (resultMode === "image") {
           const resultImgFile = formData.get(
             "promptResultImage"
           ) as File | null;
+
+          if (resultImgFile?.size === 0) {
+            alert("프롬프트의 결과 값의 이미지를 첨부해주세요.");
+            return;
+          }
 
           if (resultImgFile && resultImgFile.size > 0) {
             promptResultImageUrl = await uploadPromptResultImage(
@@ -110,6 +132,13 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
               resultImgFile
             );
           }
+        }
+
+        if (isPromptLike && !isAllChecked) {
+          alert(
+            "프롬프트 관련 게시글 등록을 위해 자가진단 문항을 모두 체크해주세요."
+          );
+          return;
         }
       }
 
@@ -236,7 +265,7 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
       {isPromptLike && (
         <>
           <PromptResultSection />
-          <SelfCheckList />
+          <SelfCheckList values={selfCheck} onChange={setSelfCheck} />
         </>
       )}
       <div className="flex justify-center mb-10">
