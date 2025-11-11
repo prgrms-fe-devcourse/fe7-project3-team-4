@@ -12,10 +12,10 @@ export function PostTypeSelect({ postType, onChange }: Props) {
         게시글 작성
       </span>
       <select
+        name="postType"
         value={postType}
         onChange={(e) => onChange(e.target.value as PostType)}
         className="px-6 py-1.5 rounded-lg border border-black/20 bg-white/40 text-[#0A0A0A]"
-        name="postType"
       >
         <option value="prompt">프롬프트</option>
         <option value="free">자유</option>

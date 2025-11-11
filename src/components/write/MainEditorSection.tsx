@@ -1,53 +1,111 @@
 "use client";
 
-import { Image as ImageIcon, XIcon } from "lucide-react";
+import { Hashtag } from "@/types";
+import { Image as X } from "lucide-react";
 import Image from "next/image";
-import aiImage from "@/assets/svg/aiImage.svg";
+import { ChangeEvent, useState } from "react";
 
-export function MainEditorSection() {
+export function MainEditorSection({ hashtags }: { hashtags: Hashtag[] }) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedHashtags, setSelectedHashtags] = useState<Hashtag["name"][]>(
+    []
+  );
+
+  const handleImgFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+  };
+
+  const removeImgFile = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(null);
+  };
+
+  const toggleHashtag = (name: Hashtag["name"]) => {
+    setSelectedHashtags((prev) =>
+      prev.includes(name) ? prev.filter((v) => v !== name) : [...prev, name]
+    );
+  };
+
   return (
-    <div className="grid bg-white/40 shadow-lg rounded-xl p-6">
+    <div className="grid bg-white/40 shadow-lg rounded-xl p-6 gap-4">
       <input
         type="text"
         name="title"
         placeholder="제목"
-        className="placeholder-[#A8A8A8] mb-2 border border-[#D9D9D9] rounded-lg pl-4 py-1.5 outline-none"
+        className="placeholder-[#A8A8A8] border border-[#D9D9D9] rounded-lg pl-4 py-1.5 outline-none"
       />
 
-      <div className="grid border border-[#D9D9D9] rounded-lg p-4">
-        <textarea
-          name="content"
-          placeholder="무엇에 대해 이야기해 볼까요?"
-          className="w-full h-[120px] rounded-lg text-[#0A0A0A] placeholder-[#A8A8A8] resize-none focus:outline-none"
-        />
-
-        {/* AI 이미지 프리뷰 (임시) */}
-        <div className="relative inline-block w-[50px] h-[50px] mt-6 mb-2">
-          <Image
-            src={aiImage}
-            alt="AI illustration"
-            className="rounded-lg shadow-[0_4px_4px_rgba(0,0,0,0.25)]"
-          />
-          <button
-            type="button"
-            className="absolute -top-1 -right-1 bg-white rounded-full p-0.5 shadow-sm cursor-pointer hover:text-red-500"
-          >
-            <XIcon size={18} color="#666" />
-          </button>
-        </div>
-
-        {/* 이미지 업로드 */}
-        <label htmlFor="imgFile" className="cursor-pointer w-fit">
-          <ImageIcon color="#C7C7CC" />
-        </label>
-        <input
-          type="file"
-          id="imgFile"
-          accept="image/*"
-          className="hidden"
-          name="imgFile"
-        />
+      <div className="relative flex flex-col items-center py-8 rounded-lg bg-[#D9D9D9]/20 border border-dashed border-[#D9D9D9]">
+        {previewUrl ? (
+          <>
+            <div className="relative py-2">
+              <Image
+                src={previewUrl}
+                alt="preview"
+                width={400}
+                height={400}
+                className="max-h-52 object-contain rounded-lg"
+              />
+            </div>
+            <button
+              type="button"
+              className="cursor-pointer absolute top-1.5 right-1.5 p-1 rounded-full text-red-500 border border-[#E5E7EB] bg-white"
+              onClick={removeImgFile}
+            >
+              <X size={14} />
+            </button>
+          </>
+        ) : (
+          <>
+            <input
+              id="writeImg"
+              accept="image/*"
+              className="hidden"
+              type="file"
+              name="mainImage"
+              onChange={handleImgFileUpload}
+            />
+            <p className="text-[#404040] mb-4">Upload image</p>
+            <label
+              htmlFor="writeImg"
+              className="px-5 py-3 rounded-xl text-[#404040] bg-[#D0D0D0] cursor-pointer"
+            >
+              Choose Img File
+            </label>
+          </>
+        )}
       </div>
+
+      <textarea
+        name="content"
+        placeholder="무엇에 대해 이야기해 볼까요?"
+        className="w-full h-[120px] border border-[#D9D9D9] p-4 rounded-lg text-[#0A0A0A] placeholder-[#A8A8A8] resize-none focus:outline-none"
+      />
+
+      <p className="ml-2 text-sm">해시태그</p>
+      <div className="-mt-2 flex flex-row flex-wrap gap-2">
+        {hashtags.map((hashtag) => {
+          const active = selectedHashtags.includes(hashtag.name);
+          return (
+            <button
+              key={hashtag.id}
+              type="button"
+              onClick={() => toggleHashtag(hashtag.name)}
+              className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg 
+                  ${active ? "bg-[#248AFF] text-white" : "hover:bg-[#daebff]"}`}
+            >
+              #{hashtag.name}
+            </button>
+          );
+        })}
+      </div>
+      <input type="hidden" name="hashtags" value={selectedHashtags.join(",")} />
     </div>
   );
 }

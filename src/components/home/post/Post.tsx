@@ -1,13 +1,13 @@
-// src/components/home/post/Post.tsx
+"use client";
+
 import { Heart, MessageSquare } from "lucide-react";
 import Link from "next/link";
-
 
 export default function Post({
   data,
   onLikeToggle,
 }: {
-  data: Post; 
+  data: Post;
   isPriority?: boolean;
   onLikeToggle?: (id: string) => void;
 }) {
@@ -20,20 +20,15 @@ export default function Post({
   return (
     <>
       <div className="bg-white/40 border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl">
-        <Link
-          href={`/?type=${data.post_type}&id=${data.id}`}
-          className="block"
-        >
+        <Link href={`/?type=${data.post_type}&id=${data.id}`} className="block">
           <div className="p-6 pb-0">
             <div>
-              <div className="flex justify-between">
-              </div>
+              <div className="flex justify-between"></div>
               <div className="my-5">
                 <div className="mb-6 space-y-4">
                   <p className="text-[18px] font-medium">{data.title}</p>
                   <p>{String(data.content)}</p>
                 </div>
-                
               </div>
               <div className="space-x-2 text-sm text-[#248AFF]">
                 {data.hashtags?.map((tag, i) => (
@@ -60,7 +55,6 @@ export default function Post({
               <span>{data.comment_count}</span>
             </div>
           </button>
-          
         </div>
       </div>
     </>
