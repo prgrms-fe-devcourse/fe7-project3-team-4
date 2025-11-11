@@ -42,7 +42,7 @@ type TransformedPostData = {
   image?: string; // jsonb에서 'main_image_url' 등을 추출
   hashtags: string[];
   isBookmarked: boolean; // 'user_post_bookmarks'에서 계산
-  isLiked: boolean; // 'user_post_bookmarks'에서 계산
+  isLiked: boolean; // [수정] 'user_post_likes'에서 계산
   model?: string;
 };
 
@@ -83,18 +83,16 @@ export default async function SearchPostForm({
   let query = supabase.from("posts").select(
     `
     *,
-    user_id ( email ),
-    user_post_bookmarks!left ( user_id )
+    profiles!posts_user_id_fkey ( email ),
+    user_post_bookmarks!left ( user_id ),
     user_post_likes!left ( user_id )
   `
   );
 
   if (user) {
-    query = query.eq("user_post_bookmarks.user_id", user.id);
-  }
-
-  if (user) {
-    query = query.eq("user_post_likes.user_id", user.id);
+    query = query
+      .eq("user_post_bookmarks.user_id", user.id)
+      .eq("user_post_likes.user_id", user.id);
   }
 
   // 'searchTerm' 필터 (4개 필드 검색)
@@ -188,11 +186,11 @@ export default async function SearchPostForm({
                 key={tag.id}
                 href={href} // 수정된 href
                 className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg
-          ${
-            isActive
-              ? "bg-[#9787ff] font-bold text-white"
-              : "hover:bg-[#ECE9FF]"
-          }`}
+           ${
+             isActive
+               ? "bg-[#9787ff] font-bold text-white"
+               : "hover:bg-[#ECE9FF]"
+           }`}
               >
                 #{label}
               </Link>
