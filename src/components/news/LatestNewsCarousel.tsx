@@ -3,22 +3,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image"; // Image 임포트 확인
-
-type LatestNews = {
-  id: string;
-  title: string;
-  images?: string[] | null;
-};
-
-type LatestNewsCarouselProps = {
-  newsList: LatestNews[];
-};
+import { useNewsFeedContext } from "@/context/NewsFeedContext";
 
 const MAX_VISIBILITY = 3;
 
-export default function LatestNewsCarousel({
-  newsList,
-}: LatestNewsCarouselProps) {
+export default function LatestNewsCarousel() {
+  const { newsList } = useNewsFeedContext();
+
   const [active, setActive] = useState(0);
   const count = newsList.length;
 
@@ -131,10 +122,10 @@ export default function LatestNewsCarousel({
                         className="object-cover" // 2. w-full, h-full 제거
                         loading="lazy"
                         // 3. (권장) fill 사용 시 sizes 추가
-                        sizes="10vw" 
+                        sizes="10vw"
                       />
-                      // ====================================
                     ) : (
+                      // ====================================
                       <div className="w-full h-full flex items-center justify-center text-gray-400">
                         <svg
                           className="w-16 h-16"
@@ -167,16 +158,16 @@ export default function LatestNewsCarousel({
                       <p className="text-white text-xs font-semibold line-clamp-2">
                         {news.title}
                       </p>
-                    </div> */}  
-                  {/* 뉴스 타이틀 표시 */}
-                  <div
-                    className="absolute bottom-0 left-0 right-0 p-3 bg-linear-to-t from-black/80 to-transparent
+                    </div> */}
+                    {/* 뉴스 타이틀 표시 */}
+                    <div
+                      className="absolute bottom-0 left-0 right-0 p-3 bg-linear-to-t from-black/80 to-transparent
                                transition-all duration-300 ease-in-out"
-                  >
-                    <p className="text-white text-xs font-semibold line-clamp-2">
-                      {news.title}
-                    </p>
-                  </div>
+                    >
+                      <p className="text-white text-xs font-semibold line-clamp-2">
+                        {news.title}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </Link>
