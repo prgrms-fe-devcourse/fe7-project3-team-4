@@ -15,3 +15,5 @@ type Post = {
   model?: string;
   isBookmarked?: boolean;
 };
+
+type WeeklyModel = "텍스트" | "이미지";

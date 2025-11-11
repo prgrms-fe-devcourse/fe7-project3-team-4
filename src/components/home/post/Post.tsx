@@ -11,7 +11,7 @@ export default function Post({
 }) {
   return (
     <>
-      <div className="bg-white/40 border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl">
+      <div className="bg-white/40 border border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl">
         <Link href={`/?type=${data.post_type}&id=${data.id}`} className="block">
           <div className="p-6 pb-0">
             <div>
