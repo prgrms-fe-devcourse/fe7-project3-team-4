@@ -67,7 +67,7 @@ export function ProfileActivityTabs({
   return (
     <>
       {/* 탭 버튼 */}
-      <div className="bg-white/40 border-white/20 rounded-xl shadow-xl">
+      <div className="bg-white/40 border border-white/20 rounded-xl shadow-xl">
         <div className="mt-6 p-1 w-full flex gap-1 leading-none">
           <Link
             href={createTabHref("posts")}
