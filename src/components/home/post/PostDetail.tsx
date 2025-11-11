@@ -9,6 +9,7 @@ import Comments from "./Comments";
 import RichTextRenderer from "@/components/common/RichTextRenderer";
 import { PostType } from "@/types/Post";
 import Image from "next/image";
+import CommentForm from "./CommentForm";
 
 export const MOCK_COMMENTS: PostComment[] = [
   // ... 기존 MOCK_COMMENTS 내용 ...
