@@ -10,7 +10,7 @@ export default function Comments({ comment }: { comment: PostComment }) {
           <div className="w-9 h-9 rounded-full bg-gray-300"></div>
           {/* 이름 + 이메일 */}
           <div className="mb-1.5">
-            <div className="text-sm">{comment.nickname}</div>
+            <div className="text-sm">{comment.display_name}</div>
             <div className="text-xs text-[#717182]">@{comment.email}</div>
           </div>
         </div>
@@ -28,11 +28,11 @@ export default function Comments({ comment }: { comment: PostComment }) {
               <CornerDownRight size={10} />
             </button>
             <span className="ml-1 text-xs">
-              {comment.createdAt.slice(0, 10)}
+              {comment.created_at.slice(0, 10)}
             </span>
           </div>
           {/* 대댓글이 있으면 block */}
-          {comment.hasReply && (
+          {comment.has_reply && (
             <>
               <button className="block cursor-pointer text-[#0094FF] text-sm mt-1 hover:text-[#0095ff8f]">
                 1개의 답글 보기
