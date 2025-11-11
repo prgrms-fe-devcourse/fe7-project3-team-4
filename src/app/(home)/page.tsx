@@ -373,7 +373,12 @@ export default function Page() {
       </div>
 
       {selectedPost ? (
-        <PostDetail post={selectedPost} onBack={handleBack} />
+        <PostDetail
+          post={selectedPost}
+          onLikeToggle={handlePostLikeToggle}
+          onBookmarkToggle={handlePostBookmarkToggle}
+          onBack={handleBack}
+        />
       ) : (
         <>
           <div className="space-y-8 pb-6">

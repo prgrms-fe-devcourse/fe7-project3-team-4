@@ -1,15 +1,11 @@
-import {
-  ArrowLeft,
-  ArrowUpDown,
-  Bookmark,
-  Heart,
-  MessageSquare,
-} from "lucide-react";
+import { ArrowLeft, ArrowUpDown } from "lucide-react";
 import Comments from "./Comments";
 import RichTextRenderer from "@/components/common/RichTextRenderer";
 import { PostType } from "@/types/Post";
 import Image from "next/image";
 import CommentForm from "./CommentForm";
+import PostActions from "./PostAction";
+import PromptDetail from "./PromptDetail";
 
 export const MOCK_COMMENTS: PostComment[] = [
   // ... 기존 MOCK_COMMENTS 내용 ...
@@ -17,9 +13,13 @@ export const MOCK_COMMENTS: PostComment[] = [
 
 export default function PostDetail({
   post,
+  onLikeToggle,
+  onBookmarkToggle,
   onBack,
 }: {
   post: PostType;
+  onLikeToggle?: (id: string) => void;
+  onBookmarkToggle?: (id: string, type: "post" | "news") => void;
   onBack: () => void;
 }) {
   const authorName = post.profiles?.display_name || "익명";
@@ -39,7 +39,7 @@ export default function PostDetail({
 
       <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
         {/* 게시글 정보 */}
-        <div className="pb-7">
+        <div>
           {/* 작성자 정보 */}
           <div className="flex justify-between">
             <div className="flex gap-3 items-center">
@@ -79,10 +79,10 @@ export default function PostDetail({
             )}
           </div>
           {/* 게시글 내용 */}
-          <div className="my-5">
+          <div className="mt-5">
             {/* 제목 */}
-            <div className="mb-6 space-y-4">
-              <p className="text-[18px] font-medium">{post.title}</p>
+            <div className="space-y-4">
+              <p className="text-[18px] font-semibold">{post.title}</p>
               {/* 전체 콘텐츠 렌더링 (텍스트 + 이미지 모두) */}
               <div className="mt-4 space-y-6">
                 <RichTextRenderer content={post.content} showImage={false} />
@@ -90,46 +90,34 @@ export default function PostDetail({
                 <RichTextRenderer
                   content={post.content}
                   imageOnly={true}
-                  postId={post.id}
-                  postType={post.post_type}
                   title={post.title}
                 />
               </div>
             </div>
           </div>
+          {/* 프롬프트 or 주간 챌린지 */}
+          <PromptDetail />
           {/* 태그들 */}
           {post.hashtags && post.hashtags.length > 0 && (
-            <div className="flex flex-row flex-wrap gap-2 text-sm text-[#248AFF]">
+            <div className="flex flex-row flex-wrap gap-2 mt-5 text-sm text-[#248AFF]">
               {post.hashtags.map((tag, i) => (
                 <span key={i}>{tag.startsWith("#") ? tag : `#${tag}`}</span>
               ))}
             </div>
           )}
         </div>
-        {/* 아래 버튼들 */}
-        <div className="flex justify-center gap-30 text-[#717182]">
-          <button className="cursor-pointer py-1 px-2 rounded-md hover:text-[#FF569B] hover:bg-[#F7E6ED]">
-            <div className="flex gap-2 text-sm items-center ">
-              <Heart size={18} />
-              <span>{post.like_count ?? 0}</span>
-            </div>
-          </button>
-          <button className="cursor-pointer py-1 px-2 rounded-md hover:bg-gray-200">
-            <div className="flex gap-2 text-sm items-center">
-              <MessageSquare size={18} />
-              <span>{post.comment_count ?? 0}</span>
-            </div>
-          </button>
-          <button
-            className={`cursor-pointer py-1 px-2 rounded-md hover:text-[#6758FF] hover:bg-[#D8D4FF] ${
-              post.isBookmarked ? "text-[#6758FF] bg-[#D8D4FF]" : ""
-            }`}
-          >
-            <Bookmark size={18} />
-          </button>
-        </div>
+        {/* 액션 버튼 */}
+        <PostActions
+          postId={post.id}
+          likeCount={post.like_count}
+          commentCount={post.comment_count}
+          isLiked={post.isLiked}
+          isBookmarked={post.isBookmarked}
+          onLikeToggle={onLikeToggle}
+          onBookmarkToggle={onBookmarkToggle}
+        />
         {/* 작성자 소개 */}
-        <div className="mt-7">
+        <div>
           <p className="ml-2 mb-2 text-ms font-medium">작성자 소개</p>
           <div className="flex justify-between items-start gap-3 p-3 bg-white rounded-lg">
             <div className="flex-1 flex gap-3">
@@ -148,7 +136,7 @@ export default function PostDetail({
                 </p>
               </div>
             </div>
-            <button className="cursor-pointer leading-none text-[#4888FF] bg-[#EBF2FF] rounded-lg py-1.5 px-2 text-sm">
+            <button className="cursor-pointer leading-none text-[#6758FF] bg-[#6758FF]/10 rounded-lg py-1.5 px-2 text-sm">
               + 팔로우
             </button>
           </div>
