@@ -15,6 +15,7 @@ export interface PostType {
   model?: string;
   thumbnail?: string | null;
   subtitle?: string | null;
+  result_mode?: string | null;
   profiles?: {
     display_name: string | null;
     email: string | null;

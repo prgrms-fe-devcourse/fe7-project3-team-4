@@ -386,9 +386,23 @@ export default function PostDetail({
           <div className="mt-5">
             <div className="space-y-4">
               <p className="text-[18px] font-medium">{post.title}</p>
-              <div className="mt-4">
-                <RichTextRenderer content={post.content} showImage={true} />
-              </div>
+              {/* 이미지 */}
+              {post.thumbnail === "" ? null : (
+                <div className="relative">
+                  <Image
+                    src={extractImageSrcArr(post.content)[0]}
+                    alt={post.title}
+                    width={800}
+                    height={800}
+                    className="object-cover"
+                  />
+                </div>
+              )}
+              {/* content */}
+              <RichTextRenderer
+                content={pickNthParagraphDoc(post.content, 0)}
+                showImage={false}
+              />
             </div>
           </div>
 
@@ -413,7 +427,7 @@ export default function PostDetail({
       </div>
 
       <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
-        <PromptDetail />
+        <PromptDetail post={post} />
       </div>
 
       <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
