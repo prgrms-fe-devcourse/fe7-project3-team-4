@@ -1,5 +1,3 @@
-// src/app/(home)/notify/page.tsx (수정본)
-
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import type { NotificationWithDetails } from "@/types/notification";

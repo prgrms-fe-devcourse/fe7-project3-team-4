@@ -17,7 +17,9 @@ export default async function Page() {
 
   return (
     <>
-      <WritePostForm hashtags={hashtags} />
+      <section className="relative max-w-2xl mx-auto">
+        <WritePostForm hashtags={hashtags} />
+      </section>
     </>
   );
 }

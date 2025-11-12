@@ -140,7 +140,7 @@ export default async function NewsDetailPage({
 
   return (
     // [수정] PostDetail과 동일한 컨테이너 스타일 적용 (이전 단계에서 적용됨)
-    <main className="max-w-3xl mx-auto p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
+    <main className="max-w-2xl mx-auto p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
       {/* 수정하기 버튼 (기존 위치 유지) */}
       <div className="mb-4 text-right">
         <Link

@@ -149,16 +149,18 @@ export default async function Page({
   const initialTab = search.tab || "posts";
 
   return (
-    <Suspense fallback={<ProfilePageSkeleton />}>
-      <ProfileDataLoader
-        userId={user.id}
-        targetUserId={targetUserId}
-        initialTab={initialTab}
-        updateProfile={updateProfile}
-        updateAvatarUrl={updateAvatarUrl}
-        togglePostBookmark={togglePostBookmark}
-        toggleFollow={toggleFollow}
-      />
-    </Suspense>
+    <section className="relative max-w-2xl mx-auto">
+      <Suspense fallback={<ProfilePageSkeleton />}>
+        <ProfileDataLoader
+          userId={user.id}
+          targetUserId={targetUserId}
+          initialTab={initialTab}
+          updateProfile={updateProfile}
+          updateAvatarUrl={updateAvatarUrl}
+          togglePostBookmark={togglePostBookmark}
+          toggleFollow={toggleFollow}
+        />
+      </Suspense>
+    </section>
   );
 }
