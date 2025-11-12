@@ -25,7 +25,9 @@ const getOrdinalSuffix = (n: number) => {
 export default async function Rank() {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const currentUserId = user?.id || null;
 
   const { data, error } = await supabase
@@ -73,9 +75,9 @@ export default async function Rank() {
       .from("follows")
       .select("following_id")
       .eq("follower_id", currentUserId);
-    
+
     if (followData) {
-      followingIds = new Set(followData.map(f => f.following_id));
+      followingIds = new Set(followData.map((f) => f.following_id));
     }
   }
 
@@ -107,33 +109,37 @@ export default async function Rank() {
               className="flex justify-between items-center"
             >
               {/* ⭐️ Link로 감싸서 클릭 시 프로필 이동 */}
-              <Link 
+              <Link
                 href={`/profile?userId=${item.user_id}`}
-                className="flex items-center gap-1.5 flex-1 min-w-0 mr-4 hover:bg-gray-50 rounded-lg p-2 transition-colors"
+                className="flex items-center gap-1.5 flex-1 min-w-0 hover:bg-gray-50 rounded-lg p-2 transition-colors"
               >
                 <div className="w-8" style={{ color: rankColor }}>
                   {rankNumber}
                   {rankSuffix}.
                 </div>
-                <div className="relative w-9 h-9 bg-gray-300 rounded-full overflow-hidden shrink-0">
-                  {avatar ? (
-                    <Image
-                      src={avatar}
-                      alt={displayName}
-                      fill={true}
-                      className="object-cover w-full h-full"
-                    />
-                  ) : (
-                    <span className="flex items-center justify-center h-full w-full text-gray-500 text-lg font-semibold">
-                      {(displayName[0] || "?").toUpperCase()}
-                    </span>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm truncate">{displayName}</p>
-                  <p className="text-[11px] text-[#717182] truncate">
-                    @{email}
-                  </p>
+                <div className="flex-1 flex gap-2">
+                  {/* 이미지 */}
+                  <div className="relative w-9 h-9 bg-gray-300 rounded-full overflow-hidden shrink-0">
+                    {avatar ? (
+                      <Image
+                        src={avatar}
+                        alt={displayName}
+                        fill={true}
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <span className="flex items-center justify-center h-full w-full text-gray-500 text-lg font-semibold">
+                        {(displayName[0] || "?").toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  {/* 유저 정보 */}
+                  <div className="min-w-0">
+                    <p className="text-sm truncate">{displayName}</p>
+                    <p className="text-[11px] text-[#717182] truncate">
+                      {email}
+                    </p>
+                  </div>
                 </div>
               </Link>
               <div className="shrink-0">

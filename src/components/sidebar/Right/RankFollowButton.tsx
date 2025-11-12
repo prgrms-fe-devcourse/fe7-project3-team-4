@@ -44,12 +44,10 @@ export default function RankFollowButton({
         setIsFollowing(false);
       } else {
         // 팔로우
-        const { error } = await supabase
-          .from("follows")
-          .insert({
-            follower_id: currentUserId,
-            following_id: targetUserId,
-          });
+        const { error } = await supabase.from("follows").insert({
+          follower_id: currentUserId,
+          following_id: targetUserId,
+        });
 
         if (error) throw error;
         setIsFollowing(true);
@@ -66,7 +64,7 @@ export default function RankFollowButton({
     <button
       onClick={handleFollowToggle}
       disabled={isLoading}
-      className={`cursor-pointer text-sm px-4 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+      className={`cursor-pointer text-sm px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
         isFollowing
           ? "text-gray-600 bg-gray-200 hover:bg-gray-300"
           : "text-white bg-[#6758FF] hover:bg-[#5648E5]"
