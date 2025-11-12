@@ -382,6 +382,7 @@ export type Database = {
           like_count: number | null
           model: string | null
           post_type: string | null
+          result_mode: string | null
           subtitle: string | null
           thumbnail: string | null
           title: string | null
@@ -399,6 +400,7 @@ export type Database = {
           like_count?: number | null
           model?: string | null
           post_type?: string | null
+          result_mode?: string | null
           subtitle?: string | null
           thumbnail?: string | null
           title?: string | null
@@ -416,6 +418,7 @@ export type Database = {
           like_count?: number | null
           model?: string | null
           post_type?: string | null
+          result_mode?: string | null
           subtitle?: string | null
           thumbnail?: string | null
           title?: string | null
