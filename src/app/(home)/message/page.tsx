@@ -163,8 +163,8 @@ export default function Page() {
               other_avatar: p?.avatar_url ?? null,
               last_message_at: r.last_message_at ?? null,
               last_message_text: r.last_message_text ?? null,
-              unread_count: 0, // ⬅︎ 일단 0으로 채워두고
-              _lastReadAt: lastReadAt ?? null, // ⬅︎ 나중에 카운트 쿼리에서 사용
+              unread_count: 0, // 일단 0으로 채워두고
+              _lastReadAt: lastReadAt ?? null, // 나중에 카운트 쿼리에서 사용
             },
           ];
         });
@@ -355,6 +355,61 @@ export default function Page() {
 
     return () => {
       supabase.removeChannel(channel);
+    };
+  }, [me, roomId, supabase]);
+
+  // 새 메시지 리얼타임 , 내가 보고있지 않은 방에만 뱃지 적용
+  useEffect(() => {
+    if (!me) return;
+
+    const ch = supabase
+      .channel(`message-badge-${me}`)
+      .on(
+        `postgres_changes`,
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+        },
+        (payload) => {
+          const m = payload.new as {
+            room_id: string;
+            sender_id: string;
+            created_at: string;
+          };
+          // 내가 보낸건 빼고
+          if (m.sender_id === me) return;
+
+          // 현재 보고있는 방은 즉시 읽음 처리 (뱃지 x)
+          if (roomId === m.room_id) {
+            (async () => {
+              try {
+                await supabase
+                  .rpc("mark_room_read", { room_id: m.room_id })
+                  .throwOnError();
+              } catch (e) {
+                // 무시
+              }
+            })();
+            return;
+          }
+
+          // 방 카드가 이미 있을떄 좌측 목록에 뱃지 +1
+          setRooms((prev) => {
+            const idx = prev.findIndex((x) => x.id === m.room_id);
+            if (idx < 0) return prev;
+            const next = [...prev];
+            next[idx] = {
+              ...next[idx],
+              unread_count: (next[idx].unread_count ?? 0) + 1,
+            };
+            return next;
+          });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
     };
   }, [me, roomId, supabase]);
 
@@ -861,7 +916,7 @@ export default function Page() {
                           return unreadByPeer ? (
                             <span
                               title="상대 미읽음"
-                              className="inline-block w-2 h-2 rounded-full bg-[#9AA0A6]"
+                              className="inline-block w-2 h-2 rounded-full bg-[#6758FF]"
                             ></span>
                           ) : null;
                         })()}
@@ -888,7 +943,7 @@ export default function Page() {
                             minute: "2-digit",
                           })}
                         </span>
-                        {(() => {
+                        {/* {(() => {
                           const unread =
                             !myLastReadAt || m.created_at > myLastReadAt;
                           return unread ? (
@@ -897,7 +952,7 @@ export default function Page() {
                               className="inline-block w-2 h-2 rounded-full bg-[#6758FF]"
                             ></span>
                           ) : null;
-                        })()}
+                        })()} */}
                       </div>
                     )}
                   </div>
