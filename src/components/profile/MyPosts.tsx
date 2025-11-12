@@ -6,13 +6,13 @@ import { PostType } from "@/types/Post";
 type MyPostsProps = {
   posts: PostType[];
   onLikeToggle: (id: string) => void;
-  onBookmarkToggle: (id: string) => void; // ⭐️ 추가
+  // onBookmarkToggle: (id: string) => void;
 };
 
 export default function MyPosts({ 
   posts, 
   onLikeToggle,
-  // onBookmarkToggle // ⭐️ 추가
+  // onBookmarkToggle
 }: MyPostsProps) {
   if (!posts || posts.length === 0) {
     return <EmptyActivity message="작성한 게시글이 없습니다" />;
@@ -26,7 +26,7 @@ export default function MyPosts({
             key={data.id}
             data={data}
             onLikeToggle={onLikeToggle}
-            // onBookmarkToggle={onBookmarkToggle} // ⭐️ 추가
+            // onBookmarkToggle={onBookmarkToggle}
           />
         );
       })}

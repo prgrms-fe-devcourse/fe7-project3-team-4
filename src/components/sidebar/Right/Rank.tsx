@@ -1,8 +1,10 @@
+// src/components/profile/Rank.tsx
 import { Trophy } from "lucide-react";
 import Box from "./Box";
 import { createClient } from "@/utils/supabase/server";
 import Image from "next/image";
 import RankFollowButton from "./RankFollowButton";
+import Link from "next/link"; // ⭐️ 추가
 
 const getOrdinalSuffix = (n: number) => {
   if (n % 100 >= 11 && n % 100 <= 13) {
@@ -23,7 +25,6 @@ const getOrdinalSuffix = (n: number) => {
 export default async function Rank() {
   const supabase = await createClient();
 
-  // 현재 로그인한 사용자 정보 가져오기
   const { data: { user } } = await supabase.auth.getUser();
   const currentUserId = user?.id || null;
 
@@ -57,7 +58,6 @@ export default async function Rank() {
     );
   }
 
-  // user_id 기준으로 중복 제거
   const uniqueMap = new Map();
   for (const post of data) {
     if (!uniqueMap.has(post.user_id)) {
@@ -67,7 +67,6 @@ export default async function Rank() {
   const uniqueByUser = Array.from(uniqueMap.values());
   const topUsers = uniqueByUser.slice(0, 4);
 
-  // 현재 사용자의 팔로우 상태 조회
   let followingIds: Set<string> = new Set();
   if (currentUserId) {
     const { data: followData } = await supabase
@@ -107,12 +106,15 @@ export default async function Rank() {
               key={item.user_id}
               className="flex justify-between items-center"
             >
-              <div className="flex items-center gap-1.5 flex-1 min-w-0 mr-4">
+              {/* ⭐️ Link로 감싸서 클릭 시 프로필 이동 */}
+              <Link 
+                href={`/profile?userId=${item.user_id}`}
+                className="flex items-center gap-1.5 flex-1 min-w-0 mr-4 hover:bg-gray-50 rounded-lg p-2 transition-colors"
+              >
                 <div className="w-8" style={{ color: rankColor }}>
                   {rankNumber}
                   {rankSuffix}.
                 </div>
-
                 <div className="relative w-9 h-9 bg-gray-300 rounded-full overflow-hidden shrink-0">
                   {avatar ? (
                     <Image
@@ -127,15 +129,13 @@ export default async function Rank() {
                     </span>
                   )}
                 </div>
-
                 <div className="min-w-0">
                   <p className="text-sm truncate">{displayName}</p>
                   <p className="text-[11px] text-[#717182] truncate">
                     @{email}
                   </p>
                 </div>
-              </div>
-
+              </Link>
               <div className="shrink-0">
                 {!isSelf && (
                   <RankFollowButton

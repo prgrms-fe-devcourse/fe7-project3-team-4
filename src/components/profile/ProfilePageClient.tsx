@@ -1,3 +1,5 @@
+// src/components/profile/ProfilePageClient.tsx
+
 "use client";
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
@@ -33,6 +35,9 @@ type BookmarkedItem =
 
 type ProfilePageClientProps = {
   profile: Profile;
+  currentUserId: string;
+  targetUserId: string;
+  isFollowing: boolean;
   initialTab: string;
   updateProfile: (
     prevState: FormState,
@@ -44,6 +49,7 @@ type ProfilePageClientProps = {
     currentUserId: string,
     isBookmarked: boolean
   ) => Promise<FormState>;
+  toggleFollow: (targetId: string) => Promise<{ success: boolean }>;
   initialMyPosts: PostType[];
   initialBookmarkedPosts: PostType[];
   initialBookmarkedNews: BookmarkedNewsRow[];
@@ -52,10 +58,14 @@ type ProfilePageClientProps = {
 
 export default function ProfilePageClient({
   profile,
+  currentUserId,
+  targetUserId,
+  isFollowing: initialIsFollowing,
   initialTab,
   updateProfile,
   updateAvatarUrl,
   togglePostBookmark,
+  toggleFollow,
   initialMyPosts,
   initialBookmarkedPosts,
   initialBookmarkedNews,
@@ -71,111 +81,148 @@ export default function ProfilePageClient({
     handleBookmarkToggle: handleNewsBookmarkToggle,
   } = useNewsFeedContext();
 
-  const initialBookmarks = useMemo(() => {
-    const posts: BookmarkedItem[] = initialBookmarkedPosts.map((p) => ({
-      ...p,
-      isBookmarked: true,
-      type: "post",
-    }));
+  const isOwnProfile = currentUserId === targetUserId;
 
-    const news: BookmarkedItem[] = initialBookmarkedNews.map((n) => ({
-      ...n,
+  // ⭐️ 상태 초기화 및 props 동기화
+  const [myPosts, setMyPosts] = useState<PostType[]>(initialMyPosts);
+  const [myComments, setMyComments] = useState<DbCommentRow[]>(
+    initialMyComments.map((c) => ({
+      ...c,
+      isLiked: !!(c.comment_likes && c.comment_likes.length > 0),
+    }))
+  );
+  
+  const initialBookmarks = useMemo(() => {
+    const posts = initialBookmarkedPosts.map((p) => ({ ...p, type: "post" as const }));
+    const news = initialBookmarkedNews.map((n) => ({ 
+      ...n, 
+      type: "news" as const,
       isLiked: !!(n.user_news_likes && n.user_news_likes.length > 0),
       isBookmarked: true,
-      type: "news",
     }));
-
-    return [...posts, ...news].sort((a, b) => {
-      const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
-      const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
-      return timeB - timeA;
-    });
+    return [...posts, ...news].sort((a, b) => 
+      new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+    );
   }, [initialBookmarkedPosts, initialBookmarkedNews]);
+  
+  const [myBookmarks, setMyBookmarks] = useState<BookmarkedItem[]>(initialBookmarks);
+  const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
 
-  // ⭐️ 초기 댓글에 isLiked 추가
-  const initialCommentsWithLiked = useMemo(() => {
-    return initialMyComments.map((comment) => ({
-      ...comment,
-      isLiked: !!(comment.comment_likes && comment.comment_likes.length > 0),
-    }));
-  }, [initialMyComments]);
-
-  // ⭐️ 상태 관리
-  const [myPosts, setMyPosts] = useState(initialMyPosts);
-  const [myBookmarks, setMyBookmarks] = useState(initialBookmarks);
-  const [myComments, setMyComments] = useState(initialCommentsWithLiked);
-
-  // ✅ Realtime 구독 설정
+  // ⭐️ targetUserId 변경 시 모든 state 강제 리셋
   useEffect(() => {
-    if (!profile?.id) return;
+    setMyPosts(initialMyPosts);
+    setMyComments(
+      initialMyComments.map((c) => ({
+        ...c,
+        isLiked: !!(c.comment_likes && c.comment_likes.length > 0),
+      }))
+    );
+    setMyBookmarks(initialBookmarks);
+    setIsFollowing(initialIsFollowing);
+    
+    // 이전 Realtime 채널 정리
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+    }
+  }, [targetUserId, initialMyPosts, initialMyComments, initialBookmarks, initialIsFollowing, supabase]);
+
+
+  // ✅ (개선 4) 의존성 배열 최적화
+  const handleFollowToggle = useCallback(async () => {
+    try {
+      const result = await toggleFollow(targetUserId);
+      if (result.success) {
+        setIsFollowing(prev => !prev);
+      }
+    } catch (error) {
+      console.error("Follow toggle failed:", error);
+    }
+  }, [toggleFollow, targetUserId]);
+
+  // ✅ (개선 2) Realtime 구독 필터링을 위한 Memo
+  const bookmarkedNewsIds = useMemo(() => 
+    myBookmarks
+      .filter(item => item.type === 'news')
+      .map(item => `${item.id}`), // Supabase 'in' 필터를 위해 홑따옴표 추가
+    [myBookmarks]
+  );
+
+  // ✅ Realtime 구독
+  useEffect(() => {
+    if (!targetUserId) return;
 
     const setupRealtime = async () => {
       if (channelRef.current) {
         await supabase.removeChannel(channelRef.current);
       }
 
-      const channelName = `profile-activity:${profile.id}`;
+      const channelName = `profile-activity:${targetUserId}`;
       const channel = supabase.channel(channelName);
 
       console.log(`[ProfilePageClient] 🚀 Subscribing to: ${channelName}`);
 
-      // ⭐️ posts 테이블 업데이트 감지 (like_count 변경)
+      // posts 업데이트 (✅ 개선 2: 필터 추가)
       channel.on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "posts" },
+        { 
+          event: "UPDATE", 
+          schema: "public", 
+          table: "posts",
+          filter: `user_id=eq.${targetUserId}` // ⭐️ 필터 추가
+        },
         (payload) => {
-          console.log(`[ProfilePageClient] ✅ posts UPDATE:`, payload.new);
           const updatedPost = payload.new as PostType;
-
-          // myPosts 업데이트
-          setMyPosts((prev) =>
-            prev.map((post) =>
-              post.id === updatedPost.id
-                ? { ...post, like_count: updatedPost.like_count, view_count: updatedPost.view_count }
-                : post
-            )
-          );
-
-          // myBookmarks 업데이트
-          setMyBookmarks((prev) =>
-            prev.map((item) => {
-              if (item.type === "post" && item.id === updatedPost.id) {
-                return { ...item, like_count: updatedPost.like_count };
-              }
-              return item;
-            })
-          );
+          console.log(`[posts UPDATE]`, updatedPost);
+          
+          setMyPosts(prev => prev.map(post => 
+            post.id === updatedPost.id 
+              ? { ...post, like_count: updatedPost.like_count, view_count: updatedPost.view_count }
+              : post
+          ));
+          setMyBookmarks(prev => prev.map(item => 
+            item.type === "post" && item.id === updatedPost.id
+              ? { ...item, like_count: updatedPost.like_count }
+              : item
+          ));
         }
       );
 
-      // ⭐️ comments 테이블 업데이트 감지 (like_count 변경)
+      // comments 업데이트 (✅ 개선 2: 필터 추가)
       channel.on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "comments" },
+        { 
+          event: "UPDATE", 
+          schema: "public", 
+          table: "comments",
+          filter: `user_id=eq.${targetUserId}` // ⭐️ 필터 추가
+        },
         (payload) => {
-          console.log(`[ProfilePageClient] ✅ comments UPDATE:`, payload.new);
           const updatedComment = payload.new as DbCommentRow;
-
-          setMyComments((prev) =>
-            prev.map((comment) =>
-              comment.id === updatedComment.id
-                ? { ...comment, like_count: updatedComment.like_count }
-                : comment
-            )
-          );
+          console.log(`[comments UPDATE]`, updatedComment);
+          
+          setMyComments(prev => prev.map(comment =>
+            comment.id === updatedComment.id
+              ? { ...comment, like_count: updatedComment.like_count }
+              : comment
+          ));
         }
       );
 
-      // ⭐️ news 테이블 업데이트 감지
-      channel.on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "news" },
-        (payload) => {
-          console.log(`[ProfilePageClient] ✅ news UPDATE:`, payload.new);
-          const updatedNews = payload.new as NewsRow;
-
-          setMyBookmarks((prev) =>
-            prev.map((item) => {
+      // news 업데이트 (✅ 개선 2: 필터 추가)
+      if (bookmarkedNewsIds.length > 0) {
+        channel.on(
+          "postgres_changes",
+          { 
+            event: "UPDATE", 
+            schema: "public", 
+            table: "news",
+            filter: `id=in.(${bookmarkedNewsIds.join(',')})` // ⭐️ 필터 추가
+          },
+          (payload) => {
+            const updatedNews = payload.new as NewsRow;
+            console.log(`[news UPDATE]`, updatedNews);
+            
+            setMyBookmarks(prev => prev.map(item => {
               if (item.type === "news" && item.id === updatedNews.id) {
                 return {
                   ...item,
@@ -184,236 +231,144 @@ export default function ProfilePageClient({
                 };
               }
               return item;
-            })
-          );
-        }
-      );
+            }));
+          }
+        );
+      }
 
-      // ⭐️ user_post_likes 변경 감지 (내 좋아요 상태)
+      // user_post_likes 변경
       channel.on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "user_post_likes",
-          filter: `user_id=eq.${profile.id}`,
+          filter: `user_id=eq.${currentUserId}`,
         },
         (payload) => {
-          console.log(
-            `[ProfilePageClient] ✅ user_post_likes ${payload.eventType}:`,
-            payload.new || payload.old
-          );
-
+          console.log(`[user_post_likes ${payload.eventType}]`, payload);
+          
           if (payload.eventType === "INSERT") {
-            const newLike = payload.new as { post_id: string; user_id: string };
-            
-            setMyPosts((prev) =>
-              prev.map((post) =>
-                post.id === newLike.post_id ? { ...post, isLiked: true } : post
-              )
-            );
-            
-            setMyBookmarks((prev) =>
-              prev.map((item) => {
-                if (item.type === "post" && item.id === newLike.post_id) {
-                  return { ...item, isLiked: true };
-                }
-                return item;
-              })
-            );
+            const newLike = payload.new as { post_id: string };
+            updatePostLikeState(newLike.post_id, true);
           } else if (payload.eventType === "DELETE") {
-            const oldLike = payload.old as { post_id: string; user_id: string };
-            
-            setMyPosts((prev) =>
-              prev.map((post) =>
-                post.id === oldLike.post_id ? { ...post, isLiked: false } : post
-              )
-            );
-            
-            setMyBookmarks((prev) =>
-              prev.map((item) => {
-                if (item.type === "post" && item.id === oldLike.post_id) {
-                  return { ...item, isLiked: false };
-                }
-                return item;
-              })
-            );
+            const oldLike = payload.old as { post_id: string };
+            updatePostLikeState(oldLike.post_id, false);
           }
         }
       );
 
-      // ⭐️ comment_likes 변경 감지 (댓글 좋아요 상태)
+      // comment_likes 변경
       channel.on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "comment_likes",
-          filter: `user_id=eq.${profile.id}`,
+          filter: `user_id=eq.${currentUserId}`,
         },
         (payload) => {
-          console.log(
-            `[ProfilePageClient] ✅ comment_likes ${payload.eventType}:`,
-            payload.new || payload.old
-          );
-
+          console.log(`[comment_likes ${payload.eventType}]`, payload);
+          
           if (payload.eventType === "INSERT") {
-            const newLike = payload.new as { comment_id: string; user_id: string };
-            setMyComments((prev) =>
-              prev.map((comment) =>
-                comment.id === newLike.comment_id
-                  ? { ...comment, isLiked: true }
-                  : comment
-              )
-            );
+            const newLike = payload.new as { comment_id: string };
+            updateCommentLikeState(newLike.comment_id, true);
           } else if (payload.eventType === "DELETE") {
-            const oldLike = payload.old as { comment_id: string; user_id: string };
-            setMyComments((prev) =>
-              prev.map((comment) =>
-                comment.id === oldLike.comment_id
-                  ? { ...comment, isLiked: false }
-                  : comment
-              )
-            );
+            const oldLike = payload.old as { comment_id: string };
+            updateCommentLikeState(oldLike.comment_id, false);
           }
         }
       );
 
-      // 뉴스 좋아요 상태 변경 감지
+      // user_news_likes 변경
       channel.on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "user_news_likes",
-          filter: `user_id=eq.${profile.id}`,
+          filter: `user_id=eq.${currentUserId}`,
         },
         (payload) => {
-          console.log(
-            `[ProfilePageClient] ✅ user_news_likes ${payload.eventType}:`,
-            payload.new || payload.old
-          );
-
+          console.log(`[user_news_likes ${payload.eventType}]`, payload);
+          
           if (payload.eventType === "INSERT") {
-            const newLike = payload.new as { news_id: string; user_id: string };
-            setMyBookmarks((prev) =>
-              prev.map((item) => {
-                if (item.type === "news" && item.id === newLike.news_id) {
-                  return { ...item, isLiked: true };
-                }
-                return item;
-              })
-            );
+            const newLike = payload.new as { news_id: string };
+            updateNewsLikeState(newLike.news_id, true);
           } else if (payload.eventType === "DELETE") {
-            const oldLike = payload.old as { news_id: string; user_id: string };
-            setMyBookmarks((prev) =>
-              prev.map((item) => {
-                if (item.type === "news" && item.id === oldLike.news_id) {
-                  return { ...item, isLiked: false };
-                }
-                return item;
-              })
-            );
+            const oldLike = payload.old as { news_id: string };
+            updateNewsLikeState(oldLike.news_id, false);
           }
         }
       );
 
-      // 북마크 삭제 감지
+      // 북마크 삭제
       channel.on(
         "postgres_changes",
         {
           event: "DELETE",
           schema: "public",
           table: "user_news_bookmarks",
-          filter: `user_id=eq.${profile.id}`,
+          filter: `user_id=eq.${targetUserId}`,
         },
         (payload) => {
-          console.log(
-            `[ProfilePageClient] ✅ user_news_bookmarks DELETE:`,
-            payload.old
-          );
-          const oldBookmark = payload.old as {
-            news_id: string;
-            user_id: string;
-          };
-
-          setMyBookmarks((prev) =>
-            prev.filter((item) => {
-              if (item.type === "news") {
-                return item.id !== oldBookmark.news_id;
-              }
-              return true;
-            })
-          );
+          const oldBookmark = payload.old as { news_id: string };
+          setMyBookmarks(prev => prev.filter(item => 
+            !(item.type === "news" && item.id === oldBookmark.news_id)
+          ));
         }
       );
 
-      // ⭐️ 게시글 북마크 삭제 감지
       channel.on(
         "postgres_changes",
         {
           event: "DELETE",
           schema: "public",
           table: "user_post_bookmarks",
-          filter: `user_id=eq.${profile.id}`,
+          filter: `user_id=eq.${targetUserId}`,
         },
         (payload) => {
-          console.log(
-            `[ProfilePageClient] ✅ user_post_bookmarks DELETE:`,
-            payload.old
-          );
-          const oldBookmark = payload.old as {
-            post_id: string;
-            user_id: string;
-          };
-
-          setMyBookmarks((prev) =>
-            prev.filter((item) => {
-              if (item.type === "post") {
-                return item.id !== oldBookmark.post_id;
-              }
-              return true;
-            })
-          );
+          const oldBookmark = payload.old as { post_id: string };
+          setMyBookmarks(prev => prev.filter(item => 
+            !(item.type === "post" && item.id === oldBookmark.post_id)
+          ));
           
-          // myPosts의 북마크 상태도 업데이트
-          setMyPosts((prev) =>
-            prev.map((post) =>
-              post.id === oldBookmark.post_id
-                ? { ...post, isBookmarked: false }
-                : post
-            )
-          );
+          setMyPosts(prev => prev.map(post =>
+            post.id === oldBookmark.post_id
+              ? { ...post, isBookmarked: false }
+              : post
+          ));
         }
       );
 
-      // ⭐️ 게시글 북마크 추가 감지
+      // 북마크 추가 (✅ 개선 3: myBookmarks에도 추가)
       channel.on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "user_post_bookmarks",
-          filter: `user_id=eq.${profile.id}`,
+          filter: `user_id=eq.${targetUserId}`,
         },
         (payload) => {
-          console.log(
-            `[ProfilePageClient] ✅ user_post_bookmarks INSERT:`,
-            payload.new
-          );
-          const newBookmark = payload.new as {
-            post_id: string;
-            user_id: string;
-          };
+          const newBookmark = payload.new as { post_id: string };
+          let postToAdd: PostType | undefined;
+          
+          setMyPosts(prev => prev.map(post => {
+            if (post.id === newBookmark.post_id) {
+              postToAdd = post; // ⭐️ 북마크 목록에 추가할 포스트 정보 확보
+              return { ...post, isBookmarked: true };
+            }
+            return post;
+          }));
 
-          // myPosts의 북마크 상태 업데이트
-          setMyPosts((prev) =>
-            prev.map((post) =>
-              post.id === newBookmark.post_id
-                ? { ...post, isBookmarked: true }
-                : post
-            )
-          );
+          // ⭐️ myBookmarks 상태에도 추가
+          if (postToAdd) {
+            setMyBookmarks(prev => [
+              { ...postToAdd!, isBookmarked: true, type: "post" as const },
+              ...prev
+            ]);
+          }
         }
       );
 
@@ -424,16 +379,10 @@ export default function ProfilePageClient({
           console.log(`[ProfilePageClient] ✅ SUBSCRIBED successfully`);
         } else if (status === "CHANNEL_ERROR") {
           console.error(`[ProfilePageClient] ❌ CHANNEL_ERROR:`, err);
-          setTimeout(() => {
-            console.log("[ProfilePageClient] 🔄 Retrying connection...");
-            setupRealtime();
-          }, 3000);
+          setTimeout(() => setupRealtime(), 3000);
         } else if (status === "TIMED_OUT") {
           console.error(`[ProfilePageClient] ⏱️ TIMED_OUT:`, err);
-          setTimeout(() => {
-            console.log("[ProfilePageClient] 🔄 Retrying after timeout...");
-            setupRealtime();
-          }, 3000);
+          setTimeout(() => setupRealtime(), 3000);
         }
       });
 
@@ -444,138 +393,166 @@ export default function ProfilePageClient({
 
     return () => {
       if (channelRef.current) {
-        console.log(`[ProfilePageClient] 🧹 Cleanup: removing channel`);
         supabase.removeChannel(channelRef.current);
       }
     };
-  }, [profile?.id, supabase]);
+  }, [targetUserId, currentUserId, supabase, bookmarkedNewsIds]); // ✅ (개선 2) 의존성 추가
 
-  // ⭐️ 게시글 좋아요 토글 (Trigger가 like_count 자동 업데이트)
+  // --- Realtime용 상태 업데이트 헬퍼 ---
+  
+  const updatePostLikeState = (postId: string, isLiked: boolean) => {
+    setMyPosts(prev => prev.map(post => 
+      post.id === postId ? { ...post, isLiked } : post
+    ));
+    setMyBookmarks(prev => prev.map(item => 
+      item.type === "post" && item.id === postId 
+        ? { ...item, isLiked } 
+        : item
+    ));
+  };
+
+  const updateCommentLikeState = (commentId: string, isLiked: boolean) => {
+    setMyComments(prev => prev.map(comment => 
+      comment.id === commentId ? { ...comment, isLiked } : comment
+    ));
+  };
+
+  const updateNewsLikeState = (newsId: string, isLiked: boolean) => {
+    setMyBookmarks(prev => prev.map(item => 
+      item.type === "news" && item.id === newsId 
+        ? { ...item, isLiked } 
+        : item
+    ));
+  };
+
+  // --- 핸들러 함수 (✅ 개선 4: 함수형 업데이트 및 의존성 최적화) ---
+
+  // 게시글 좋아요 토글
   const handlePostLikeToggle = useCallback(
     async (id: string) => {
-      if (!profile) return;
+      if (!currentUserId) return;
 
-      const postInMyPosts = myPosts.find((p) => p.id === id);
-      const postInBookmarks = myBookmarks.find(
-        (item) => item.type === "post" && item.id === id
-      ) as (PostType & { type: "post" }) | undefined;
+      let originalPostInMyPosts: PostType | undefined;
+      let originalPostInBookmarks: BookmarkedItem | undefined;
 
-      const currentPost = postInMyPosts || postInBookmarks;
-      if (!currentPost) return;
-
-      const isCurrentlyLiked = currentPost.isLiked ?? false;
-      const currentLikes = currentPost.like_count ?? 0;
-
-      // 1. 낙관적 업데이트 (myPosts)
-      setMyPosts((prev) =>
-        prev.map((p) =>
-          p.id === id
+      // 1. 낙관적 업데이트
+      setMyPosts(prev => {
+        originalPostInMyPosts = prev.find(p => p.id === id); // 롤백용 원본 저장
+        return prev.map(post =>
+          post.id === id
             ? {
-                ...p,
-                isLiked: !isCurrentlyLiked,
-                like_count: !isCurrentlyLiked
-                  ? currentLikes + 1
-                  : Math.max(0, currentLikes - 1),
+                ...post,
+                isLiked: !(post.isLiked ?? false),
+                like_count: !(post.isLiked ?? false)
+                  ? (post.like_count ?? 0) + 1
+                  : Math.max(0, (post.like_count ?? 0) - 1),
               }
-            : p
-        )
-      );
+            : post
+        );
+      });
+      
+      setMyBookmarks(prev => {
+        const item = prev.find(i => i.type === 'post' && i.id === id);
+        if (item) originalPostInBookmarks = { ...item }; // 롤백용 원본 저장
 
-      // 1-2. 낙관적 업데이트 (myBookmarks) - type 속성 유지
-      setMyBookmarks((prev) =>
-        prev.map((item) => {
+        return prev.map(item => {
           if (item.type === "post" && item.id === id) {
             return {
               ...item,
-              isLiked: !isCurrentlyLiked,
-              like_count: !isCurrentlyLiked
-                ? currentLikes + 1
-                : Math.max(0, currentLikes - 1),
+              isLiked: !(item.isLiked ?? false),
+              like_count: !(item.isLiked ?? false)
+                ? (item.like_count ?? 0) + 1
+                : Math.max(0, (item.like_count ?? 0) - 1),
             };
           }
           return item;
-        })
-      );
+        });
+      });
 
-      // 2. DB 업데이트 (Trigger가 자동으로 like_count 업데이트)
+      // 2. DB 작업
       try {
+        const isCurrentlyLiked = originalPostInMyPosts?.isLiked ?? originalPostInBookmarks?.isLiked ?? false;
+        
         if (isCurrentlyLiked) {
-          const { error } = await supabase
+          await supabase
             .from("user_post_likes")
             .delete()
-            .eq("user_id", profile.id)
+            .eq("user_id", currentUserId)
             .eq("post_id", id);
-          if (error) throw error;
         } else {
-          const { error } = await supabase
+          await supabase
             .from("user_post_likes")
-            .insert({ user_id: profile.id, post_id: id });
-          if (error && error.code !== "23505") throw error;
+            .insert({ user_id: currentUserId, post_id: id });
         }
       } catch (error) {
-        console.error("Post like toggle DB update failed:", error);
-        // 3. 롤백 (myPosts)
-        setMyPosts((prev) =>
-          prev.map((p) =>
-            p.id === id
-              ? { ...p, isLiked: isCurrentlyLiked, like_count: currentLikes }
-              : p
-          )
-        );
-        // 3-2. 롤백 (myBookmarks)
-        setMyBookmarks((prev) =>
-          prev.map((item) => {
-            if (item.type === "post" && item.id === id) {
-              return {
-                ...item,
-                isLiked: isCurrentlyLiked,
-                like_count: currentLikes,
-              };
-            }
-            return item;
-          })
-        );
+        console.error("Post like toggle failed:", error);
+        
+        // 3. 롤백
+        if (originalPostInMyPosts) {
+          setMyPosts(prev => prev.map(post =>
+            post.id === id ? originalPostInMyPosts! : post
+          ));
+        }
+        if (originalPostInBookmarks) {
+          setMyBookmarks(prev => prev.map(item =>
+            item.type === 'post' && item.id === id ? originalPostInBookmarks! : item
+          ));
+        }
       }
     },
-    [supabase, profile, myPosts, myBookmarks]
+    [supabase, currentUserId] // ✅ 의존성 최적화
   );
 
-  // ⭐️ 게시글 북마크 토글
+  // 게시글 북마크 토글 (✅ 개선 1 & 4)
   const handlePostBookmarkToggle = useCallback(
     async (id: string) => {
-      if (!profile) return;
+      if (!currentUserId) return;
 
-      const postInMyPosts = myPosts.find((p) => p.id === id);
-      const postInBookmarks = myBookmarks.find(
-        (item) => item.type === "post" && item.id === id
-      ) as PostType | undefined;
-
-      const currentPost = postInMyPosts || postInBookmarks;
-      if (!currentPost) return;
-
-      const isCurrentlyBookmarked = currentPost.isBookmarked ?? false;
+      let originalPostInMyPosts: PostType | undefined;
+      let originalMyBookmarks: BookmarkedItem[] | undefined;
+      let isCurrentlyBookmarked: boolean | undefined;
+      let postForBookmarkList: (PostType & { type: "post" }) | undefined;
 
       // 1. 낙관적 업데이트
-      setMyPosts((prev) =>
-        prev.map((p) =>
-          p.id === id ? { ...p, isBookmarked: !isCurrentlyBookmarked } : p
-        )
-      );
-
-      if (isCurrentlyBookmarked) {
-        setMyBookmarks((prev) =>
-          prev.filter((item) => !(item.type === "post" && item.id === id))
+      setMyPosts(prev => {
+        originalPostInMyPosts = prev.find(p => p.id === id);
+        if (originalPostInMyPosts) {
+          isCurrentlyBookmarked = originalPostInMyPosts.isBookmarked ?? false;
+          postForBookmarkList = { ...originalPostInMyPosts, isBookmarked: !isCurrentlyBookmarked, type: "post" };
+        }
+        return prev.map(post =>
+          post.id === id ? { ...post, isBookmarked: !(post.isBookmarked ?? false) } : post
         );
-      } else {
-        const postToAdd = { ...currentPost, isBookmarked: true, type: "post" as const };
-        setMyBookmarks((prev) => [postToAdd, ...prev]);
-      }
+      });
 
-      // 2. DB 업데이트
+      setMyBookmarks(prev => {
+        originalMyBookmarks = prev; // 롤백용 원본 배열 저장
+        
+        if (isCurrentlyBookmarked === undefined) {
+          const item = prev.find(i => i.type === "post" && i.id === id);
+          if (item) {
+            isCurrentlyBookmarked = (item as PostType).isBookmarked ?? false;
+            postForBookmarkList = { ...(item as PostType), isBookmarked: !isCurrentlyBookmarked, type: "post" };
+          }
+        }
+
+        if (isCurrentlyBookmarked === undefined) return prev; // 포스트 못찾음
+
+        if (isCurrentlyBookmarked) {
+          return prev.filter(item => !(item.type === "post" && item.id === id));
+        } else {
+          if (!postForBookmarkList) return prev;
+          return [postForBookmarkList, ...prev];
+        }
+      });
+
+      if (isCurrentlyBookmarked === undefined) return;
+
+      // 2. DB 작업
       try {
         const result = await togglePostBookmark(
           id,
-          profile.id,
+          currentUserId,
           isCurrentlyBookmarked
         );
         if (!result.success) {
@@ -583,118 +560,122 @@ export default function ProfilePageClient({
         }
       } catch (error) {
         console.error("Post bookmark toggle failed:", error);
-        // 3. 롤백
-        setMyPosts((prev) =>
-          prev.map((p) =>
-            p.id === id ? { ...p, isBookmarked: isCurrentlyBookmarked } : p
-          )
-        );
-        setMyBookmarks(initialBookmarks);
+        
+        // 3. 롤백 (✅ 개선 1)
+        if (originalPostInMyPosts) {
+          setMyPosts(prev => prev.map(p => p.id === id ? originalPostInMyPosts! : p));
+        }
+        if (originalMyBookmarks) {
+          setMyBookmarks(originalMyBookmarks); // 💥 버그 수정: 배열 전체 롤백
+        }
       }
     },
-    [profile, myPosts, myBookmarks, togglePostBookmark, initialBookmarks]
+    [currentUserId, togglePostBookmark] // ✅ 의존성 최적화
   );
 
-  // ⭐️ 댓글 좋아요 토글 (Trigger가 like_count 자동 업데이트)
+  // 댓글 좋아요 토글 (✅ 개선 4)
   const handleCommentLikeToggle = useCallback(
     async (id: string) => {
-      if (!profile) return;
+      if (!currentUserId) return;
 
-      const currentComment = myComments.find((c) => c.id === id);
-      if (!currentComment) return;
-
-      const isCurrentlyLiked = currentComment.isLiked ?? false;
-      const currentLikes = currentComment.like_count ?? 0;
+      let originalComment: DbCommentRow | undefined;
 
       // 1. 낙관적 업데이트
-      setMyComments((prev) =>
-        prev.map((c) =>
-          c.id === id
+      setMyComments(prev => {
+        originalComment = prev.find(c => c.id === id); // 롤백용 원본 저장
+        return prev.map(comment =>
+          comment.id === id
             ? {
-                ...c,
-                isLiked: !isCurrentlyLiked,
-                like_count: !isCurrentlyLiked
-                  ? currentLikes + 1
-                  : Math.max(0, currentLikes - 1),
+                ...comment,
+                isLiked: !(comment.isLiked ?? false),
+                like_count: !(comment.isLiked ?? false)
+                  ? (comment.like_count ?? 0) + 1
+                  : Math.max(0, (comment.like_count ?? 0) - 1),
               }
-            : c
-        )
-      );
+            : comment
+        );
+      });
 
-      // 2. DB 업데이트 (Trigger가 자동으로 like_count 업데이트)
+      if (!originalComment) return;
+
+      // 2. DB 작업
       try {
+        const isCurrentlyLiked = originalComment.isLiked ?? false;
         if (isCurrentlyLiked) {
-          const { error } = await supabase
+          await supabase
             .from("comment_likes")
             .delete()
-            .eq("user_id", profile.id)
+            .eq("user_id", currentUserId)
             .eq("comment_id", id);
-          if (error) throw error;
         } else {
-          const { error } = await supabase
+          await supabase
             .from("comment_likes")
-            .insert({ user_id: profile.id, comment_id: id });
-          if (error && error.code !== "23505") throw error;
+            .insert({ user_id: currentUserId, comment_id: id });
         }
       } catch (error) {
-        console.error("Comment like toggle DB update failed:", error);
+        console.error("Comment like toggle failed:", error);
+        
         // 3. 롤백
-        setMyComments((prev) =>
-          prev.map((c) =>
-            c.id === id
-              ? {
-                  ...c,
-                  isLiked: isCurrentlyLiked,
-                  like_count: currentLikes,
-                }
-              : c
-          )
-        );
+        setMyComments(prev => prev.map(comment =>
+          comment.id === id ? originalComment! : comment
+        ));
       }
     },
-    [supabase, profile, myComments]
+    [supabase, currentUserId] // ✅ 의존성 최적화
   );
 
-  // 북마크 탭에서의 북마크 토글 (삭제만)
+  // 북마크 탭에서 북마크 해제 (✅ 개선 1 & 4)
   const handleProfileBookmarkToggle = useCallback(
     async (id: string, type: "post" | "news") => {
-      if (!profile) return;
+      if (!currentUserId) return;
 
-      setMyBookmarks((prev) => prev.filter((item) => item.id !== id));
+      let originalMyBookmarks: BookmarkedItem[] | undefined;
 
+      // 1. 낙관적 업데이트
+      setMyBookmarks(prev => {
+        originalMyBookmarks = prev; // 롤백용 원본 배열 저장
+        return prev.filter(item => item.id !== id);
+      });
+
+      // 2. DB 작업
       try {
         if (type === "news") {
           await handleNewsBookmarkToggle(id);
         } else {
-          const result = await togglePostBookmark(id, profile.id, true);
+          // type === "post"
+          const result = await togglePostBookmark(id, currentUserId, true); // true: "isBookmarked" (즉, 삭제)
           if (!result.success) {
-            console.error(`포스트 북마크 해제 실패: ${result.error}`);
-            setMyBookmarks(initialBookmarks);
+            throw new Error(result.error ?? "포스트 북마크 해제 실패");
           }
         }
       } catch (error) {
         console.error("북마크 토글 실패:", error);
-        setMyBookmarks(initialBookmarks);
+        
+        // 3. 롤백 (✅ 개선 1)
+        if (originalMyBookmarks) {
+          setMyBookmarks(originalMyBookmarks); // 💥 버그 수정: 배열 전체 롤백
+        }
       }
     },
-    [profile, handleNewsBookmarkToggle, togglePostBookmark, initialBookmarks]
+    [currentUserId, handleNewsBookmarkToggle, togglePostBookmark] // ✅ 의존성 최적화
   );
 
-  // 뉴스 좋아요 토글
+  // 뉴스 좋아요 토글 (✅ 개선 4)
   const handleProfileNewsLikeToggle = useCallback(
     async (id: string) => {
-      const currentItem = myBookmarks.find(
-        (item) => item.type === "news" && item.id === id
-      ) as NewsItemWithState | undefined;
+      if (!currentUserId) return;
 
-      if (!currentItem) return;
+      let originalNewsItem: BookmarkedItem | undefined;
 
-      const isCurrentlyLiked = currentItem.isLiked;
-      const currentLikes = currentItem.like_count ?? 0;
-
-      setMyBookmarks((prevBookmarks) =>
-        prevBookmarks.map((item) => {
+      // 1. 낙관적 업데이트
+      setMyBookmarks(prev => {
+        const item = prev.find(i => i.id === id && i.type === "news");
+        if (item) originalNewsItem = { ...item }; // 롤백용 원본 저장
+        
+        return prev.map(item => {
           if (item.id === id && item.type === "news") {
+            const isCurrentlyLiked = (item as NewsItemWithState).isLiked;
+            const currentLikes = item.like_count ?? 0;
             return {
               ...item,
               isLiked: !isCurrentlyLiked,
@@ -704,28 +685,24 @@ export default function ProfilePageClient({
             };
           }
           return item;
-        })
-      );
+        });
+      });
 
+      // 2. DB 작업
       try {
         await handleNewsLikeToggle(id);
       } catch (error) {
-        console.error("Profile like toggle DB update failed:", error);
-        setMyBookmarks((prevBookmarks) =>
-          prevBookmarks.map((item) => {
-            if (item.id === id && item.type === "news") {
-              return {
-                ...item,
-                isLiked: isCurrentlyLiked,
-                like_count: currentLikes,
-              };
-            }
-            return item;
-          })
-        );
+        console.error("Profile like toggle failed:", error);
+        
+        // 3. 롤백
+        if (originalNewsItem) {
+          setMyBookmarks(prev => prev.map(item =>
+            item.id === id && item.type === "news" ? originalNewsItem! : item
+          ));
+        }
       }
     },
-    [handleNewsLikeToggle, myBookmarks]
+    [handleNewsLikeToggle, currentUserId] // ✅ 의존성 최적화
   );
 
   return (
@@ -733,8 +710,11 @@ export default function ProfilePageClient({
       <div className="relative">
         <ProfileHeader
           profile={profile}
-          onAvatarClick={() => setIsEditImgOpen(true)}
-          onEditClick={() => setIsEditProfileOpen(true)}
+          isOwnProfile={isOwnProfile}
+          isFollowing={isFollowing}
+          onFollowToggle={handleFollowToggle}
+          onAvatarClick={() => isOwnProfile && setIsEditImgOpen(true)}
+          onEditClick={() => isOwnProfile && setIsEditProfileOpen(true)}
         />
         <ProfileActivityTabs
           initialTab={initialTab as TabKey}
