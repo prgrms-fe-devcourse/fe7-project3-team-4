@@ -8,10 +8,10 @@ import {
 } from "@/utils/extractTextFromJson";
 import { Copy, ExternalLink } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 
 export default function PromptDetail({ post }: { post: PostType }) {
+  /* copied는 추후에 Toast 창으로 사용 */
   const [copied, setCopied] = useState(false);
 
   const promptText = useMemo(
