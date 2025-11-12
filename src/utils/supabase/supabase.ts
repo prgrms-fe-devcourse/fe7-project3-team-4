@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       comment_likes: {
@@ -223,24 +198,30 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          last_message_at: string
+          last_message_at: string | null
           last_message_text: string | null
+          last_read_at_max: string | null
+          last_read_at_min: string | null
           pair_max: string | null
           pair_min: string | null
         }
         Insert: {
           created_at?: string
           id?: string
-          last_message_at: string
+          last_message_at?: string | null
           last_message_text?: string | null
+          last_read_at_max?: string | null
+          last_read_at_min?: string | null
           pair_max?: string | null
           pair_min?: string | null
         }
         Update: {
           created_at?: string
           id?: string
-          last_message_at?: string
+          last_message_at?: string | null
           last_message_text?: string | null
+          last_read_at_max?: string | null
+          last_read_at_min?: string | null
           pair_max?: string | null
           pair_min?: string | null
         }
@@ -267,7 +248,6 @@ export type Database = {
           created_at: string | null
           id: string
           image_url: string | null
-          is_read: boolean | null
           room_id: string
           sender_id: string
         }
@@ -276,7 +256,6 @@ export type Database = {
           created_at?: string | null
           id?: string
           image_url?: string | null
-          is_read?: boolean | null
           room_id: string
           sender_id: string
         }
@@ -285,7 +264,6 @@ export type Database = {
           created_at?: string | null
           id?: string
           image_url?: string | null
-          is_read?: boolean | null
           room_id?: string
           sender_id?: string
         }
@@ -459,6 +437,8 @@ export type Database = {
           created_at: string | null
           display_name: string | null
           email: string | null
+          followed_count: number | null
+          following_count: number | null
           id: string
         }
         Insert: {
@@ -467,6 +447,8 @@ export type Database = {
           created_at?: string | null
           display_name?: string | null
           email?: string | null
+          followed_count?: number | null
+          following_count?: number | null
           id: string
         }
         Update: {
@@ -475,6 +457,8 @@ export type Database = {
           created_at?: string | null
           display_name?: string | null
           email?: string | null
+          followed_count?: number | null
+          following_count?: number | null
           id?: string
         }
         Relationships: []
@@ -617,6 +601,7 @@ export type Database = {
     }
     Functions: {
       ensure_direct_room: { Args: { other_user_id: string }; Returns: string }
+      mark_room_read: { Args: { room_id: string }; Returns: undefined }
     }
     Enums: {
       comment_target_type: "posts" | "news"
@@ -768,9 +753,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       comment_target_type: ["posts", "news"],

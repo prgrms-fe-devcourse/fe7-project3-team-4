@@ -1,6 +1,7 @@
 import { Json } from "@/utils/supabase/supabase";
 export interface PostType {
   id: string;
+  user_id: string;
   title: string;
   content: Json | null;
   created_at: string;

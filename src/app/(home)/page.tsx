@@ -236,6 +236,7 @@ export default function Page() {
     const type = tabToType[tab];
     const params = new URLSearchParams(searchParams.toString());
     params.delete("id");
+    params.delete("posttype");
 
     if (type === "all") {
       params.delete("type");
@@ -249,6 +250,7 @@ export default function Page() {
   const handleBack = () => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("id");
+    params.delete("posttype"); 
     router.push(`/?${params.toString()}`, { scroll: false });
   };
 
