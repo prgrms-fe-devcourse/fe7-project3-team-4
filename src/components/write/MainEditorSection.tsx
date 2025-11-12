@@ -15,7 +15,11 @@ export function MainEditorSection({ hashtags }: { hashtags: Hashtag[] }) {
   const [selectedHashtags, setSelectedHashtags] = useState<Hashtag["name"][]>(
     []
   );
-  const [contentJson, setContentJson] = useState<any | null>(null);
+  const [contentJson, setContentJson] = useState<any>({
+    type: "doc",
+    content: [],
+  });
+  const [contentText, setContentText] = useState<string>("");
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -33,18 +37,17 @@ export function MainEditorSection({ hashtags }: { hashtags: Hashtag[] }) {
       },
     },
     onUpdate: ({ editor }) => {
-      const json = editor.getJSON();
-      setContentJson(json);
+      setContentJson(editor.getJSON());
+      setContentText(editor.getText());
     },
+    // SSR 하이드레이션 대응
     immediatelyRender: false,
   });
 
   const handleImgFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     if (previewUrl) URL.revokeObjectURL(previewUrl);
-
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
   };
@@ -52,10 +55,7 @@ export function MainEditorSection({ hashtags }: { hashtags: Hashtag[] }) {
   const removeImgFile = () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const toggleHashtag = (name: Hashtag["name"]) => {
@@ -121,12 +121,18 @@ export function MainEditorSection({ hashtags }: { hashtags: Hashtag[] }) {
       {/* Tiptap Editor */}
       <div className="w-full">
         {editor && <EditorContent editor={editor} />}
-        {/* ✅ tiptap JSON만 서버로 보냄 */}
         <input
           type="hidden"
-          name="content"
-          value={contentJson ? JSON.stringify(contentJson) : ""}
+          name="content_raw"
+          value={
+            contentJson
+              ? JSON.stringify(contentJson)
+              : JSON.stringify({ type: "doc", content: [] })
+          }
         />
+
+        {/* (선택) 프리뷰용 텍스트 */}
+        <input type="hidden" name="content_text" value={contentText} />
       </div>
 
       {/* 해시태그 */}
@@ -148,7 +154,6 @@ export function MainEditorSection({ hashtags }: { hashtags: Hashtag[] }) {
         })}
       </div>
 
-      {/* 선택한 해시태그 */}
       <input type="hidden" name="hashtags" value={selectedHashtags.join(",")} />
     </div>
   );
