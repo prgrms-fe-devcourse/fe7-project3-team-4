@@ -695,12 +695,6 @@ export default function Page() {
                     </div>
                     <div className="text-left">
                       <div className="text-[#0A0A0A]">{u.display_name}</div>
-                      <div className="text-sm text-[#717182]">
-                        클릭해서 대화를 시작하세요
-                      </div>
-                    </div>
-                    <div className="absolute right-4 text-xs text-[#717182]">
-                      새 채팅
                     </div>
                   </button>
                 ))}
