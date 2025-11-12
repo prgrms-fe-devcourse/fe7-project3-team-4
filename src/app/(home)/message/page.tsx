@@ -222,19 +222,35 @@ export default function Page() {
           const other_id = r.pair_min === me ? r.pair_max : r.pair_min;
           setRooms((prev) => {
             const idx = prev.findIndex((x) => x.id === r.id);
+            const newLastAt = r.last_message_at ?? null;
+            const newLastText = r.last_message_text ?? null;
+
             if (idx >= 0) {
-              // 기존 카드 갱신 + 최상단으로 끌어올리기
+              const prevItem = prev[idx];
+              const changed =
+                prevItem.last_message_at !== newLastAt ||
+                prevItem.last_message_text !== newLastText;
               const updated: RoomListItem = {
-                ...prev[idx],
-                last_message_at: r.last_message_at ?? null,
-                last_message_text: r.last_message_text ?? null,
+                ...prevItem,
+                last_message_at: newLastAt,
+                last_message_text: newLastText,
               };
-              const next = [...prev];
-              next.splice(idx, 1);
-              return [updated, ...next];
+              if (changed) {
+                const next = [...prev];
+                next.splice(idx, 1);
+                return [updated, ...next];
+              } else {
+                const next = [...prev];
+                next[idx] = updated;
+                return next; // 순서 유지
+              }
             }
-            // 목록에 없던 방(첫 메시지 등) -> 상대 프로필을 조회해서 추가
-            // 프로필 조회 후 추가
+
+            // 리스트에 없는 방은 '마지막 메시지'가 생겼을 때만 추가 (단순 읽음 업데이트로는 추가하지 않음)
+            if (!newLastAt && !newLastText) {
+              return prev;
+            }
+
             (async () => {
               const { data: p } = await supabase
                 .from("profiles")
@@ -246,8 +262,8 @@ export default function Page() {
                 other_id,
                 other_name: p?.display_name ?? null,
                 other_avatar: p?.avatar_url ?? null,
-                last_message_at: r.last_message_at ?? null,
-                last_message_text: r.last_message_text ?? null,
+                last_message_at: newLastAt,
+                last_message_text: newLastText,
                 unread_count: 0,
               };
               setRooms((cur) => [item, ...cur]);
@@ -275,16 +291,34 @@ export default function Page() {
           const other_id = r.pair_min === me ? r.pair_max : r.pair_min;
           setRooms((prev) => {
             const idx = prev.findIndex((x) => x.id === r.id);
+            const newLastAt = r.last_message_at ?? null;
+            const newLastText = r.last_message_text ?? null;
+
             if (idx >= 0) {
+              const prevItem = prev[idx];
+              const changed =
+                prevItem.last_message_at !== newLastAt ||
+                prevItem.last_message_text !== newLastText;
               const updated: RoomListItem = {
-                ...prev[idx],
-                last_message_at: r.last_message_at ?? null,
-                last_message_text: r.last_message_text ?? null,
+                ...prevItem,
+                last_message_at: newLastAt,
+                last_message_text: newLastText,
               };
-              const next = [...prev];
-              next.splice(idx, 1);
-              return [updated, ...next];
+              if (changed) {
+                const next = [...prev];
+                next.splice(idx, 1);
+                return [updated, ...next];
+              } else {
+                const next = [...prev];
+                next[idx] = updated;
+                return next; // 순서 유지
+              }
             }
+
+            if (!newLastAt && !newLastText) {
+              return prev;
+            }
+
             (async () => {
               const { data: p } = await supabase
                 .from("profiles")
@@ -296,8 +330,8 @@ export default function Page() {
                 other_id,
                 other_name: p?.display_name ?? null,
                 other_avatar: p?.avatar_url ?? null,
-                last_message_at: r.last_message_at ?? null,
-                last_message_text: r.last_message_text ?? null,
+                last_message_at: newLastAt,
+                last_message_text: newLastText,
                 unread_count: 0,
               };
               setRooms((cur) => [item, ...cur]);
