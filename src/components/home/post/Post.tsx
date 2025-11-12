@@ -1,42 +1,95 @@
 import Link from "next/link";
 import PostActions from "./PostAction";
+import { PostType } from "@/types/Post";
+import Image from "next/image";
 
 export default function Post({
   data,
   onLikeToggle,
+  onBookmarkToggle,
 }: {
-  data: Post;
-  isPriority?: boolean;
+  data: PostType;
   onLikeToggle?: (id: string) => void;
+  onBookmarkToggle?: (id: string, type: "post" | "news") => void;
 }) {
+  const authorName = data.profiles?.display_name || "익명";
+  const authorEmail = data.profiles?.email || "";
+  const authorAvatar = data.profiles?.avatar_url;
+  const displayDate = (data.created_at || "").slice(0, 10);
+  const postUrl = `/?type=${data.post_type}&id=${data.id}`;
+
   return (
-    <>
-      <div className="bg-white/40 border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl">
-        <Link href={`/?type=${data.post_type}&id=${data.id}`} className="block">
-          <div className="p-6 pb-0">
-            <div>
-              <div className="flex justify-between"></div>
-              <div className="my-5">
-                <div className="mb-6 space-y-4">
-                  <p className="text-[18px] font-medium">{data.title}</p>
-                  <p>{String(data.content)}</p>
-                </div>
-              </div>
-              <div className="space-x-2 text-sm text-[#248AFF]">
-                {data.hashtags?.map((tag, i) => (
-                  <span key={i}>#{tag}</span>
-                ))}
-              </div>
+    <article className="bg-white/40 border border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl overflow-hidden">
+      <div className="p-6 pb-0">
+        {/* 상단: 작성자 정보 */}
+        <div className="flex justify-between">
+          <div className="flex gap-3 items-center">
+            <div className="relative w-11 h-11 bg-gray-300 rounded-full shrink-0 overflow-hidden">
+              {authorAvatar ? (
+                <Image
+                  src={authorAvatar}
+                  alt={authorName}
+                  fill
+                  loading="eager"
+                  className="object-cover"
+                />
+              ) : (
+                <span className="flex items-center justify-center h-full w-full text-gray-500 text-lg font-semibold">
+                  {(authorName[0] || "?").toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div className="space-y-1 leading-none">
+              <p>{authorName}</p>
+              <p className="text-[#717182] text-sm">
+                {authorEmail ? `${authorEmail} · ` : "@user · "}
+                {displayDate}
+              </p>
             </div>
           </div>
+        </div>
+
+        <Link href={postUrl} className="block my-5 space-y-4">
+          {/* 중간: 제목 */}
+          <h3 className="text-[18px] font-semibold">{data.title}</h3>
+          {/* 썸네일 이미지 (thumbnail) - 존재할 경우에만 렌더링 */}
+          {data.thumbnail && (
+            <div className="relative w-full aspect-video overflow-hidden rounded-lg">
+              <Image
+                src={data.thumbnail}
+                alt={data.title}
+                fill
+                className="object-cover"
+                loading="lazy"
+              />
+            </div>
+          )}
+          {/* 부제목 (subtitle) - 존재할 경우에만 렌더링 */}
+          {data.subtitle && (
+            <div className="line-clamp-3 text-gray-700">{data.subtitle}</div>
+          )}
         </Link>
-        <PostActions
-          postId={data.id}
-          likeCount={data.like_count}
-          commentCount={data.comment_count}
-          onLikeToggle={onLikeToggle}
-        />
+
+        {/* 해시태그 */}
+        {data.hashtags && data.hashtags.length > 0 && (
+          <div className="space-x-2 text-sm text-[#248AFF] mt-4">
+            {data.hashtags.map((tag, i) => (
+              <span key={i}>{tag.startsWith("#") ? tag : `#${tag}`}</span>
+            ))}
+          </div>
+        )}
       </div>
-    </>
+
+      {/* 액션 버튼 */}
+      <PostActions
+        postId={data.id}
+        likeCount={data.like_count}
+        commentCount={data.comment_count}
+        isLiked={data.isLiked}
+        isBookmarked={data.isBookmarked}
+        onLikeToggle={onLikeToggle}
+        onBookmarkToggle={onBookmarkToggle}
+      />
+    </article>
   );
 }

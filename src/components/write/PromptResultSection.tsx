@@ -2,38 +2,33 @@
 
 import { X } from "lucide-react";
 import Image from "next/image";
-import { useState, ChangeEvent, useId } from "react";
-
-type ResultMode = "text" | "image";
-type ModelType = "gpt" | "gemini";
+import { useState, ChangeEvent, useId, useRef } from "react";
 
 export function PromptResultSection() {
   const inputId = useId();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [resultMode, setResultMode] = useState<ResultMode>("text");
-  const [model, setModel] = useState<ModelType>("gpt");
+  const [model, setModel] = useState<ModelType>("GPT");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleImgFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
   };
 
   const removeImgFile = () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
     <>
-      {/* 선택한 모델 값을 form에 포함 */}
+      <input type="hidden" name="resultMode" value={resultMode} />
       <input type="hidden" name="model" value={model} />
 
-      {/* 결과 타입 토글 */}
       <div className="flex justify-center items-center mt-4">
         <div className="p-0.5 bg-[#248AFF]/20 rounded-lg text-xs">
           <button
@@ -62,16 +57,15 @@ export function PromptResultSection() {
       </div>
 
       <div className="grid bg-white/40 shadow-lg rounded-xl p-6">
-        {/* 헤더 + GPT/Gemini 선택 */}
         <div className="flex justify-between mb-6">
           <div className="font-semibold text-xl">프롬프트 및 결과</div>
           <div className="flex items-center gap-1 p-0.5 rounded-lg text-xs bg-white/40 border border-black/20">
             <button
               type="button"
-              onClick={() => setModel("gpt")}
+              onClick={() => setModel("GPT")}
               className={
                 "cursor-pointer py-1 px-3 leading-none rounded-lg transition-shadow " +
-                (model === "gpt"
+                (model === "GPT"
                   ? "bg-[#74AA9C] text-white shadow-2xl"
                   : "text-[#9CA3AF] bg-transparent")
               }
@@ -80,10 +74,10 @@ export function PromptResultSection() {
             </button>
             <button
               type="button"
-              onClick={() => setModel("gemini")}
+              onClick={() => setModel("Gemini")}
               className={
                 "cursor-pointer py-1 px-3 leading-none rounded-lg transition-shadow " +
-                (model === "gemini"
+                (model === "Gemini"
                   ? "bg-[#4285F4] text-white shadow-2xl"
                   : "text-[#9CA3AF] bg-transparent")
               }
@@ -97,18 +91,18 @@ export function PromptResultSection() {
         <textarea
           name="promptInput"
           placeholder="입력한 프롬프트"
-          className="border border-[#D9D9D9] rounded-lg h-40 mb-10 p-4 outline-none"
+          className="border border-[#D9D9D9] rounded-lg h-40 p-4 outline-none mb-8"
         />
 
-        {/* 결과 영역: 텍스트 or 이미지 */}
+        {/* 결과: 텍스트 or 이미지 */}
         {resultMode === "text" ? (
           <textarea
             name="promptResult"
             placeholder="프롬프트의 결과"
-            className="bg-[#D9D9D9]/20 rounded-lg h-40 p-4 outline-none border border-[#D9D9D9]"
+            className="bg-[#D9D9D9]/20 rounded-lg h-40 p-4 outline-none border border-[#D9D9D9] mb-8"
           />
         ) : (
-          <div className="relative flex flex-col items-center py-8 rounded-lg bg-[#D9D9D9]/20 border border-dashed border-[#D9D9D9]">
+          <div className="relative flex flex-col items-center py-8 rounded-lg bg-[#D9D9D9]/20 border border-dashed border-[#D9D9D9] mb-8">
             {previewUrl ? (
               <>
                 <div className="relative py-2">
@@ -136,6 +130,7 @@ export function PromptResultSection() {
                   className="hidden"
                   type="file"
                   name="promptResultImage"
+                  ref={fileInputRef}
                   onChange={handleImgFileUpload}
                 />
                 <p className="absolute top-4 left-4 text-[#7D7E80] mb-2">
@@ -152,6 +147,15 @@ export function PromptResultSection() {
             )}
           </div>
         )}
+
+        {/* ✅ 결과 링크 공유 (form에 포함) */}
+        <input
+          type="url"
+          name="resultLink"
+          placeholder="결과 링크(https:// …)"
+          autoComplete="off"
+          className="border border-[#D9D9D9] rounded-lg p-4 outline-none"
+        />
       </div>
     </>
   );

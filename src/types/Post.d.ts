@@ -1,17 +1,40 @@
-type Post = {
+import { Json } from "@/utils/supabase/supabase";
+export interface PostType {
   id: string;
-  comment_count: number;
-  content: string;
-  created_at: string;
-  updated_at?: string;
-  like_count: number;
-  post_type: "prompt" | "free" | "weekly";
-  title: string;
   user_id: string;
-  image?: string | null;
+  title: string;
+  content: Json | null;
+  created_at: string;
+  post_type: string;
+  hashtags?: string[];
+  like_count: number;
+  comment_count: number;
   view_count: number;
-  email: string;
-  hashtags: string[];
-  model?: "GPT" | "Gemini" | "텍스트" | "이미지";
+  isLiked?: boolean;
   isBookmarked?: boolean;
-};
+  model?: string;
+  thumbnail?: string | null;
+  subtitle?: string | null;
+  profiles?: {
+    display_name: string | null;
+    email: string | null;
+    avatar_url?: string | null;
+    bio?: string | null;
+  };
+}
+
+// WeeklyModel 타입 정의
+export type WeeklyModel = "텍스트" | "이미지";
+
+// WeeklyPostType 예시 (PostType 확장 + 추가 필드)
+export interface WeeklyPostType extends PostType {
+  model?: WeeklyModel;
+  user_id: string;
+  // profiles 테이블에서 조회한 데이터
+  profiles?: {
+    display_name: string | null;
+    email: string | null;
+    avatar_url?: string | null;
+    bio?: string | null;
+  };
+}

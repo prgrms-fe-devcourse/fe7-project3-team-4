@@ -2,17 +2,21 @@
 
 "use client";
 
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
+import Link from "next/link";
 import MyPosts from "@/components/profile/MyPosts";
 import MyComments from "@/components/profile/MyComments";
 import MyBookMark from "@/components/profile/MyBookMark";
-import { NewsItemWithState, Post } from "@/types";
+import { NewsItemWithState } from "@/types";
+import { PostType } from "@/types/Post";
 import { Database } from "@/utils/supabase/supabase";
 
 type DbCommentRow = Database["public"]["Tables"]["comments"]["Row"] & {
   content: string | null;
   like_count: number | null;
   reply_count: number | null;
+  comment_likes?: { user_id: string }[] | null;
+  isLiked?: boolean;
 };
 
 export type TabKey = "posts" | "comments" | "bookmarks";
@@ -24,83 +28,98 @@ const TAB_LABEL: Record<TabKey, string> = {
 };
 
 type BookmarkedItem =
-  | (Post & { type: "post" })
+  | (PostType & { type: "post" })
   | (NewsItemWithState & { type: "news" });
 
 type ProfileActivityTabsProps = {
   initialTab: TabKey;
-  myPosts: Post[];
+  myPosts: PostType[];
   myComments: DbCommentRow[];
   myBookmarks: BookmarkedItem[];
-  onLikeToggle: (id: string) => void;
+  onLikeToggle: (id: string) => void; // 뉴스 좋아요
   onBookmarkToggle: (id: string, type: "post" | "news") => void;
-  onPostLikeToggle: (id: string) => void;
+  onPostLikeToggle: (id: string) => void; // 게시글 좋아요
+  onCommentLikeToggle: (id: string) => void; // ⭐️ 댓글 좋아요 추가
+  onPostBookmarkToggle: (id: string) => void; // ⭐️ 게시글 북마크 추가
 };
 
 export function ProfileActivityTabs({
-  initialTab, 
+  initialTab,
   myPosts,
   myComments,
   myBookmarks,
   onLikeToggle,
   onBookmarkToggle,
   onPostLikeToggle,
+  onCommentLikeToggle, // ⭐️ 추가
+  onPostBookmarkToggle, // ⭐️ 추가
 }: ProfileActivityTabsProps) {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const activeTab = (searchParams.get("tab") as TabKey) || initialTab;
 
-  const handleTabChange = (tab: TabKey) => {
+  const createTabHref = (tab: TabKey) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", tab);
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    return `${pathname}?${params.toString()}`;
   };
 
   const baseBtn =
-    "cursor-pointer flex-1 py-4 rounded-xl text-sm transition-colors";
+    "cursor-pointer flex-1 py-4 rounded-xl text-sm transition-colors text-center";
   const activeClass = "bg-white text-[#111827] shadow-sm";
   const inactiveClass = "text-[#9CA3AF]";
 
   return (
     <>
       {/* 탭 버튼 */}
-      <div className="bg-white/40 border-white/20 rounded-xl shadow-xl">
+      <div className="bg-white/40 border border-white/20 rounded-xl shadow-xl">
         <div className="mt-6 p-1 w-full flex gap-1 leading-none">
-          <button
+          <Link
+            href={createTabHref("posts")}
+            scroll={false}
             className={`${baseBtn} ${
               activeTab === "posts" ? activeClass : inactiveClass
             }`}
-            onClick={() => handleTabChange("posts")}
           >
             {TAB_LABEL.posts}
-          </button>
-          <button
+          </Link>
+          <Link
+            href={createTabHref("comments")}
+            scroll={false}
             className={`${baseBtn} ${
               activeTab === "comments" ? activeClass : inactiveClass
             }`}
-            onClick={() => handleTabChange("comments")}
           >
             {TAB_LABEL.comments}
-          </button>
-          <button
+          </Link>
+          <Link
+            href={createTabHref("bookmarks")}
+            scroll={false}
             className={`${baseBtn} ${
               activeTab === "bookmarks" ? activeClass : inactiveClass
             }`}
-            onClick={() => handleTabChange("bookmarks")}
           >
             {TAB_LABEL.bookmarks}
-          </button>
+          </Link>
         </div>
       </div>
 
       {/* 탭 콘텐츠 */}
       <div className="mt-4 lg:mt-6">
         {activeTab === "posts" && (
-          <MyPosts posts={myPosts} onLikeToggle={onPostLikeToggle} />
+          <MyPosts 
+            posts={myPosts} 
+            onLikeToggle={onPostLikeToggle}
+            onBookmarkToggle={onPostBookmarkToggle} // ⭐️ 추가
+          />
         )}
-        {activeTab === "comments" && <MyComments comments={myComments} />}
+        {activeTab === "comments" && (
+          <MyComments 
+            comments={myComments}
+            onLikeToggle={onCommentLikeToggle} // ⭐️ 추가
+          />
+        )}
         {activeTab === "bookmarks" && (
           <MyBookMark
             items={myBookmarks}

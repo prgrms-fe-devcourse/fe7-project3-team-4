@@ -1,127 +1,272 @@
-import {
-  ArrowLeft,
-  ArrowUpDown,
-  Bookmark,
-  CircleArrowUp,
-  Heart,
-  MessageSquare,
-  Smile,
-} from "lucide-react";
-import Image from "next/image";
-import Comments from "./Comments";
+"use client";
 
-export const MOCK_COMMENTS: PostComment[] = [
-  {
-    id: "comment_1",
-    content: "정말 유용한 프롬프트네요! 바로 적용해봤습니다.",
-    created_at: "2025-11-01T10:05:00Z",
-    parent_id: null,
-    updated_at: "2025-11-01T10:05:00Z",
-    display_name: "React초보",
-    email: "react_newbie@example.com",
-    has_reply: true,
-  },
-  {
-    id: "comment_2",
-    content: "혹시 state 대신 useReducer를 사용하는 예시도 보여주실 수 있나요?",
-    created_at: "2025-11-01T10:10:00Z",
-    parent_id: "comment_1",
-    updated_at: "2025-11-01T10:10:00Z",
-    display_name: "개발고수",
-    email: "dev_master@example.com",
-    has_reply: false,
-  },
-  {
-    id: "comment_3",
-    content: "좋은 질문입니다. 복잡한 상태 로직에는 useReducer가 더 적합하죠.",
-    created_at: "2025-11-01T10:15:00Z",
-    parent_id: "comment_2",
-    updated_at: "2025-11-01T10:15:00Z",
-    display_name: "React초보",
-    email: "react_newbie@example.com",
-    has_reply: false,
-  },
-  {
-    id: "comment_4",
-    content: "감사합니다!",
-    created_at: "2025-11-02T15:00:00Z",
-    parent_id: null,
-    updated_at: "2025-11-02T15:00:00Z",
-    display_name: "Next팬",
-    email: "next_fan@example.com",
-    has_reply: false,
-  },
-  {
-    id: "comment_5",
-    content:
-      "피보나치 DP 풀이 방식 공유합니다. \n```javascript\nfunction fib(n) {\n  const dp = [0, 1];\n  for (let i = 2; i <= n; i++) {\n    dp[i] = dp[i - 1] + dp[i - 2];\n  }\n  return dp[n];\n}\n```",
-    created_at: "2025-11-03T11:00:00Z",
-    parent_id: null,
-    updated_at: "2025-11-03T11:00:00Z",
-    display_name: "알고리즘왕",
-    email: "algo_king@example.com",
-    has_reply: true,
-  },
-  {
-    id: "comment_6",
-    content: "와, 재귀보다 훨씬 빠르네요!",
-    created_at: "2025-11-03T11:05:00Z",
-    parent_id: "comment_5",
-    updated_at: "2025-11-03T11:05:00Z",
-    display_name: "코린이",
-    email: "coder_beginner@example.com",
-    has_reply: false,
-  },
-  {
-    id: "comment_7",
-    content: "이거 정말 유용하네요. RLS 설정할 때 참고하겠습니다.",
-    created_at: "2025-11-05T17:00:00Z",
-    parent_id: null,
-    updated_at: "2025-11-05T17:00:00Z",
-    display_name: "데이터베이스맨",
-    email: "db_man@example.com",
-    has_reply: true,
-  },
-  {
-    id: "comment_8",
-    content: "혹시 'update' 권한은 어떻게 주나요?",
-    created_at: "2025-11-05T17:02:00Z",
-    parent_id: "comment_7",
-    updated_at: "2025-11-05T17:02:00Z",
-    display_name: "수파베이스뉴비",
-    email: "supabase_newbie@example.com",
-    has_reply: false,
-  },
-  {
-    id: "comment_9",
-    content: "페르소나 프롬프트, 코드 리뷰 말고 다른 곳에도 쓸 수 있을까요?",
-    created_at: "2025-11-06T09:00:00Z",
-    parent_id: null,
-    updated_at: null,
-    display_name: "GPT활용가",
-    email: "gpt_user@example.com",
-    has_reply: false,
-  },
-  {
-    id: "comment_10",
-    content:
-      "tailwind.config.js에서 `darkMode: 'class'` 설정하는 걸 잊지 마세요!",
-    created_at: "2025-11-07T13:20:00Z",
-    parent_id: null,
-    updated_at: "2025-11-07T13:20:00Z",
-    display_name: "CSS러버",
-    email: "css_lover@example.com",
-    has_reply: false,
-  },
-];
+import { ArrowLeft, ArrowUpDown } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import Comments from "./Comments";
+import RichTextRenderer from "@/components/common/RichTextRenderer";
+import { PostType } from "@/types/Post";
+import Image from "next/image";
+import CommentForm from "./CommentForm";
+import PostActions from "./PostAction";
+import { createClient } from "@/utils/supabase/client";
+import PromptDetail from "./PromptDetail";
+
+type RawComment = {
+  id: string;
+  content: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  like_count: number | null;
+  reply_count: number | null;
+  has_reply: boolean;
+  parent_id?: string | null;
+  user_id: string | null;
+  profiles: {
+    display_name: string | null;
+    email: string | null;
+    avatar_url?: string | null;
+    bio?: string | null;
+  } | null;
+};
+
+interface PostDetailProps {
+  post: PostType;
+  onBack: () => void;
+  onLikeToggle?: (id: string) => void;
+  onBookmarkToggle?: (id: string, type: "post" | "news") => void;
+}
 
 export default function PostDetail({
   post,
+  onLikeToggle,
+  onBookmarkToggle,
   onBack,
-}: {
-  post: Post;
-  onBack: () => void;
-}) {
+}: PostDetailProps) {
+  const [comments, setComments] = useState<PostComment[]>([]);
+  const [sortOrder, setSortOrder] = useState<"latest" | "popular">("latest");
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
+  
+  const supabase = createClient();
+  const authorName = post.profiles?.display_name || "익명";
+  const authorEmail = post.profiles?.email || "";
+  const authorAvatar = post.profiles?.avatar_url || null;
+  const displayDate = (post.created_at || "").slice(0, 10);
+
+  // ✅ 현재 사용자 정보 가져오기
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+    };
+    getCurrentUser();
+  }, [supabase]);
+
+  // ✅ 조회수 증가
+  useEffect(() => {
+    const incrementViewCount = async () => {
+      const { error } = await supabase.rpc('increment_view_count', {
+        post_id: post.id
+      });
+      
+      if (error) {
+        console.error('Error incrementing view count:', error);
+      }
+    };
+
+    incrementViewCount();
+  }, [post.id, supabase]);
+
+  // ✅ 팔로우 상태 확인
+  useEffect(() => {
+    const checkFollowStatus = async () => {
+      if (!currentUserId || !post.user_id) return;
+      
+      const { data, error } = await supabase
+        .from('follows')
+        .select('id')
+        .eq('follower_id', currentUserId)
+        .eq('following_id', post.user_id)
+        .single();
+
+      if (!error && data) {
+        setIsFollowing(true);
+      }
+    };
+
+    checkFollowStatus();
+  }, [currentUserId, post.user_id, supabase]);
+
+  // ✅ 팔로우/언팔로우 핸들러
+  const handleFollowToggle = async () => {
+    if (!currentUserId || !post.user_id) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    if (currentUserId === post.user_id) {
+      alert('자기 자신을 팔로우할 수 없습니다.');
+      return;
+    }
+
+    setIsFollowLoading(true);
+
+    try {
+      if (isFollowing) {
+        // 언팔로우
+        const { error } = await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', currentUserId)
+          .eq('following_id', post.user_id);
+
+        if (error) throw error;
+        setIsFollowing(false);
+      } else {
+        // 팔로우
+        const { error } = await supabase
+          .from('follows')
+          .insert({
+            follower_id: currentUserId,
+            following_id: post.user_id
+          });
+
+        if (error) throw error;
+        setIsFollowing(true);
+      }
+    } catch (error) {
+      console.error('Error toggling follow:', error);
+      alert('팔로우 처리 중 오류가 발생했습니다.');
+    } finally {
+      setIsFollowLoading(false);
+    }
+  };
+
+  // ✅ 댓글 가져오기
+  const fetchComments = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("comments")
+      .select(
+        `
+        id,
+        content,
+        created_at,
+        updated_at,
+        like_count,
+        reply_count,
+        has_reply,
+        parent_id,
+        user_id,
+        profiles:user_id (
+          display_name,
+          email,
+          avatar_url,
+          bio
+        )
+      `
+      )
+      .eq("target_id", post.id)
+      .is("parent_id", null)
+      .order(sortOrder === "latest" ? "created_at" : "like_count", {
+        ascending: false,
+      });
+    if (error) {
+      console.error("Error fetching comments:", error);
+      return;
+    }
+    if (data) {
+      const formattedComments: PostComment[] = data.map(
+        (comment: RawComment) => ({
+          id: comment.id,
+          content: comment.content ?? "",
+          created_at: comment.created_at ?? "",
+          updated_at: comment.updated_at ?? null,
+          like_count: comment.like_count ?? 0,
+          reply_count: comment.reply_count ?? 0,
+          has_reply: comment.has_reply ?? false,
+          parent_id: comment.parent_id ?? null,
+          user_id: comment.user_id ?? "",
+          profiles: comment.profiles
+            ? {
+                display_name: comment.profiles.display_name ?? "익명",
+                email: comment.profiles.email ?? "user",
+                avatar_url: comment.profiles.avatar_url ?? null,
+                bio: comment.profiles.bio ?? null,
+              }
+            : {
+                display_name: "익명",
+                email: "user",
+              },
+        })
+      );
+
+      setComments(formattedComments);
+    }
+  }, [post.id, sortOrder, supabase]);
+
+  // ✅ 댓글 fetch
+  useEffect(() => {
+    fetchComments();
+  }, [fetchComments]);
+
+  // ✅ Realtime: comments 변경 감지
+  useEffect(() => {
+    const channel = supabase
+      .channel(`comments:${post.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "comments",
+          filter: `target_id=eq.${post.id}`,
+        },
+        () => {
+          fetchComments();
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [post.id, supabase, fetchComments]);
+
+  // ✅ Realtime: posts.comment_count 변경 감지
+  useEffect(() => {
+    const channel = supabase
+      .channel(`post:${post.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "posts",
+          filter: `id=eq.${post.id}`,
+        },
+        (payload) => {
+          const updatedPost = payload.new as {
+            comment_count: number;
+            like_count: number;
+          };
+          console.log(
+            "실시간 업데이트:",
+            updatedPost.comment_count,
+            updatedPost.like_count
+          );
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [post.id, supabase]);
+
+  // ✅ 댓글 작성 콜백
+  const handleCommentAdded = () => {
+    fetchComments();
+  };
+
   return (
     <div className="space-y-6 pb-6">
       <button
@@ -131,20 +276,31 @@ export default function PostDetail({
         <ArrowLeft className="arrow-wiggle" />
         뒤로
       </button>
-
       <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
-        {/* 게시글 정보 */}
+        {/* 작성자 정보 */}
         <div className="pb-7">
-          {/* 작성자 정보 */}
           <div className="flex justify-between">
             <div className="flex gap-3 items-center">
-              {/* 프로필 이미지 */}
-              <div className="w-11 h-11 bg-gray-300 rounded-full"></div>
-              {/* 이름, 이메일, 작성 시간?날짜? */}
+              <div className="relative w-11 h-11 bg-gray-300 rounded-full overflow-hidden">
+                {authorAvatar ? (
+                  <Image
+                    src={authorAvatar}
+                    alt={authorName}
+                    fill
+                    className="object-cover"
+                    sizes="44px"
+                  />
+                ) : (
+                  <span className="flex items-center justify-center h-full w-full text-gray-500 text-lg font-semibold">
+                    {(authorName[0] || "?").toUpperCase()}
+                  </span>
+                )}
+              </div>
               <div className="space-y-1 leading-none">
-                <p>{post.user_id}</p>
+                <p>{authorName}</p>
                 <p className="text-[#717182] text-sm">
-                  {post.email} · {post.created_at.slice(0, 10)}
+                  {authorEmail ? `${authorEmail} · ` : "@user · "}
+                  {displayDate}
                 </p>
               </div>
             </div>
@@ -159,116 +315,131 @@ export default function PostDetail({
             )}
           </div>
           {/* 게시글 내용 */}
-          <div className="my-5">
-            {/* 제목 */}
-            <div className="mb-6 space-y-4">
+          <div className="mt-5">
+            <div className="space-y-4">
               <p className="text-[18px] font-medium">{post.title}</p>
-              <p>{post.content}</p>
+              <div className="mt-4">
+                <RichTextRenderer content={post.content} showImage={true} />
+              </div>
             </div>
-            {/* 썸네일(이미지) */}
-            {post.image && (
-              <Image
-                src={post.image}
-                alt={post.title}
-                width={800}
-                height={800}
-                className="object-cover w-full h-auto bg-gray-300 rounded-lg"
-              ></Image>
-            )}
           </div>
-          {/* 태그들 */}
-          <div className="space-x-2 text-sm text-[#248AFF]">
-            {post.hashtags.map((tag, i) => (
-              <span key={i}>#{tag}</span>
-            ))}
-          </div>
-        </div>
-        {/* 아래 버튼들 */}
-        <div className="flex justify-center gap-30 text-[#717182]">
-          <button className="cursor-pointer py-1 px-2 rounded-md hover:text-[#FF569B] hover:bg-[#F7E6ED]">
-            <div className="flex gap-2 text-sm items-center ">
-              <Heart size={18} />
-              <span>{post.like_count}</span>
+          {/* 태그 */}
+          {post.hashtags && post.hashtags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-5 text-sm text-[#248AFF]">
+              {post.hashtags.map((tag, i) => (
+                <span key={i}>{tag.startsWith("#") ? tag : `#${tag}`}</span>
+              ))}
             </div>
-          </button>
-          <button className="cursor-pointer py-1 px-2 rounded-md hover:bg-gray-200">
-            <div className="flex gap-2 text-sm items-center">
-              <MessageSquare size={18} />
-              <span>{post.comment_count}</span>
-            </div>
-          </button>
-          <button
-            className={`cursor-pointer py-1 px-2 rounded-md hover:text-[#6758FF] hover:bg-[#D8D4FF] ${
-              post.isBookmarked ? "text-[#6758FF] bg-[#D8D4FF]" : ""
-            }`}
-          >
-            <Bookmark size={18} />
-          </button>
+          )}
         </div>
+
+        {/* 좋아요/북마크 */}
+        <PostActions
+          postId={post.id}
+          likeCount={post.like_count}
+          commentCount={comments.length}
+          isLiked={post.isLiked}
+          isBookmarked={post.isBookmarked}
+          onLikeToggle={onLikeToggle}
+          onBookmarkToggle={onBookmarkToggle}
+        />
+      </div>
+
+      {/* 프롬프트 세부 */}
+      <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
+        <PromptDetail />
+      </div>
+
+      <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
         {/* 작성자 소개 */}
-        <div className="mt-7">
+        <div>
           <p className="ml-2 mb-2 text-ms font-medium">작성자 소개</p>
           <div className="flex justify-between items-start gap-3 p-3 bg-white rounded-lg">
             <div className="flex-1 flex gap-3">
-              {/* 프로필 이미지 */}
-              <div className="w-11 h-11 bg-gray-300 rounded-full"></div>
-              {/* 이름, 이메일, 작성 시간?날짜? */}
+              <div className="relative w-11 h-11 bg-gray-300 rounded-full overflow-hidden">
+                {authorAvatar ? (
+                  <Image
+                    src={authorAvatar}
+                    alt={authorName}
+                    fill
+                    className="object-cover"
+                    sizes="44px"
+                  />
+                ) : (
+                  <span className="flex items-center justify-center h-full w-full text-gray-500 text-lg font-semibold">
+                    {(authorName[0] || "?").toUpperCase()}
+                  </span>
+                )}
+              </div>
               <div className="flex-1 space-y-1 leading-none">
                 <p>
-                  {post.user_id}
+                  {authorName}
                   <span className="text-[#717182] text-sm ml-1">
-                    {post.email}
+                    {authorEmail || "@user"}
                   </span>
                 </p>
                 <p className="text-sm line-clamp-2">
-                  자기소개자기소개자기소개자기소개자기소개자기소개자기소개자기소개자기소개자기소개기소개자기소개자기소개자기소개자기소개자기소개자기소개자기소개자기소개자기소개기소개자기소개자기소개자기소개자기소개자기소개자기소개자기소개자기소개자기소개
+                  {post.profiles?.bio || "자기소개가 없습니다."}
                 </p>
               </div>
             </div>
-            <button className="cursor-pointer leading-none text-[#4888FF] bg-[#EBF2FF] rounded-lg py-1.5 px-2 text-sm">
-              + 팔로우
-            </button>
+            {currentUserId && currentUserId !== post.user_id && (
+              <button 
+                onClick={handleFollowToggle}
+                disabled={isFollowLoading}
+                className={`cursor-pointer leading-none rounded-lg py-1.5 px-2 text-sm transition-colors ${
+                  isFollowing 
+                    ? 'text-gray-600 bg-gray-100 hover:bg-gray-200' 
+                    : 'text-[#6758FF] bg-[#6758FF]/10 hover:bg-[#6758FF]/20'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                {isFollowLoading ? '처리중...' : isFollowing ? '팔로잉' : '+ 팔로우'}
+              </button>
+            )}
           </div>
         </div>
-        {/* 댓글 입력 창 */}
-        <div className="flex items-center gap-2 my-6">
-          <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
-          <form className="flex-1 flex items-center justify-between px-3 py-2 bg-white border-black/10 self-center rounded-lg gap-2">
-            <input
-              type="text"
-              placeholder="댓글을 입력하세요..."
-              className="flex-1 outline-none"
-            />
-            <div className="flex items-center gap-2">
-              <button className="block cursor-pointer text-[#ADA4FF]">
-                <Smile />
-              </button>
-              <button type="submit" className="block cursor-pointer">
-                <CircleArrowUp />
-              </button>
-            </div>
-          </form>
-        </div>
-        {/* 댓글 영역 */}
+
+        {/* 댓글 작성 */}
+        <CommentForm postId={post.id} onCommentAdded={handleCommentAdded} />
+
+        {/* 댓글 목록 */}
         <div className="space-y-5">
-          {/* 최신순 인기순 버튼 */}
           <div className="p-1 flex items-center gap-3 py-1 px-4 bg-white rounded-lg border border-[#F2F2F4]">
             <ArrowUpDown size={12} />
             <div className="text-sm space-x-1 p-0.5 bg-[#EEEEF0] rounded-lg">
-              <button className="cursor-pointer py-1 px-3 rounded-lg bg-white shadow">
+              <button
+                onClick={() => setSortOrder("latest")}
+                className={`cursor-pointer py-1 px-3 rounded-lg ${
+                  sortOrder === "latest" ? "bg-white shadow" : ""
+                }`}
+              >
                 최신순
               </button>
-              <button className="cursor-pointer py-1 px-3 rounded-lg">
+              <button
+                onClick={() => setSortOrder("popular")}
+                className={`cursor-pointer py-1 px-3 rounded-lg ${
+                  sortOrder === "popular" ? "bg-white shadow" : ""
+                }`}
+              >
                 인기순
               </button>
             </div>
           </div>
-          {/* 댓글 영역 */}
           <div className="px-9">
-            {/* 댓글 */}
-            {MOCK_COMMENTS.map((comment) => (
-              <Comments key={comment.id} comment={comment} />
-            ))}
+            {comments.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">
+                첫 댓글을 작성해보세요!
+              </p>
+            ) : (
+              comments.map((comment) => (
+                <Comments
+                  key={comment.id}
+                  comment={comment}
+                  postId={post.id}
+                  onCommentDeleted={fetchComments}
+                />
+              ))
+            )}
           </div>
         </div>
       </div>

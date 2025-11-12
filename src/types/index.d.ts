@@ -7,6 +7,7 @@ import { Database } from "@/utils/supabase/supabase";
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"] | null;
 export type Post = Database["public"]["Tables"]["posts"]["Row"];
 export type Comment = Database["public"]["Tables"]["comments"]["Row"];
+export type Hashtag = Database["public"]["Tables"]["hashtags"]["Row"];
 
 export type MainDetail = Post & {
   profiles: Profile;
@@ -52,3 +53,6 @@ export type NewsItemWithState = NewsRow & {
   isLiked: boolean; // 현재 사용자의 좋아요 여부 (UI 상태)
   isBookmarked: boolean; // 현재 사용자의 북마크 여부 (UI 상태)
 };
+
+export { Database };
+

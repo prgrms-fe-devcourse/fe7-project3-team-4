@@ -2,7 +2,8 @@
 import Post from "../home/post/Post";
 import NewsItem from "../news/NewsItem";
 import EmptyActivity from "./EmptyActivity";
-import { NewsItemWithState, Post as PostType } from "@/types";
+import { NewsItemWithState } from "@/types";
+import { PostType } from "@/types/Post";
 
 type BookmarkedItem =
   | (PostType & { type: "post" })
@@ -10,9 +11,9 @@ type BookmarkedItem =
 
 type MyBookMarkProps = {
   items: BookmarkedItem[];
-  onLikeToggle: (id: string) => void; // News 좋아요
-  onBookmarkToggle: (id: string, type: "post" | "news") => void; // [⭐️]
-  onPostLikeToggle: (id: string) => void; // Post 좋아요
+  onLikeToggle: (id: string) => void; 
+  onBookmarkToggle: (id: string, type: "post" | "news") => void;
+  onPostLikeToggle: (id: string) => void; 
 };
 
 export default function MyBookMark({
@@ -26,34 +27,32 @@ export default function MyBookMark({
   }
 
   return (
-    <>
-      <div className="space-y-4">
-        {items.map((item) => {
-          if (item.type === "post") {
-            return (
-              <Post
-                key={item.id}
-                data={item}
-                onLikeToggle={onPostLikeToggle}
-                onBookmarkToggle={onBookmarkToggle} // [⭐️] Post 북마크 해제 핸들러
-              />
-            );
-          }
+    <div className="space-y-4">
+      {items.map((item) => {
+        if (item.type === "post") {
+          return (
+            <Post
+              key={item.id}
+              data={item}
+              onLikeToggle={onPostLikeToggle}
+              onBookmarkToggle={onBookmarkToggle}
+            />
+          );
+        }
 
-          if (item.type === "news") {
-            return (
-              <NewsItem
-                key={item.id}
-                item={item}
-                onLikeToggle={onLikeToggle}
-                onBookmarkToggle={() => onBookmarkToggle(item.id, "news")} // [⭐️] News 북마크 해제
-              />
-            );
-          }
+        if (item.type === "news") {
+          return (
+            <NewsItem
+              key={item.id}
+              item={item}
+              onLikeToggle={onLikeToggle}
+              onBookmarkToggle={() => onBookmarkToggle(item.id, "news")} 
+            />
+          );
+        }
 
-          return null;
-        })}
-      </div>
-    </>
+        return null;
+      })}
+    </div>
   );
 }

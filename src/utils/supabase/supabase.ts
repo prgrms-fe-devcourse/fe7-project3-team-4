@@ -119,16 +119,19 @@ export type Database = {
           created_at: string | null
           follower_id: string
           following_id: string
+          id: string
         }
         Insert: {
           created_at?: string | null
           follower_id: string
           following_id: string
+          id?: string
         }
         Update: {
           created_at?: string | null
           follower_id?: string
           following_id?: string
+          id?: string
         }
         Relationships: [
           {
@@ -437,6 +440,8 @@ export type Database = {
           created_at: string | null
           display_name: string | null
           email: string | null
+          followed_count: number | null
+          following_count: number | null
           id: string
         }
         Insert: {
@@ -445,6 +450,8 @@ export type Database = {
           created_at?: string | null
           display_name?: string | null
           email?: string | null
+          followed_count?: number | null
+          following_count?: number | null
           id: string
         }
         Update: {
@@ -453,6 +460,8 @@ export type Database = {
           created_at?: string | null
           display_name?: string | null
           email?: string | null
+          followed_count?: number | null
+          following_count?: number | null
           id?: string
         }
         Relationships: []
@@ -595,6 +604,7 @@ export type Database = {
     }
     Functions: {
       ensure_direct_room: { Args: { other_user_id: string }; Returns: string }
+      increment_view_count: { Args: { post_id: string }; Returns: undefined }
       mark_room_read: { Args: { room_id: string }; Returns: undefined }
     }
     Enums: {
