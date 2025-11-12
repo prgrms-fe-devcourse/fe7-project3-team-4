@@ -43,23 +43,23 @@ export default function CommentForm({
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      
+
       if (user) {
         setUser(user);
-        
+
         // ✅ profiles 테이블에서 모든 필요한 필드 조회
         const { data: profile, error } = await supabase
           .from("profiles")
           .select("avatar_url, display_name, email")
           .eq("id", user.id)
           .single();
-        
+
         if (!error && profile) {
           setUserProfile(profile);
         }
       }
     };
-    
+
     fetchUser();
   }, [supabase]);
 
@@ -87,10 +87,10 @@ export default function CommentForm({
       alert(`댓글 작성 실패: ${error.message || "알 수 없는 오류"}`);
     } else {
       setCommentText("");
-      
+
       // ✅ 댓글 수 증가 RPC 호출
-      await supabase.rpc('increment_post_comment_count', { 
-        post_id: postId 
+      await supabase.rpc("increment_post_comment_count", {
+        post_id: postId,
       });
 
       // ✅ 대댓글 로직
@@ -128,10 +128,10 @@ export default function CommentForm({
     <div className="flex items-start gap-2 my-6">
       <div className="relative w-8 h-8 bg-gray-300 rounded-full shrink-0 overflow-hidden">
         {avatarUrl ? (
-          <Image 
-            src={avatarUrl} 
+          <Image
+            src={avatarUrl}
             alt={displayName}
-            fill 
+            fill
             className="object-cover"
             sizes="32px" // ✅ Next.js Image 최적화
           />

@@ -1,57 +1,42 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/utils/supabase/client";
+// ⭐️ createClient는 DB 작업이 아닌 prop을 받으므로 제거해도 됩니다.
+// import { createClient } from "@/utils/supabase/client";
 
 interface RankFollowButtonProps {
   targetUserId: string;
-  initialIsFollowing: boolean;
+  isFollowing: boolean; // ⭐️ 부모로부터 실시간 상태를 받음
   currentUserId: string | null;
+  // ⭐️ 클릭 시 실행할 함수를 부모로부터 받음
+  onFollowToggle: (targetUserId: string) => Promise<void>;
 }
 
 export default function RankFollowButton({
   targetUserId,
-  initialIsFollowing,
+  isFollowing,
   currentUserId,
+  onFollowToggle,
 }: RankFollowButtonProps) {
-  const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
+  // ⭐️ 로딩 상태만 자체적으로 관리
   const [isLoading, setIsLoading] = useState(false);
-  const supabase = createClient();
+  // const supabase = createClient(); // ⭐️ 로직이 부모로 이동
 
-  const handleFollowToggle = async () => {
+  // ⭐️ 부모로부터 받은 함수를 실행
+  const handleFollowClick = async () => {
     if (!currentUserId) {
       alert("로그인이 필요합니다.");
       return;
     }
-
     if (currentUserId === targetUserId) {
       alert("자기 자신을 팔로우할 수 없습니다.");
       return;
     }
 
     setIsLoading(true);
-
     try {
-      if (isFollowing) {
-        // 언팔로우
-        const { error } = await supabase
-          .from("follows")
-          .delete()
-          .eq("follower_id", currentUserId)
-          .eq("following_id", targetUserId);
-
-        if (error) throw error;
-        setIsFollowing(false);
-      } else {
-        // 팔로우
-        const { error } = await supabase.from("follows").insert({
-          follower_id: currentUserId,
-          following_id: targetUserId,
-        });
-
-        if (error) throw error;
-        setIsFollowing(true);
-      }
+      // ⭐️ 부모의 토글 함수 호출
+      await onFollowToggle(targetUserId);
     } catch (error) {
       console.error("Error toggling follow:", error);
       alert("팔로우 처리 중 오류가 발생했습니다.");
@@ -62,7 +47,7 @@ export default function RankFollowButton({
 
   return (
     <button
-      onClick={handleFollowToggle}
+      onClick={handleFollowClick} // ⭐️ 수정된 핸들러
       disabled={isLoading}
       className={`cursor-pointer text-sm px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
         isFollowing
