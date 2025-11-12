@@ -30,7 +30,7 @@ type PostContentJson = {
 type TransformedPostData = {
   id: string;
   comment_count: number;
-  content: string; // jsonb에서 'text'를 추출
+  content: PostContentJson;
   created_at: string;
   updated_at?: string;
   like_count: number;
@@ -38,14 +38,13 @@ type TransformedPostData = {
   title: string;
   user_id: string;
   view_count: number;
-  email: string; // 'profiles'에서 join
-  image?: string; // jsonb에서 'main_image_url' 등을 추출
+  email: string;
+  image?: string;
   hashtags: string[];
-  isBookmarked: boolean; // 'user_post_bookmarks'에서 계산
-  isLiked: boolean; // [수정] 'user_post_likes'에서 계산
+  isBookmarked: boolean;
+  isLiked: boolean;
   model?: string;
 };
-
 const TAG_LABEL_MAP: Record<string, string> = {
   education: "교육",
   writing: "글쓰기",
@@ -125,7 +124,7 @@ export default async function SearchPostForm({
           id: post.id,
           user_id: post.user_id ?? "",
           title: post.title ?? "제목 없음",
-          content: contentJson?.text ?? "내용 없음",
+          content: contentJson ?? {},
           image:
             contentJson?.main_image_url ||
             contentJson?.prompt_result_image_url ||
@@ -133,7 +132,7 @@ export default async function SearchPostForm({
           email: post.profiles?.email ?? "이메일 없음",
           isBookmarked: post.user_post_bookmarks.length > 0,
           isLiked: post.user_post_likes.length > 0,
-          // 나머지 필드 매핑
+
           hashtags: (post.hashtags as string[]) ?? [],
           post_type: post.post_type as "prompt" | "free" | "weekly",
           like_count: post.like_count ?? 0,

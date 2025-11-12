@@ -27,14 +27,12 @@ type RawComment = {
     bio?: string | null;
   } | null;
 };
-
 interface PostDetailProps {
   post: PostType;
   onBack: () => void;
   onLikeToggle?: (id: string) => void;
   onBookmarkToggle?: (id: string, type: "post" | "news") => void;
 }
-
 export default function PostDetail({
   post,
   onLikeToggle,
@@ -54,7 +52,8 @@ export default function PostDetail({
   const fetchComments = useCallback(async () => {
     const { data, error } = await supabase
       .from("comments")
-      .select(`
+      .select(
+        `
         id,
         content,
         created_at,
@@ -70,41 +69,42 @@ export default function PostDetail({
           avatar_url,
           bio
         )
-      `)
+      `
+      )
       .eq("target_id", post.id)
       .is("parent_id", null)
       .order(sortOrder === "latest" ? "created_at" : "like_count", {
         ascending: false,
       });
-
     if (error) {
       console.error("Error fetching comments:", error);
       return;
     }
-
     if (data) {
-      const formattedComments: PostComment[] = data.map((comment: RawComment) => ({
-        id: comment.id,
-        content: comment.content ?? "",
-        created_at: comment.created_at ?? "",
-        updated_at: comment.updated_at ?? null,
-        like_count: comment.like_count ?? 0,
-        reply_count: comment.reply_count ?? 0,
-        has_reply: comment.has_reply ?? false,
-        parent_id: comment.parent_id ?? null,
-        user_id: comment.user_id ?? "",
-        profiles: comment.profiles
-          ? {
-              display_name: comment.profiles.display_name ?? "익명",
-              email: comment.profiles.email ?? "user",
-              avatar_url: comment.profiles.avatar_url ?? null,
-              bio: comment.profiles.bio ?? null,
-            }
-          : {
-              display_name: "익명",
-              email: "user",
-            },
-      }));
+      const formattedComments: PostComment[] = data.map(
+        (comment: RawComment) => ({
+          id: comment.id,
+          content: comment.content ?? "",
+          created_at: comment.created_at ?? "",
+          updated_at: comment.updated_at ?? null,
+          like_count: comment.like_count ?? 0,
+          reply_count: comment.reply_count ?? 0,
+          has_reply: comment.has_reply ?? false,
+          parent_id: comment.parent_id ?? null,
+          user_id: comment.user_id ?? "",
+          profiles: comment.profiles
+            ? {
+                display_name: comment.profiles.display_name ?? "익명",
+                email: comment.profiles.email ?? "user",
+                avatar_url: comment.profiles.avatar_url ?? null,
+                bio: comment.profiles.bio ?? null,
+              }
+            : {
+                display_name: "익명",
+                email: "user",
+              },
+        })
+      );
 
       setComments(formattedComments);
     }
@@ -132,7 +132,6 @@ export default function PostDetail({
         }
       )
       .subscribe();
-
     return () => {
       supabase.removeChannel(channel);
     };
@@ -155,11 +154,14 @@ export default function PostDetail({
             comment_count: number;
             like_count: number;
           };
-          console.log("실시간 업데이트:", updatedPost.comment_count, updatedPost.like_count);
+          console.log(
+            "실시간 업데이트:",
+            updatedPost.comment_count,
+            updatedPost.like_count
+          );
         }
       )
       .subscribe();
-
     return () => {
       supabase.removeChannel(channel);
     };
@@ -169,7 +171,6 @@ export default function PostDetail({
   const handleCommentAdded = () => {
     fetchComments();
   };
-
   return (
     <div className="space-y-6 pb-6">
       <button
@@ -179,7 +180,6 @@ export default function PostDetail({
         <ArrowLeft className="arrow-wiggle" />
         뒤로
       </button>
-
       <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
         {/* 작성자 정보 */}
         <div className="pb-7">
@@ -218,7 +218,6 @@ export default function PostDetail({
               </div>
             )}
           </div>
-
           {/* 게시글 내용 */}
           <div className="my-5">
             <div className="mb-6 space-y-4">
@@ -228,7 +227,6 @@ export default function PostDetail({
               </div>
             </div>
           </div>
-
           {/* 태그 */}
           {post.hashtags && post.hashtags.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-5 text-sm text-[#248AFF]">
@@ -249,7 +247,6 @@ export default function PostDetail({
           onLikeToggle={onLikeToggle}
           onBookmarkToggle={onBookmarkToggle}
         />
-
         {/* 작성자 소개 */}
         <div>
           <p className="ml-2 mb-2 text-ms font-medium">작성자 소개</p>
@@ -270,7 +267,6 @@ export default function PostDetail({
                   </span>
                 )}
               </div>
-
               <div className="flex-1 space-y-1 leading-none">
                 <p>
                   {authorName}
@@ -315,7 +311,6 @@ export default function PostDetail({
               </button>
             </div>
           </div>
-
           <div className="px-9">
             {comments.length === 0 ? (
               <p className="text-center text-gray-500 py-8">
