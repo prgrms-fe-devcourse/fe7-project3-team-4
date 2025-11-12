@@ -31,7 +31,6 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (isSubmitting) return;
-
     setIsSubmitting(true);
 
     const form = e.currentTarget;
@@ -51,8 +50,12 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
       const type = (formData.get("postType") as PostType) || postType;
       const title = (formData.get("title") as string)?.trim();
 
-      const rawContent = formData.get("content") as string | null;
+      const rawContent = formData.get("content_raw") as string | null;
       const baseDoc = rawContent ? JSON.parse(rawContent) : null;
+
+      const contentText = (
+        (formData.get("content_text") as string) ?? ""
+      ).trim();
 
       const rawHashtags = (formData.get("hashtags") as string) || "";
       const selectedHashtags = rawHashtags
@@ -92,8 +95,8 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
       let resultLink: string | null = null;
 
       if (isPromptLikePost) {
-        resultMode = formData.get("resultMode") as ResultMode;
-        model = formData.get("model") as ModelType;
+        resultMode = (formData.get("resultMode") as ResultMode) || null;
+        model = (formData.get("model") as ModelType) || null;
 
         promptInput =
           ((formData.get("promptInput") as string) || "").trim() || null;
@@ -108,7 +111,6 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
         if (resultMode === "text") {
           const result = (formData.get("promptResult") as string) || "";
           promptResultText = result.trim() || null;
-
           if (!promptResultText) {
             alert("프롬프트의 결과 값을 작성해주세요.");
             return;
@@ -120,21 +122,20 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
             "promptResultImage"
           ) as File | null;
 
-          if (resultImgFile?.size === 0) {
+          if (!resultImgFile || resultImgFile.size === 0) {
             alert("프롬프트의 결과 값의 이미지를 첨부해주세요.");
             return;
           }
 
-          if (resultImgFile && resultImgFile.size > 0) {
-            promptResultImageUrl = await uploadPromptResultImage(
-              supabase,
-              user.id,
-              resultImgFile
-            );
-          }
+          promptResultImageUrl = await uploadPromptResultImage(
+            supabase,
+            user.id,
+            resultImgFile
+          );
         }
 
-        if (isPromptLike && !isAllChecked) {
+        // ❗ 오타 수정: isPromptLike → isPromptLikePost
+        if (isPromptLikePost && !isAllChecked) {
           alert(
             "프롬프트 관련 게시글 등록을 위해 자가진단 문항을 모두 체크해주세요."
           );
@@ -142,9 +143,10 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
         }
       }
 
+      // ----- 최종 content 구성 (이미지 → 본문) -----
       const extendedContent: any[] = [];
 
-      // 1) 대표 이미지 먼저 넣고 싶으면 여기
+      // 1) 대표 이미지 먼저
       if (mainImageUrl) {
         extendedContent.push({
           type: "image",
@@ -155,10 +157,12 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
         });
       }
 
-      // 2) 기존 에디터 내용
-      extendedContent.push(...baseDoc.content);
+      // 2) 에디터 내용 그대로
+      extendedContent.push(
+        ...(Array.isArray(baseDoc.content) ? baseDoc.content : [])
+      );
 
-      // 3) 프롬프트 관련 블럭들 (isPromptLikePost일 때만)
+      // 3) 프롬프트 블럭들
       if (isPromptLikePost) {
         if (promptInput) {
           extendedContent.push(
@@ -200,10 +204,7 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
             },
             {
               type: "image",
-              attrs: {
-                src: promptResultImageUrl,
-                alt: "프롬프트 결과 이미지",
-              },
+              attrs: { src: promptResultImageUrl, alt: "프롬프트 결과 이미지" },
             }
           );
         }
@@ -222,13 +223,13 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
         }
       }
 
+      // 항상 Doc 래퍼 유지
       const finalDoc = {
-        ...baseDoc,
+        type: "doc",
         content: extendedContent,
       };
 
-      // ----- DB 저장: content에 doc만 -----
-
+      // ----- DB 저장 -----
       const { data, error } = await supabase
         .from("posts")
         .insert({
@@ -239,6 +240,8 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
           hashtags: selectedHashtags,
           model,
           is_prompt_like: isPromptLikePost,
+          thumbnail: mainImageUrl,
+          subtitle: contentText,
         })
         .select()
         .single();
