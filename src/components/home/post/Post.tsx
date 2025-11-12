@@ -1,6 +1,5 @@
 import Link from "next/link";
 import PostActions from "./PostAction";
-import { TextPreview, ImagePreview } from '@/components/common/FeedRenderer';
 import { PostType } from "@/types/Post";
 import Image from "next/image";
 
@@ -50,23 +49,36 @@ export default function Post({
           </div>
         </div>
 
-        {/* 중간: 제목, 텍스트 미리보기 - Link로 감싸기 */}
+        {/* 중간: 제목 */}
         <Link href={postUrl} className="block my-5">
           <h3 className="text-[18px] font-semibold hover:underline">
             {data.title}
           </h3>
-          {/* 텍스트 미리보기 (이미지 제외, 3줄 제한) */}
-          <div className="line-clamp-3 text-gray-700">
-            <TextPreview content={data.content} />
-          </div>
         </Link>
 
-        {/* 이미지 렌더링 - 별도 Link로 감싸기 (imageOnly 내부에서) */}
-      <ImagePreview 
-        content={data.content}
-        postUrl={postUrl}
-        title={data.title}
-      />
+        {/* 썸네일 이미지 (thumbnail) - 존재할 경우에만 렌더링 */}
+        {data.thumbnail && (
+          <Link href={postUrl} className="block my-5">
+            <div className="relative w-full aspect-video overflow-hidden rounded-lg">
+              <Image
+                src={data.thumbnail}
+                alt={data.title}
+                fill
+                className="object-cover"
+                loading="lazy"
+              />
+            </div>
+          </Link>
+        )}
+
+        {/* 부제목 (subtitle) - 존재할 경우에만 렌더링 */}
+        {data.subtitle && (
+          <Link href={postUrl} className="block my-5">
+            <div className="line-clamp-3 text-gray-700">
+              {data.subtitle}
+            </div>
+          </Link>
+        )}
 
         {/* 해시태그 */}
         {data.hashtags && data.hashtags.length > 0 && (

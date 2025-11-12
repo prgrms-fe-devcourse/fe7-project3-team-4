@@ -2,10 +2,16 @@ type PostComment = {
   id: string;
   content: string;
   created_at: string;
-  parent_id?: string | null;
   updated_at: string | null;
-  //조인으로 가져오는 유저 정보
-  display_name: string | null;
-  email: string;
+  like_count: number;
+  reply_count: number;
   has_reply: boolean;
+  parent_id?: string | null;
+  user_id: string;
+  profiles?: {
+    display_name: string | null;
+    email: string | null;
+    avatar_url?: string | null;
+    bio?: string | null;
+  };
 };

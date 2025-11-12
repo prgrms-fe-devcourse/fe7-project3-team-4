@@ -70,7 +70,6 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/**",
       },
-      // ✅ Naver 이미지 허용
       {
         protocol: "https",
         hostname: "search.pstatic.net",
