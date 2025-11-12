@@ -12,6 +12,10 @@ import { createClient } from "@/utils/supabase/client";
 import PromptDetail from "./PromptDetail";
 import Link from "next/link";
 import { RealtimeChannel } from "@supabase/supabase-js";
+import {
+  extractImageSrcArr,
+  pickNthParagraphDoc,
+} from "@/utils/extractTextFromJson";
 
 const FOLLOWS_CHANNEL = "follows-update-channel";
 

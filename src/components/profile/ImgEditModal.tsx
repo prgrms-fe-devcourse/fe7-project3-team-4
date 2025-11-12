@@ -1,5 +1,3 @@
-// src/components/profile/ImgEditModal.tsx
-
 "use client";
 
 import { MouseEvent, useState, ChangeEvent, FormEvent } from "react";
@@ -11,7 +9,7 @@ type ImgEditModalProps = {
   isOpen: boolean;
   onClose: () => void;
   profile: Profile;
-  action: (url: string) => Promise<FormState>; 
+  action: (url: string) => Promise<FormState>;
 };
 
 export function ImgEditModal({
@@ -20,7 +18,7 @@ export function ImgEditModal({
   profile,
   action,
 }: ImgEditModalProps) {
-  const [supabase] = useState(() => createClient()); 
+  const [supabase] = useState(() => createClient());
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -80,7 +78,7 @@ export function ImgEditModal({
 
       const newUrl = `${urlData.publicUrl}?t=${new Date().getTime()}`;
 
-      const result = await action(newUrl); 
+      const result = await action(newUrl);
 
       if (result.success) {
         alert("프로필 이미지가 변경되었습니다.");
@@ -114,7 +112,6 @@ export function ImgEditModal({
           )}
 
           <div className="flex flex-col gap-4 items-center py-8 rounded-xl bg-white">
-
             <div className="w-32 h-32 rounded-full bg-gray-200 relative overflow-hidden">
               {previewUrl ? (
                 <Image
@@ -136,7 +133,7 @@ export function ImgEditModal({
               className="hidden"
               type="file"
               name="imgFile"
-              onChange={handleFileChange} 
+              onChange={handleFileChange}
               disabled={isUploading}
             />
             <label
@@ -163,7 +160,7 @@ export function ImgEditModal({
             <button
               type="submit"
               className="cursor-pointer py-1.5 px-4 bg-[#6758FF] rounded-lg text-white disabled:opacity-50"
-              disabled={isUploading || !file} 
+              disabled={isUploading || !file}
             >
               {isUploading ? "업로드 중..." : "수정"}
             </button>

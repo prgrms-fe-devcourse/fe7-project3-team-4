@@ -1,4 +1,3 @@
-// src/components/profile/MyComments.tsx
 import { Heart, MessageCircle, MessageSquareReply } from "lucide-react";
 import ContentBox from "../ContentBox";
 import EmptyActivity from "./EmptyActivity";
@@ -18,9 +17,9 @@ type MyCommentsProps = {
   onLikeToggle: (id: string) => void;
 };
 
-export default function MyComments({ 
+export default function MyComments({
   comments,
-  onLikeToggle
+  onLikeToggle,
 }: MyCommentsProps) {
   if (!comments || comments.length === 0) {
     return <EmptyActivity message="작성한 댓글이 없습니다" />;
@@ -29,8 +28,10 @@ export default function MyComments({
   return (
     <div className="space-y-4">
       {comments.map((comment) => {
-        const isLiked = comment.isLiked ?? !!(comment.comment_likes && comment.comment_likes.length > 0);
-        
+        const isLiked =
+          comment.isLiked ??
+          !!(comment.comment_likes && comment.comment_likes.length > 0);
+
         return (
           <ContentBox key={comment.id}>
             <div className="p-6 flex items-start gap-3">
@@ -46,19 +47,19 @@ export default function MyComments({
                       onClick={() => onLikeToggle(comment.id)}
                       className="flex items-center gap-2 hover:text-red-500 transition-colors"
                     >
-                      <Heart 
+                      <Heart
                         size={18}
                         className={isLiked ? "fill-red-500 text-red-500" : ""}
                       />
                       <span>{comment.like_count ?? 0}</span>
                     </button>
-                    
+
                     <div className="flex items-center gap-2">
                       <MessageSquareReply size={18} />
                       <span>{comment.reply_count ?? 0}</span>
                     </div>
                   </div>
-                  
+
                   <p className="text-xs text-gray-500">
                     {formatTimeAgo(comment.created_at)}
                   </p>
