@@ -5,6 +5,7 @@ import { Image as ImageIcon, Search, Send } from "lucide-react";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import type { JSX } from "react";
 
 type ChatProfile = {
   id: string;
@@ -411,7 +412,7 @@ export default function Page() {
     if (!activeRoomId && peerId) {
       // 첫 메시지 시점에 방 생성 (RPC 우선, 실패 시 fallback)
       try {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .rpc("ensure_direct_room", { other_user_id: peerId })
           .throwOnError();
         if (!data) throw new Error("ensure_direct_room returned no id");
@@ -691,43 +692,72 @@ export default function Page() {
             </div>
           )}
           {roomId &&
-            msgs.map((m) => {
-              const mine = m.sender_id === me;
-              return (
-                <div
-                  key={m.id}
-                  className={`flex items-end gap-1 ${
-                    mine ? "justify-end" : ""
-                  }`}
-                >
-                  {mine && (
-                    <span className="text-[#717182] text-xs">
-                      {new Date(m.created_at).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  )}
+            (() => {
+              let lastDateKey = "";
+              return msgs.flatMap((m) => {
+                const mine = m.sender_id === me;
+                const dt = new Date(m.created_at);
+                const dateKey = dt.toISOString().slice(0, 10); // YYYY-MM-DD
+                const needSep = dateKey !== lastDateKey;
+                lastDateKey = dateKey;
+
+                const parts: JSX.Element[] = [];
+
+                if (needSep) {
+                  const label = dt.toLocaleDateString("ko-KR", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    weekday: "short",
+                  });
+                  parts.push(
+                    <div key={`sep-${dateKey}`} className="relative my-4">
+                      <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-black/10"></div>
+                      <div className="relative mx-auto w-fit rounded-full border border-black/10 bg-white/60 px-3 py-1 text-[11px] text-[#4B4B57] backdrop-blur">
+                        {label}
+                      </div>
+                    </div>
+                  );
+                }
+
+                parts.push(
                   <div
-                    className={`${
-                      mine
-                        ? "bg-[#6758FF] text-white"
-                        : "bg-white/50 text-[#0A0A0A]"
-                    } border border-[#6758FF]/30 rounded-xl px-4 py-2 max-w-[70%]`}
+                    key={m.id}
+                    className={`flex items-end gap-1 ${
+                      mine ? "justify-end" : ""
+                    }`}
                   >
-                    {m.content}
+                    {mine && (
+                      <span className="text-[#717182] text-xs">
+                        {dt.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    )}
+                    <div
+                      className={`${
+                        mine
+                          ? "bg-[#6758FF] text-white"
+                          : "bg-white/50 text-[#0A0A0A]"
+                      } border border-[#6758FF]/30 rounded-xl px-4 py-2 max-w-[70%]`}
+                    >
+                      {m.content}
+                    </div>
+                    {!mine && (
+                      <span className="text-[#717182] text-xs">
+                        {dt.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    )}
                   </div>
-                  {!mine && (
-                    <span className="text-[#717182] text-xs">
-                      {new Date(m.created_at).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
+                );
+
+                return parts;
+              });
+            })()}
         </div>
         {/* 메시지 입력창 */}
         <div className="mt-auto flex items-center gap-3 border border-[#E5E5E5] rounded-lg p-3">
