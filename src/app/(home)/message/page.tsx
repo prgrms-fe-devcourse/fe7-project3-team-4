@@ -59,6 +59,16 @@ export default function Page() {
     Promise.resolve().then(() => setPeerId(peerIdParam ?? null));
   }, [peerIdParam, roomId]);
 
+  // 방 또는 pre-chat에 진입하면 검색 UI 정리
+  useEffect(() => {
+    if (roomId || peerId) {
+      setQ("");
+      setDebouncedQ("");
+      setResults([]);
+      setIsSearching(false);
+    }
+  }, [roomId, peerId]);
+
   // fetch current user id
   useEffect(() => {
     let active = true;
@@ -373,6 +383,9 @@ export default function Page() {
       sp.delete("peerId");
       sp.set("roomId", existing.id);
       router.push(`/message?${sp.toString()}`, { scroll: false });
+      setQ("");
+      setDebouncedQ("");
+      setResults([]);
       setIsSearching(false);
       return;
     }
@@ -381,6 +394,9 @@ export default function Page() {
     sp.delete("roomId");
     sp.set("peerId", otherUserId);
     router.push(`/message?${sp.toString()}`, { scroll: false });
+    setQ("");
+    setDebouncedQ("");
+    setResults([]);
     setIsSearching(false);
   };
 
@@ -519,7 +535,7 @@ export default function Page() {
               }}
               className="ml-3 text-xs text-[#717182] hover:underline"
             >
-              검색 종료
+              종료
             </button>
           )}
         </div>
