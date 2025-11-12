@@ -1,21 +1,27 @@
+// src/components/profile/ProfileHeader.tsx
 "use client";
 
-import { Profile } from "@/types"; // [1] Profile 타입 임포트
+import { Profile } from "@/types";
 import { Calendar, Pencil, SquarePen } from "lucide-react";
 import Image from "next/image";
 
 type ProfileHeaderProps = {
-  profile: Profile; // [2] profile prop 추가
+  profile: Profile;
+  isOwnProfile: boolean; // ⭐️ 본인 프로필 여부
+  isFollowing: boolean; // ⭐️ 팔로우 상태
+  onFollowToggle?: () => void; // ⭐️ 팔로우 토글
   onAvatarClick?: () => void;
   onEditClick?: () => void;
 };
 
 export function ProfileHeader({
-  profile, // [3] profile props 받기
+  profile,
+  isOwnProfile,
+  isFollowing,
+  onFollowToggle,
   onAvatarClick,
   onEditClick,
 }: ProfileHeaderProps) {
-  // [4] 날짜 포매팅
   const joinedDate = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString("ko-KR", {
         year: "numeric",
@@ -26,10 +32,12 @@ export function ProfileHeader({
 
   return (
     <div className="mt-6 relative pt-10">
-      {/* 프로필 이미지 (클릭 시 수정 모달 오픈) */}
+      {/* 프로필 이미지 - 본인만 클릭 가능 */}
       <div
-        className="group absolute top-0 left-6 z-10 w-24 h-24 rounded-full bg-gray-300 border-2 flex items-center justify-center border-white hover:bg-black/60 cursor-pointer"
-        onClick={onAvatarClick}
+        className={`group absolute top-0 left-6 z-10 w-24 h-24 rounded-full bg-gray-300 border-2 flex items-center justify-center border-white ${
+          isOwnProfile ? "hover:bg-black/60 cursor-pointer" : "cursor-default"
+        }`}
+        onClick={isOwnProfile ? onAvatarClick : undefined}
       >
         {profile?.avatar_url ? (
           <Image
@@ -39,28 +47,45 @@ export function ProfileHeader({
             className="object-cover rounded-full" 
           />
         ) : (
-          <span className="text-gray-500 group-hover:text-white">...</span>
+          <span className="flex items-center justify-center h-full text-gray-500 group-hover:text-white">
+            ...
+          </span>
         )}
-        <Pencil
-          size={20}
-          className="text-white opacity-0 group-hover:opacity-100 transition-opacity"
-        />
+        {isOwnProfile && (
+          <Pencil
+            size={20}
+            className="text-white opacity-0 group-hover:opacity-100 transition-opacity"
+          />
+        )}
       </div>
 
       {/* 프로필 정보 박스 */}
       <div className="bg-white/40 border border-white/20 rounded-xl shadow-xl">
         <div className="px-6 pb-6 pt-3">
           <div className="w-full flex justify-end mb-8">
-            <button
-              type="button"
-              onClick={onEditClick}
-              className="cursor-pointer leading-none px-4 py-3 flex items-center gap-2 bg-white rounded-xl hover:-translate-y-0.5 hover:shadow-xl"
-            >
-              <SquarePen size={20} />
-              <span>프로필 편집</span>
-            </button>
+            {isOwnProfile ? (
+              <button
+                type="button"
+                onClick={onEditClick}
+                className="cursor-pointer leading-none px-4 py-3 flex items-center gap-2 bg-white rounded-xl hover:-translate-y-0.5 hover:shadow-xl"
+              >
+                <SquarePen size={20} />
+                <span>프로필 편집</span>
+              </button>
+            ) : (
+              // ⭐️ 타인 프로필일 때 팔로우 버튼
+              <button
+                onClick={onFollowToggle}
+                className={`cursor-pointer leading-none px-4 py-3 rounded-xl text-white transition-colors ${
+                  isFollowing
+                    ? "bg-gray-400 hover:bg-gray-500"
+                    : "bg-[#6758FF] hover:bg-[#5648E5]"
+                }`}
+              >
+                {isFollowing ? "팔로잉" : "팔로우"}
+              </button>
+            )}
           </div>
-          {/* [5] Static 텍스트를 props 데이터로 교체 */}
           <p className="text-[22px] mb-3">
             {profile?.display_name || "닉네임"}
           </p>

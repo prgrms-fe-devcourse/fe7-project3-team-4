@@ -11,9 +11,9 @@ type BookmarkedItem =
 
 type MyBookMarkProps = {
   items: BookmarkedItem[];
-  onLikeToggle: (id: string) => void; 
+  onLikeToggle: (id: string) => void;
   onBookmarkToggle: (id: string, type: "post" | "news") => void;
-  onPostLikeToggle: (id: string) => void; 
+  onPostLikeToggle: (id: string) => void;
 };
 
 export default function MyBookMark({
@@ -46,7 +46,7 @@ export default function MyBookMark({
               key={item.id}
               item={item}
               onLikeToggle={onLikeToggle}
-              onBookmarkToggle={() => onBookmarkToggle(item.id, "news")} 
+              onBookmarkToggle={() => onBookmarkToggle(item.id, "news")}
             />
           );
         }

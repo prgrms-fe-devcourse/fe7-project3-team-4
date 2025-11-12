@@ -1,3 +1,4 @@
+// src/app/(home)/post/[id]/PostDetail.tsx
 "use client";
 
 import { ArrowLeft, ArrowUpDown } from "lucide-react";
@@ -10,6 +11,7 @@ import CommentForm from "./CommentForm";
 import PostActions from "./PostAction";
 import { createClient } from "@/utils/supabase/client";
 import PromptDetail from "./PromptDetail";
+import Link from "next/link"; // ⭐️ 추가
 
 type RawComment = {
   id: string;
@@ -52,9 +54,8 @@ export default function PostDetail({
   const authorName = post.profiles?.display_name || "익명";
   const authorEmail = post.profiles?.email || "";
   const authorAvatar = post.profiles?.avatar_url || null;
-  const displayDate = (post.created_at || "").slice(0, 10);
+  // const displayDate = (post.created_at || "").slice(0, 10);
 
-  // ✅ 현재 사용자 정보 가져오기
   useEffect(() => {
     const getCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -63,7 +64,6 @@ export default function PostDetail({
     getCurrentUser();
   }, [supabase]);
 
-  // ✅ 조회수 증가
   useEffect(() => {
     const incrementViewCount = async () => {
       const { error } = await supabase.rpc('increment_view_count', {
@@ -78,7 +78,6 @@ export default function PostDetail({
     incrementViewCount();
   }, [post.id, supabase]);
 
-  // ✅ 팔로우 상태 확인
   useEffect(() => {
     const checkFollowStatus = async () => {
       if (!currentUserId || !post.user_id) return;
@@ -98,7 +97,6 @@ export default function PostDetail({
     checkFollowStatus();
   }, [currentUserId, post.user_id, supabase]);
 
-  // ✅ 팔로우/언팔로우 핸들러
   const handleFollowToggle = async () => {
     if (!currentUserId || !post.user_id) {
       alert('로그인이 필요합니다.');
@@ -114,7 +112,6 @@ export default function PostDetail({
 
     try {
       if (isFollowing) {
-        // 언팔로우
         const { error } = await supabase
           .from('follows')
           .delete()
@@ -124,7 +121,6 @@ export default function PostDetail({
         if (error) throw error;
         setIsFollowing(false);
       } else {
-        // 팔로우
         const { error } = await supabase
           .from('follows')
           .insert({
@@ -143,7 +139,6 @@ export default function PostDetail({
     }
   };
 
-  // ✅ 댓글 가져오기
   const fetchComments = useCallback(async () => {
     const { data, error } = await supabase
       .from("comments")
@@ -171,6 +166,7 @@ export default function PostDetail({
       .order(sortOrder === "latest" ? "created_at" : "like_count", {
         ascending: false,
       });
+
     if (error) {
       console.error("Error fetching comments:", error);
       return;
@@ -200,17 +196,14 @@ export default function PostDetail({
               },
         })
       );
-
       setComments(formattedComments);
     }
   }, [post.id, sortOrder, supabase]);
 
-  // ✅ 댓글 fetch
   useEffect(() => {
     fetchComments();
   }, [fetchComments]);
 
-  // ✅ Realtime: comments 변경 감지
   useEffect(() => {
     const channel = supabase
       .channel(`comments:${post.id}`)
@@ -232,7 +225,6 @@ export default function PostDetail({
     };
   }, [post.id, supabase, fetchComments]);
 
-  // ✅ Realtime: posts.comment_count 변경 감지
   useEffect(() => {
     const channel = supabase
       .channel(`post:${post.id}`)
@@ -247,7 +239,7 @@ export default function PostDetail({
         (payload) => {
           const updatedPost = payload.new as {
             comment_count: number;
-            like_count: number;
+            like_count?: number;
           };
           console.log(
             "실시간 업데이트:",
@@ -262,7 +254,6 @@ export default function PostDetail({
     };
   }, [post.id, supabase]);
 
-  // ✅ 댓글 작성 콜백
   const handleCommentAdded = () => {
     fetchComments();
   };
@@ -281,7 +272,11 @@ export default function PostDetail({
         <div className="pb-7">
           <div className="flex justify-between">
             <div className="flex gap-3 items-center">
-              <div className="relative w-11 h-11 bg-gray-300 rounded-full overflow-hidden">
+              {/* ⭐️ Link로 감싸서 클릭 시 프로필 이동 */}
+              <Link 
+                href={`/profile?userId=${post.user_id}`}
+                className="relative w-11 h-11 bg-gray-300 rounded-full overflow-hidden hover:opacity-80 transition-opacity"
+              >
                 {authorAvatar ? (
                   <Image
                     src={authorAvatar}
@@ -295,14 +290,22 @@ export default function PostDetail({
                     {(authorName[0] || "?").toUpperCase()}
                   </span>
                 )}
-              </div>
-              <div className="space-y-1 leading-none">
-                <p>{authorName}</p>
-                <p className="text-[#717182] text-sm">
-                  {authorEmail ? `${authorEmail} · ` : "@user · "}
-                  {displayDate}
+              </Link>
+              {/* ⭐️ 작성자 정보 텍스트도 Link로 감싸기 */}
+              <Link 
+                href={`/profile?userId=${post.user_id}`}
+                className="flex-1 space-y-1 leading-none hover:underline"
+              >
+                <p>
+                  {authorName}
+                  <span className="text-[#717182] text-sm ml-1">
+                    {authorEmail || "@user"}
+                  </span>
                 </p>
-              </div>
+                <p className="text-sm line-clamp-2">
+                  {post.profiles?.bio || "자기소개가 없습니다."}
+                </p>
+              </Link>
             </div>
             {post.model && (
               <div
@@ -356,7 +359,11 @@ export default function PostDetail({
           <p className="ml-2 mb-2 text-ms font-medium">작성자 소개</p>
           <div className="flex justify-between items-start gap-3 p-3 bg-white rounded-lg">
             <div className="flex-1 flex gap-3">
-              <div className="relative w-11 h-11 bg-gray-300 rounded-full overflow-hidden">
+              {/* ⭐️ 작성자 프로필 이미지 Link 추가 */}
+              <Link 
+                href={`/profile?userId=${post.user_id}`}
+                className="relative w-11 h-11 bg-gray-300 rounded-full overflow-hidden hover:opacity-80 transition-opacity"
+              >
                 {authorAvatar ? (
                   <Image
                     src={authorAvatar}
@@ -370,7 +377,7 @@ export default function PostDetail({
                     {(authorName[0] || "?").toUpperCase()}
                   </span>
                 )}
-              </div>
+              </Link>
               <div className="flex-1 space-y-1 leading-none">
                 <p>
                   {authorName}
