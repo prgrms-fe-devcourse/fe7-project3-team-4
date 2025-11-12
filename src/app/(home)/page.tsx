@@ -48,6 +48,8 @@ type SupabasePostItem = {
   user_id: string | null;
   model: string | null;
   email: string | null;
+  thumbnail: string | null;
+  subtitle: string | null;
   user_post_likes: { user_id: string }[];
   user_post_bookmarks: { user_id: string }[];
   profiles: {
@@ -147,6 +149,8 @@ export default function Page() {
           view_count: item.view_count || 0,
           user_id: item.user_id || "",
           model: (item.model as "GPT" | "Gemini") || undefined,
+          thumbnail: item.thumbnail || "",
+          subtitle: item.subtitle || "",
           isLiked: !!(item.user_post_likes && item.user_post_likes.length > 0),
           isBookmarked: !!(
             item.user_post_bookmarks && item.user_post_bookmarks.length > 0
@@ -166,26 +170,40 @@ export default function Page() {
     };
 
     fetchPosts();
-  const channel = supabase
-    .channel('posts-changes')
-    .on('postgres_changes', {
-      event: 'UPDATE',
-      schema: 'public',
-      table: 'posts',
-    }, (payload) => {
-      const updatedPost = payload.new as { id: string; comment_count: number; like_count?: number; };
-      setPosts(prev => prev.map(post => 
-        post.id === updatedPost.id 
-          ? { ...post, comment_count: updatedPost.comment_count, like_count: updatedPost.like_count ?? post.like_count }
-          : post
-      ));
-    })
-    .subscribe();
+    const channel = supabase
+      .channel("posts-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "posts",
+        },
+        (payload) => {
+          const updatedPost = payload.new as {
+            id: string;
+            comment_count: number;
+            like_count?: number;
+          };
+          setPosts((prev) =>
+            prev.map((post) =>
+              post.id === updatedPost.id
+                ? {
+                    ...post,
+                    comment_count: updatedPost.comment_count,
+                    like_count: updatedPost.like_count ?? post.like_count,
+                  }
+                : post
+            )
+          );
+        }
+      )
+      .subscribe();
 
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}, [supabase, sortBy]);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, sortBy]);
 
   const postsByType = useMemo(
     () => ({
@@ -250,26 +268,24 @@ export default function Page() {
       const isCurrentlyLiked = currentItem.isLiked;
       const currentLikes = currentItem.like_count ?? 0;
 
-      // 1. 낙관적 업데이트
+      // 1️⃣ 낙관적 업데이트
       setPosts((prev) =>
-        prev.map((item) => {
-          if (item.id === id) {
-            return {
-              ...item,
-              isLiked: !isCurrentlyLiked,
-              like_count: !isCurrentlyLiked
-                ? currentLikes + 1
-                : Math.max(0, currentLikes - 1),
-            };
-          }
-          return item;
-        })
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                isLiked: !isCurrentlyLiked,
+                like_count: !isCurrentlyLiked
+                  ? currentLikes + 1
+                  : Math.max(0, currentLikes - 1),
+              }
+            : item
+        )
       );
 
-      // 2. DB 업데이트
       try {
+        // 2️⃣ user_post_likes 삽입/삭제만 수행 (트리거가 like_count 자동 반영)
         if (isCurrentlyLiked) {
-          await supabase.rpc("decrement_like_count", { post_id: id });
           const { error } = await supabase
             .from("user_post_likes")
             .delete()
@@ -277,25 +293,22 @@ export default function Page() {
             .eq("post_id", id);
           if (error) throw error;
         } else {
-          await supabase.rpc("increment_like_count", { post_id: id });
           const { error } = await supabase
             .from("user_post_likes")
             .insert({ user_id: user.id, post_id: id });
+          // 중복 좋아요 시 에러 23505는 무시
           if (error && error.code !== "23505") throw error;
         }
       } catch (err) {
-        // 3. 롤백
+        console.error("Error toggling like:", err);
+
+        // 3️⃣ 실패 시 롤백
         setPosts((prev) =>
-          prev.map((item) => {
-            if (item.id === id) {
-              return {
-                ...item,
-                isLiked: isCurrentlyLiked,
-                like_count: currentLikes,
-              };
-            }
-            return item;
-          })
+          prev.map((item) =>
+            item.id === id
+              ? { ...item, isLiked: isCurrentlyLiked, like_count: currentLikes }
+              : item
+          )
         );
       }
     },
@@ -392,9 +405,11 @@ export default function Page() {
       </div>
 
       {selectedPost ? (
-        <PostDetail post={selectedPost} onBack={handleBack}   
-        onLikeToggle={handlePostLikeToggle} // ✅ 추가
-        onBookmarkToggle={handlePostBookmarkToggle} // ✅ 추가
+        <PostDetail
+          post={selectedPost}
+          onBack={handleBack}
+          onLikeToggle={handlePostLikeToggle} // ✅ 추가
+          onBookmarkToggle={handlePostBookmarkToggle} // ✅ 추가
         />
       ) : (
         <>
