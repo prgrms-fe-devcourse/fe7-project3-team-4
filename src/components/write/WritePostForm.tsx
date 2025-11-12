@@ -77,7 +77,7 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
 
       // ----- 이미지 업로드 (대표 + 결과이미지) -----
       const mainImageFile = formData.get("mainImage") as File | null;
-      let mainImageUrl: string | null = null;
+      let mainImageUrl: string = "";
 
       if (mainImageFile && mainImageFile.size > 0) {
         mainImageUrl = await uploadPostMainImage(
@@ -108,7 +108,7 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
           return;
         }
 
-        if (resultMode === "text") {
+        if (resultMode === "Text") {
           const result = (formData.get("promptResult") as string) || "";
           promptResultText = result.trim() || null;
           if (!promptResultText) {
@@ -117,7 +117,7 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
           }
         }
 
-        if (resultMode === "image") {
+        if (resultMode === "Image") {
           const resultImgFile = formData.get(
             "promptResultImage"
           ) as File | null;
@@ -147,15 +147,13 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
       const extendedContent: any[] = [];
 
       // 1) 대표 이미지 먼저
-      if (mainImageUrl) {
-        extendedContent.push({
-          type: "image",
-          attrs: {
-            src: mainImageUrl,
-            alt: title || "",
-          },
-        });
-      }
+      extendedContent.push({
+        type: "image",
+        attrs: {
+          src: mainImageUrl ?? "",
+          alt: title || "",
+        },
+      });
 
       // 2) 에디터 내용 그대로
       extendedContent.push(
@@ -169,7 +167,11 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
             {
               type: "paragraph",
               content: [
-                { type: "text", text: "Prompt", marks: [{ type: "bold" }] },
+                {
+                  type: "text",
+                  text: "PromptInput",
+                  marks: [{ type: "bold" }],
+                },
               ],
             },
             {
@@ -179,12 +181,16 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
           );
         }
 
-        if (resultMode === "text" && promptResultText) {
+        if (resultMode === "Text" && promptResultText) {
           extendedContent.push(
             {
               type: "paragraph",
               content: [
-                { type: "text", text: "Result", marks: [{ type: "bold" }] },
+                {
+                  type: "text",
+                  text: "PromptResult",
+                  marks: [{ type: "bold" }],
+                },
               ],
             },
             {
@@ -194,7 +200,7 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
           );
         }
 
-        if (resultMode === "image" && promptResultImageUrl) {
+        if (resultMode === "Image" && promptResultImageUrl) {
           extendedContent.push(
             {
               type: "paragraph",
@@ -239,6 +245,7 @@ export function WritePostForm({ hashtags }: { hashtags: Hashtag[] }) {
           content: finalDoc,
           hashtags: selectedHashtags,
           model,
+          result_mode: resultMode,
           is_prompt_like: isPromptLikePost,
           thumbnail: mainImageUrl,
           subtitle: contentText,

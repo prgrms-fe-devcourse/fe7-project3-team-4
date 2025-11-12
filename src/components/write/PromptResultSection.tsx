@@ -7,7 +7,7 @@ import { useState, ChangeEvent, useId, useRef } from "react";
 export function PromptResultSection() {
   const inputId = useId();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [resultMode, setResultMode] = useState<ResultMode>("text");
+  const [resultMode, setResultMode] = useState<ResultMode>("Text");
   const [model, setModel] = useState<ModelType>("GPT");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -33,20 +33,20 @@ export function PromptResultSection() {
         <div className="p-0.5 bg-[#248AFF]/20 rounded-lg text-xs">
           <button
             type="button"
-            onClick={() => setResultMode("text")}
+            onClick={() => setResultMode("Text")}
             className={
               "cursor-pointer py-1 px-3 leading-none rounded-lg transition-shadow " +
-              (resultMode === "text" ? "bg-white shadow-2xl" : "text-[#9CA3AF]")
+              (resultMode === "Text" ? "bg-white shadow-2xl" : "text-[#9CA3AF]")
             }
           >
             텍스트
           </button>
           <button
             type="button"
-            onClick={() => setResultMode("image")}
+            onClick={() => setResultMode("Image")}
             className={
               "cursor-pointer py-1 px-3 leading-none rounded-lg transition-shadow " +
-              (resultMode === "image"
+              (resultMode === "Image"
                 ? "bg-white shadow-2xl"
                 : "text-[#9CA3AF]")
             }
@@ -95,57 +95,59 @@ export function PromptResultSection() {
         />
 
         {/* 결과: 텍스트 or 이미지 */}
-        {resultMode === "text" ? (
+        {resultMode === "Text" ? (
           <textarea
             name="promptResult"
             placeholder="프롬프트의 결과"
             className="bg-[#D9D9D9]/20 rounded-lg h-40 p-4 outline-none border border-[#D9D9D9] mb-8"
           />
         ) : (
-          <div className="relative flex flex-col items-center py-8 rounded-lg bg-[#D9D9D9]/20 border border-dashed border-[#D9D9D9] mb-8">
-            {previewUrl ? (
-              <>
-                <div className="relative py-2">
-                  <Image
-                    src={previewUrl}
-                    alt="preview"
-                    width={400}
-                    height={400}
-                    className="max-h-52 object-contain rounded-lg"
-                  />
-                </div>
-                <button
-                  type="button"
-                  className="cursor-pointer absolute top-1.5 right-1.5 p-1 rounded-full text-red-500 border border-[#E5E7EB] bg-white"
-                  onClick={removeImgFile}
-                >
-                  <X size={14} />
-                </button>
-              </>
-            ) : (
-              <>
-                <input
-                  id={inputId}
-                  accept="image/*"
-                  className="hidden"
-                  type="file"
-                  name="promptResultImage"
-                  ref={fileInputRef}
-                  onChange={handleImgFileUpload}
-                />
-                <p className="absolute top-4 left-4 text-[#7D7E80] mb-2">
-                  프롬프트의 결과
-                </p>
-                <p className="text-[#404040] mb-4">Upload image</p>
-                <label
-                  htmlFor={inputId}
-                  className="px-5 py-3 rounded-xl text-[#404040] bg-[#D0D0D0] cursor-pointer"
-                >
-                  Choose Img File
-                </label>
-              </>
-            )}
-          </div>
+          <>
+            <input
+              id={inputId}
+              accept="image/*"
+              className="hidden"
+              type="file"
+              name="promptResultImage"
+              ref={fileInputRef}
+              onChange={handleImgFileUpload}
+            />
+            <div className="relative flex flex-col items-center py-8 rounded-lg bg-[#D9D9D9]/20 border border-dashed border-[#D9D9D9] mb-8">
+              {previewUrl ? (
+                <>
+                  <div className="relative py-2">
+                    <Image
+                      src={previewUrl}
+                      alt="preview"
+                      width={400}
+                      height={400}
+                      className="max-h-52 object-contain rounded-lg"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="cursor-pointer absolute top-1.5 right-1.5 p-1 rounded-full text-red-500 border border-[#E5E7EB] bg-white"
+                    onClick={removeImgFile}
+                  >
+                    <X size={14} />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="absolute top-4 left-4 text-[#7D7E80] mb-2">
+                    프롬프트의 결과
+                  </p>
+                  <p className="text-[#404040] mb-4">Upload image</p>
+                  <label
+                    htmlFor={inputId}
+                    className="px-5 py-3 rounded-xl text-[#404040] bg-[#D0D0D0] cursor-pointer"
+                  >
+                    Choose Img File
+                  </label>
+                </>
+              )}
+            </div>
+          </>
         )}
 
         {/* ✅ 결과 링크 공유 (form에 포함) */}
