@@ -49,14 +49,11 @@ export default function Post({
           </div>
         </div>
 
-        {/* 중간: 제목 */}
         <Link href={postUrl} className="block my-5">
+          {/* 중간: 제목 */}
           <h3 className="text-[18px] font-semibold">{data.title}</h3>
-        </Link>
-
-        {/* 썸네일 이미지 (thumbnail) - 존재할 경우에만 렌더링 */}
-        {data.thumbnail && (
-          <Link href={postUrl} className="block my-5">
+          {/* 썸네일 이미지 (thumbnail) - 존재할 경우에만 렌더링 */}
+          {data.thumbnail && (
             <div className="relative w-full aspect-video overflow-hidden rounded-lg">
               <Image
                 src={data.thumbnail}
@@ -66,15 +63,12 @@ export default function Post({
                 loading="lazy"
               />
             </div>
-          </Link>
-        )}
-
-        {/* 부제목 (subtitle) - 존재할 경우에만 렌더링 */}
-        {data.subtitle && (
-          <Link href={postUrl} className="block my-5">
+          )}
+          {/* 부제목 (subtitle) - 존재할 경우에만 렌더링 */}
+          {data.subtitle && (
             <div className="line-clamp-3 text-gray-700">{data.subtitle}</div>
-          </Link>
-        )}
+          )}
+        </Link>
 
         {/* 해시태그 */}
         {data.hashtags && data.hashtags.length > 0 && (

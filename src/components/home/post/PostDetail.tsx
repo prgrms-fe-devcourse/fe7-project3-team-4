@@ -9,6 +9,7 @@ import Image from "next/image";
 import CommentForm from "./CommentForm";
 import PostActions from "./PostAction";
 import { createClient } from "@/utils/supabase/client";
+import PromptDetail from "./PromptDetail";
 
 type RawComment = {
   id: string;
@@ -246,6 +247,14 @@ export default function PostDetail({
           onLikeToggle={onLikeToggle}
           onBookmarkToggle={onBookmarkToggle}
         />
+      </div>
+
+      {/* 프롬프트 세부 */}
+      <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
+        <PromptDetail />
+      </div>
+
+      <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
         {/* 작성자 소개 */}
         <div>
           <p className="ml-2 mb-2 text-ms font-medium">작성자 소개</p>
