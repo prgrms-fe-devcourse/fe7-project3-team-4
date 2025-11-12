@@ -39,6 +39,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      comment_likes: {
+        Row: {
+          comment_id: string | null
+          created_at: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          comment_id?: string | null
+          created_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          comment_id?: string | null
+          created_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comment_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           content: string | null
@@ -187,7 +223,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          last_message_at: string | null
+          last_message_at: string
           last_message_text: string | null
           pair_max: string | null
           pair_min: string | null
@@ -195,7 +231,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          last_message_at?: string | null
+          last_message_at: string
           last_message_text?: string | null
           pair_max?: string | null
           pair_min?: string | null
@@ -203,7 +239,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          last_message_at?: string | null
+          last_message_at?: string
           last_message_text?: string | null
           pair_max?: string | null
           pair_min?: string | null
@@ -580,29 +616,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      decrement_like_count: { Args: { post_id: string }; Returns: undefined }
-      decrement_reply_count: {
-        Args: { p_comment_id: string }
-        Returns: undefined
-      }
       ensure_direct_room: { Args: { other_user_id: string }; Returns: string }
-      increment_like_count: {
-        Args: { p_comment_id: string }
-        Returns: undefined
-      }
-      increment_post_like: { Args: { p_post_id: string }; Returns: undefined }
-      increment_reply_count: {
-        Args: { p_comment_id: string }
-        Returns: undefined
-      }
-      increment_view: { Args: { post_id: string }; Returns: undefined }
-      increment_view_count: { Args: { post_id: string }; Returns: undefined }
-      news_increment_like: { Args: { p_id: string }; Returns: undefined }
-      news_increment_view: { Args: { p_id: string }; Returns: undefined }
-      update_post_comment_count: {
-        Args: { delta: number; post_id: string }
-        Returns: undefined
-      }
     }
     Enums: {
       comment_target_type: "posts" | "news"

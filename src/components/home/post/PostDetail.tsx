@@ -1,24 +1,31 @@
+"use client";
+
 import { ArrowLeft, ArrowUpDown } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Comments from "./Comments";
 import RichTextRenderer from "@/components/common/RichTextRenderer";
 import { PostType } from "@/types/Post";
 import Image from "next/image";
 import CommentForm from "./CommentForm";
-import PostActions from "./PostAction"; // ✅ PostActions 컴포넌트 import
+import PostActions from "./PostAction";
 import { createClient } from "@/utils/supabase/client";
-export type PostComment = {
+
+type RawComment = {
   id: string;
-  content: string;
-  created_at: string;
-  updated_at: string;
-  like_count: number;
-  reply_count: number;
+  content: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  like_count: number | null;
+  reply_count: number | null;
   has_reply: boolean;
-  display_name: string;
-  email: string;
-  avatar_url?: string;
-  user_id: string;
+  parent_id?: string | null;
+  user_id: string | null;
+  profiles: {
+    display_name: string | null;
+    email: string | null;
+    avatar_url?: string | null;
+    bio?: string | null;
+  } | null;
 };
 interface PostDetailProps {
   post: PostType;
@@ -35,13 +42,14 @@ export default function PostDetail({
   const [comments, setComments] = useState<PostComment[]>([]);
   const [sortOrder, setSortOrder] = useState<"latest" | "popular">("latest");
   const supabase = createClient();
-  // 작성자 정보
+
   const authorName = post.profiles?.display_name || "익명";
   const authorEmail = post.profiles?.email || "";
   const authorAvatar = post.profiles?.avatar_url || null;
   const displayDate = (post.created_at || "").slice(0, 10);
-  // 댓글 조회 함수
-  const fetchComments = async () => {
+
+  // ✅ 댓글 가져오기
+  const fetchComments = useCallback(async () => {
     const { data, error } = await supabase
       .from("comments")
       .select(
@@ -53,6 +61,7 @@ export default function PostDetail({
         like_count,
         reply_count,
         has_reply,
+        parent_id,
         user_id,
         profiles:user_id (
           display_name,
@@ -72,28 +81,41 @@ export default function PostDetail({
       return;
     }
     if (data) {
-      const formattedComments: PostComment[] = data.map((comment: any) => ({
-        id: comment.id,
-        content: comment.content,
-        created_at: comment.created_at,
-        updated_at: comment.updated_at,
-        like_count: comment.like_count || 0,
-        reply_count: comment.reply_count || 0,
-        has_reply: comment.has_reply || false,
-        display_name: comment.profiles?.display_name || "익명",
-        email: comment.profiles?.email || "user",
-        bio: comment.profiles?.bio || null,
-        avatar_url: comment.profiles?.avatar_url || null,
-        user_id: comment.user_id,
-      }));
+      const formattedComments: PostComment[] = data.map(
+        (comment: RawComment) => ({
+          id: comment.id,
+          content: comment.content ?? "",
+          created_at: comment.created_at ?? "",
+          updated_at: comment.updated_at ?? null,
+          like_count: comment.like_count ?? 0,
+          reply_count: comment.reply_count ?? 0,
+          has_reply: comment.has_reply ?? false,
+          parent_id: comment.parent_id ?? null,
+          user_id: comment.user_id ?? "",
+          profiles: comment.profiles
+            ? {
+                display_name: comment.profiles.display_name ?? "익명",
+                email: comment.profiles.email ?? "user",
+                avatar_url: comment.profiles.avatar_url ?? null,
+                bio: comment.profiles.bio ?? null,
+              }
+            : {
+                display_name: "익명",
+                email: "user",
+              },
+        })
+      );
+
       setComments(formattedComments);
     }
-  };
-  // 초기 로드 및 정렬 변경 시 댓글 조회
+  }, [post.id, sortOrder, supabase]);
+
+  // ✅ 댓글 fetch
   useEffect(() => {
     fetchComments();
-  }, [post.id, sortOrder]);
-  // ✅ Realtime: comments 구독
+  }, [fetchComments]);
+
+  // ✅ Realtime: comments 변경 감지
   useEffect(() => {
     const channel = supabase
       .channel(`comments:${post.id}`)
@@ -113,8 +135,9 @@ export default function PostDetail({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [post.id]);
-  // ✅ Realtime: posts.comment_count 구독
+  }, [post.id, supabase, fetchComments]);
+
+  // ✅ Realtime: posts.comment_count 변경 감지
   useEffect(() => {
     const channel = supabase
       .channel(`post:${post.id}`)
@@ -127,12 +150,10 @@ export default function PostDetail({
           filter: `id=eq.${post.id}`,
         },
         (payload) => {
-          // comment_count 변경사항 반영
           const updatedPost = payload.new as {
             comment_count: number;
             like_count: number;
           };
-          // post 객체는 props이므로 불변, 필요시 부모에게 알림
           console.log(
             "실시간 업데이트:",
             updatedPost.comment_count,
@@ -144,8 +165,9 @@ export default function PostDetail({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [post.id]);
-  // ✅ 댓글 작성 후 콜백
+  }, [post.id, supabase]);
+
+  // ✅ 댓글 작성 콜백
   const handleCommentAdded = () => {
     fetchComments();
   };
@@ -159,12 +181,11 @@ export default function PostDetail({
         뒤로
       </button>
       <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
-        {/* 게시글 정보 */}
+        {/* 작성자 정보 */}
         <div className="pb-7">
           <div className="flex justify-between">
-            {/* 작성자 정보 */}
             <div className="flex gap-3 items-center">
-              <div className="relative w-11 h-11 bg-gray-300 rounded-full shrink-0 overflow-hidden">
+              <div className="relative w-11 h-11 bg-gray-300 rounded-full overflow-hidden">
                 {authorAvatar ? (
                   <Image
                     src={authorAvatar}
@@ -208,18 +229,19 @@ export default function PostDetail({
           </div>
           {/* 태그 */}
           {post.hashtags && post.hashtags.length > 0 && (
-            <div className="flex flex-row flex-wrap gap-2 mt-5 text-sm text-[#248AFF]">
+            <div className="flex flex-wrap gap-2 mt-5 text-sm text-[#248AFF]">
               {post.hashtags.map((tag, i) => (
                 <span key={i}>{tag.startsWith("#") ? tag : `#${tag}`}</span>
               ))}
             </div>
           )}
         </div>
-        {/* ✅ PostActions 컴포넌트 사용 - 좋아요/북마크 핸들러 연결 */}
+
+        {/* 좋아요/북마크 */}
         <PostActions
           postId={post.id}
           likeCount={post.like_count}
-          commentCount={comments.length} // ✅ 실제 댓글 수 사용
+          commentCount={comments.length}
           isLiked={post.isLiked}
           isBookmarked={post.isBookmarked}
           onLikeToggle={onLikeToggle}
@@ -262,9 +284,11 @@ export default function PostDetail({
             </button>
           </div>
         </div>
-        {/* ✅ 댓글 입력 창 - onCommentAdded 콜백 전달 */}
+
+        {/* 댓글 작성 */}
         <CommentForm postId={post.id} onCommentAdded={handleCommentAdded} />
-        {/* 댓글 영역 */}
+
+        {/* 댓글 목록 */}
         <div className="space-y-5">
           <div className="p-1 flex items-center gap-3 py-1 px-4 bg-white rounded-lg border border-[#F2F2F4]">
             <ArrowUpDown size={12} />

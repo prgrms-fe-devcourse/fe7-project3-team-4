@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { NewsItemWithState } from "@/types";
-import { Heart, Eye, Bookmark } from "lucide-react";
+import { Heart, Eye, Bookmark, BookmarkCheck } from "lucide-react";
 import Image from "next/image";
 
 type NewsItemProps = {
@@ -133,7 +133,11 @@ export default function NewsItem({
           aria-pressed={item.isBookmarked}
           aria-label="북마크"
         >
-          <Bookmark size={18} />
+        {item.isBookmarked ? (
+          <BookmarkCheck size={18} fill={"none"} />
+        ) : (
+          <Bookmark size={18} fill={"none"} />
+        )}
         </button>
       </div>
     </article>

@@ -6,24 +6,26 @@ import { createClient } from "@/utils/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import CommentForm from "./CommentForm";
 import Image from "next/image";
-import { PostComment } from "./PostDetail";
 
-type Reply = {
+type RawReply = {
   id: string;
-  content: string;
+  content: string | null;
   created_at: string;
-  like_count: number;
-  display_name: string;
-  email: string;
-  avatar_url?: string;
+  updated_at: string | null;
+  like_count: number | null;
   user_id: string;
+  profiles: {
+    display_name: string | null;
+    email: string | null;
+    avatar_url: string | null;
+  } | null;
 };
 
-export default function Comments({ 
+export default function Comments({
   comment,
   postId,
-  onCommentDeleted
-}: { 
+  onCommentDeleted,
+}: {
   comment: PostComment;
   postId: string;
   onCommentDeleted?: () => void;
@@ -41,9 +43,9 @@ export default function Comments({
       setUser(data.user);
     };
     fetchUser();
-  }, []);
+  }, [supabase.auth]);
 
-  // 대댓글 조회
+  // ✅ 대댓글 조회
   const fetchReplies = async () => {
     const { data, error } = await supabase
       .from("comments")
@@ -71,15 +73,15 @@ export default function Comments({
     }
 
     if (data) {
-      const formattedReplies: Reply[] = data.map((reply: any) => ({
+      const formattedReplies: Reply[] = (data as RawReply[]).map((reply) => ({
         id: reply.id,
-        content: reply.content,
+        content: reply.content ?? "",
         created_at: reply.created_at,
         updated_at: reply.updated_at,
-        like_count: reply.like_count || 0,
-        display_name: reply.profiles?.display_name || "익명",
-        email: reply.profiles?.email || "user",
-        avatar_url: reply.profiles?.avatar_url,
+        like_count: reply.like_count ?? 0,
+        display_name: reply.profiles?.display_name ?? "익명",
+        email: reply.profiles?.email ?? "user",
+        avatar_url: reply.profiles?.avatar_url ?? null,
         user_id: reply.user_id,
       }));
       setReplies(formattedReplies);
@@ -138,27 +140,54 @@ export default function Comments({
     setIsDeleting(false);
   };
 
-  // 좋아요 기능
-  const handleLike = async (commentId: string, currentLikeCount: number) => {
-    if (!user) {
-      alert("로그인이 필요합니다.");
-      return;
+const handleLikeToggle = async (commentId: string) => {
+  if (!user) {
+    alert("로그인이 필요합니다.");
+    return;
+  }
+
+  try {
+    // 1️⃣ 사용자가 이미 좋아요했는지 확인
+    const { data: existingLike, error: fetchError } = await supabase
+      .from("comment_likes")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("comment_id", commentId)
+      .maybeSingle(); // .single() 대신 .maybeSingle()로 안전하게
+
+    if (fetchError) throw fetchError;
+
+    // 2️⃣ 좋아요 취소
+    if (existingLike) {
+      const { error: deleteError } = await supabase
+        .from("comment_likes")
+        .delete()
+        .eq("id", existingLike.id);
+
+      if (deleteError) throw deleteError;
+    }
+    // 3️⃣ 좋아요 추가
+    else {
+      const { error: insertError } = await supabase.from("comment_likes").insert({
+        user_id: user.id,
+        comment_id: commentId,
+      });
+
+      if (insertError) throw insertError;
     }
 
-    const { error } = await supabase
-      .from("comments")
-      .update({ like_count: currentLikeCount + 1 })
-      .eq("id", commentId);
-
-    if (error) {
-      console.error("Error updating like count:", error);
+    // 4️⃣ 댓글 목록 새로고침 (대댓글이면 fetchReplies 호출)
+    if (showReplies) {
+      fetchReplies();
     } else {
-      // 대댓글 좋아요인 경우 목록 새로고침
-      if (showReplies) {
-        fetchReplies();
-      }
+      // 필요 시 상위 comments 리스트 새로고침 함수 호출
+      // fetchComments();
     }
-  };
+  } catch (err) {
+    console.error("Error toggling like:", err);
+  }
+};
+
 
   // Realtime 구독 (대댓글)
   useEffect(() => {
@@ -183,6 +212,7 @@ export default function Comments({
         supabase.removeChannel(channel);
       };
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [comment.id, showReplies]);
 
   const isOwner = user?.id === comment.user_id;
@@ -195,23 +225,23 @@ export default function Comments({
           <div className="flex gap-2">
             {/* 프로필 이미지 */}
             <div className="relative w-9 h-9 rounded-full bg-gray-300 shrink-0 overflow-hidden">
-              {comment.avatar_url ? (
+              {comment.profiles?.avatar_url ? (
                 <Image
-                  src={comment.avatar_url}
-                  alt={comment.display_name}
+                  src={comment.profiles?.avatar_url}
+                  alt={comment.profiles?.display_name || ""}
                   fill
                   className="object-cover"
                 />
               ) : (
                 <span className="flex items-center justify-center h-full w-full text-gray-500 text-sm font-semibold">
-                  {comment.display_name[0]?.toUpperCase() || "?"}
+                  {comment.profiles?.display_name || "?"}
                 </span>
               )}
             </div>
             {/* 이름 + 이메일 */}
             <div className="mb-1.5">
-              <div className="text-sm font-medium">{comment.display_name}</div>
-              <div className="text-xs text-[#717182]">@{comment.email}</div>
+              <div className="text-sm font-medium">{comment.profiles?.display_name}</div>
+              <div className="text-xs text-[#717182]">@{comment.profiles?.email}</div>
             </div>
           </div>
           {/* 삭제 버튼 */}
@@ -233,7 +263,7 @@ export default function Comments({
           {/* 댓글 메뉴 버튼 */}
           <div className="ml-1 text-[#717182] flex items-center gap-1 mt-2">
             <button
-              onClick={() => handleLike(comment.id, comment.like_count)}
+              onClick={() => handleLikeToggle(comment.id)}
               className="cursor-pointer flex items-center justify-center w-5 h-5 rounded-full bg-white border border-[#F0F0F0] hover:bg-gray-100"
             >
               <ThumbsUp size={10} />
@@ -307,7 +337,7 @@ export default function Comments({
                           </span>
                           <div className="flex items-center gap-1 mt-1 text-[#717182]">
                             <button
-                              onClick={() => handleLike(reply.id, reply.like_count)}
+                              onClick={() => handleLikeToggle(reply.id)}
                               className="cursor-pointer flex items-center justify-center w-4 h-4 rounded-full bg-white border border-[#F0F0F0] hover:bg-gray-100"
                             >
                               <ThumbsUp size={8} />
