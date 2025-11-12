@@ -1,10 +1,17 @@
 "use client";
 
 import { createClient } from "@/utils/supabase/client";
-import { Image as ImageIcon, Search, Send, Trash, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Image as ImageIcon,
+  Search,
+  Send,
+  Trash,
+  X,
+} from "lucide-react";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { JSX } from "react";
 
 type ChatProfile = {
@@ -58,6 +65,18 @@ export default function Page() {
 
   /* 모바일 */
   const isThreadOpen = !!(roomId || peerId);
+
+  /* 입력창 포커스 제어용 */
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // 채팅 전송 시 대화창 맨 아래로 스크롤 되도록
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const scrollToBottom = (smooth = true) => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: smooth ? "smooth" : "auto",
+      block: "end",
+    });
+  };
 
   // URL의 peerId를 state로 동기화 (roomId가 없을 때만)
   useEffect(() => {
@@ -524,6 +543,9 @@ export default function Page() {
     const content = draft.trim();
     setDraft("");
 
+    /* 포커스를 input으로 */
+    queueMicrotask(() => inputRef.current?.focus());
+
     let activeRoomId = roomId;
 
     if (!activeRoomId && peerId) {
@@ -578,6 +600,8 @@ export default function Page() {
 
         if (!activeRoomId) {
           setSending(false);
+          /* 포커스 복구 */
+          queueMicrotask(() => inputRef.current?.focus());
           return;
         }
         const sp = new URLSearchParams(searchParams.toString());
@@ -589,6 +613,8 @@ export default function Page() {
 
     if (!activeRoomId) {
       setSending(false);
+      /* 포커스 복구 */
+      queueMicrotask(() => inputRef.current?.focus());
       return;
     }
 
@@ -605,6 +631,9 @@ export default function Page() {
       content,
     };
     setMsgs((prev) => [...prev, temp]);
+
+    /* 대화창 맨 아래로 */
+    setTimeout(() => scrollToBottom(true), 0);
 
     const { data, error } = await supabase
       .from("messages")
@@ -626,6 +655,12 @@ export default function Page() {
     }
 
     setSending(false);
+
+    /* 대화창 맨 아래로 */
+    setTimeout(() => scrollToBottom(true), 0);
+
+    /* 포커스 복구 */
+    queueMicrotask(() => inputRef.current?.focus());
   };
 
   const goBackToList = () => {
@@ -635,11 +670,35 @@ export default function Page() {
     router.push(`/message?${sp.toString()}`, { scroll: false });
   };
 
+  // 스레드가 열리거나 전송 종료될 때 포커스
+  useEffect(() => {
+    if (isThreadOpen && !sending) {
+      const t = setTimeout(() => inputRef.current?.focus(), 0);
+      return () => clearTimeout(t);
+    }
+  }, [isThreadOpen, sending]);
+
+  // 스레드가 열리면(또는 전송 종료) 맨 아래로
+  useEffect(() => {
+    if (isThreadOpen && !sending) {
+      const t = setTimeout(() => scrollToBottom(false), 0);
+      return () => clearTimeout(t);
+    }
+  }, [isThreadOpen, sending]);
+
+  // 메시지가 추가/교체되면 맨 아래로
+  useEffect(() => {
+    if (isThreadOpen) {
+      const t = setTimeout(() => scrollToBottom(true), 0);
+      return () => clearTimeout(t);
+    }
+  }, [msgs.length, roomId, isThreadOpen]);
+
   return (
     <>
-      <div className="w-full h-full lg:p-18">
+      <div className="w-full h-full pt-10 lg:p-18">
         <div className="lg:max-w-250 mx-auto">
-          <div className="bg-white/40 rounded-xl shadow-xl h-200 lg:min-w-50 flex flex-row">
+          <div className="bg-white/40 rounded-xl shadow-md lg:shadow-xl h-200 lg:min-w-50 flex flex-row">
             {/* 왼쪽 */}
             <div
               className={`flex-none h-full w-full lg:w-auto
@@ -802,12 +861,12 @@ export default function Page() {
                 <button
                   type="button"
                   onClick={goBackToList}
-                  className="lg:hidden pl-3 text-[#717182]"
+                  className="lg:hidden pl-3 text-[#717182] cursor-pointer"
                   aria-label="목록으로"
                   title="목록으로"
                 >
                   {/* lucide-react에서 ArrowLeft 써도 좋아요 */}
-                  <X size={26} />
+                  <ArrowLeft size={26} />
                 </button>
                 <div className="flex gap-3 items-center">
                   {/* 이미지 */}
@@ -839,6 +898,8 @@ export default function Page() {
                     </p>
                   </div>
                 </div>
+                {/* 대화방 삭제 버튼 */}
+                {/* 모달창과 함께 구현하면 좋을 것 같음 */}
                 <button
                   type="button"
                   className="cursor-pointer text-[#717182] pr-3"
@@ -848,7 +909,7 @@ export default function Page() {
               </div>
 
               {/* 대화 내용 */}
-              <div className="p-6 flex flex-col justify-center gap-2">
+              <div className="px-6 py-4 flex flex-col gap-2 overflow-x-hidden overflow-y-auto">
                 {/* 대화 내용 영역 */}
                 <div>
                   {!roomId && !peerId && (
@@ -869,107 +930,113 @@ export default function Page() {
                       <p>아직 메시지가 없어요. 대화를 시작해보세요!</p>
                     </div>
                   )}
-                  {roomId &&
-                    (() => {
-                      let lastDateKey = "";
-                      return msgs.flatMap((m) => {
-                        const mine = m.sender_id === me;
-                        const dt = new Date(m.created_at);
-                        const dateKey = dt.toISOString().slice(0, 10); // YYYY-MM-DD
-                        const needSep = dateKey !== lastDateKey;
-                        lastDateKey = dateKey;
+                  <div className="space-y-2">
+                    {roomId &&
+                      (() => {
+                        let lastDateKey = "";
+                        return msgs.flatMap((m) => {
+                          const mine = m.sender_id === me;
+                          const dt = new Date(m.created_at);
+                          const dateKey = dt.toISOString().slice(0, 10); // YYYY-MM-DD
+                          const needSep = dateKey !== lastDateKey;
+                          lastDateKey = dateKey;
 
-                        const parts: JSX.Element[] = [];
+                          const parts: JSX.Element[] = [];
 
-                        if (needSep) {
-                          const label = dt.toLocaleDateString("ko-KR", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                            weekday: "short",
-                          });
+                          if (needSep) {
+                            const label = dt.toLocaleDateString("ko-KR", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                              weekday: "short",
+                            });
+                            parts.push(
+                              <div
+                                key={`sep-${dateKey}`}
+                                className="relative my-4"
+                              >
+                                <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-black/10"></div>
+                                <div className="relative mx-auto w-fit rounded-full border border-black/10 bg-white/60 px-3 py-1 text-xs text-[#4B4B57] backdrop-blur">
+                                  {label}
+                                </div>
+                              </div>
+                            );
+                          }
+
                           parts.push(
                             <div
-                              key={`sep-${dateKey}`}
-                              className="relative my-4"
+                              key={m.id}
+                              className={`flex items-end gap-2 ${
+                                mine ? "justify-end" : ""
+                              }`}
                             >
-                              <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-black/10"></div>
-                              <div className="relative mx-auto w-fit rounded-full border border-black/10 bg-white/60 px-3 py-1 text-[11px] text-[#4B4B57] backdrop-blur">
-                                {label}
+                              {mine && (
+                                <div className="flex flex-col items-end">
+                                  {(() => {
+                                    // 내가 보낸 메시지에 대해, 상대가 아직 읽지 않았다면 점 표시
+                                    const unreadByPeer =
+                                      !peerLastReadAt ||
+                                      m.created_at > peerLastReadAt;
+                                    return unreadByPeer ? (
+                                      <span
+                                        title="상대 미읽음"
+                                        className="inline-block rounded-full text-xs font-semibold text-[#6758FF]"
+                                      >
+                                        1
+                                      </span>
+                                    ) : null;
+                                  })()}
+                                  <span className="text-[#717182] text-xs">
+                                    {dt.toLocaleTimeString([], {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* 메시지 버블 */}
+                              <div
+                                className={`${
+                                  mine
+                                    ? "bg-[#6758FF] text-white"
+                                    : "bg-white/50 text-[#0A0A0A]"
+                                } border border-[#6758FF]/30 rounded-xl px-4 py-2 max-w-[70%]`}
+                              >
+                                {m.content}
                               </div>
+
+                              {/* 시간 + (상대 메시지일 때만) unread 점표시 */}
+                              {!mine && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[#717182] text-xs">
+                                    {dt.toLocaleTimeString([], {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </span>
+                                  {(() => {
+                                    const unread =
+                                      !myLastReadAt ||
+                                      m.created_at > myLastReadAt;
+                                    return unread ? (
+                                      <span
+                                        title="미읽음"
+                                        className="inline-block w-2 h-2 rounded-full bg-[#6758FF]"
+                                      ></span>
+                                    ) : null;
+                                  })()}
+                                </div>
+                              )}
                             </div>
                           );
-                        }
 
-                        parts.push(
-                          <div
-                            key={m.id}
-                            className={`flex items-end gap-1 ${
-                              mine ? "justify-end" : ""
-                            }`}
-                          >
-                            {mine && (
-                              <div className="flex items-center gap-2">
-                                <span className="text-[#717182] text-xs">
-                                  {dt.toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })}
-                                </span>
-                                {(() => {
-                                  // 내가 보낸 메시지에 대해, 상대가 아직 읽지 않았다면 점 표시
-                                  const unreadByPeer =
-                                    !peerLastReadAt ||
-                                    m.created_at > peerLastReadAt;
-                                  return unreadByPeer ? (
-                                    <span
-                                      title="상대 미읽음"
-                                      className="inline-block w-2 h-2 rounded-full bg-[#9AA0A6]"
-                                    ></span>
-                                  ) : null;
-                                })()}
-                              </div>
-                            )}
-
-                            {/* 메시지 버블 */}
-                            <div
-                              className={`${
-                                mine
-                                  ? "bg-[#6758FF] text-white"
-                                  : "bg-white/50 text-[#0A0A0A]"
-                              } border border-[#6758FF]/30 rounded-xl px-4 py-2 max-w-[70%]`}
-                            >
-                              {m.content}
-                            </div>
-
-                            {/* 시간 + (상대 메시지일 때만) unread 점표시 */}
-                            {!mine && (
-                              <div className="flex items-center gap-2">
-                                <span className="text-[#717182] text-xs">
-                                  {dt.toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })}
-                                </span>
-                                {(() => {
-                                  const unread =
-                                    !myLastReadAt ||
-                                    m.created_at > myLastReadAt;
-                                  return unread ? (
-                                    <span
-                                      title="미읽음"
-                                      className="inline-block w-2 h-2 rounded-full bg-[#6758FF]"
-                                    ></span>
-                                  ) : null;
-                                })()}
-                              </div>
-                            )}
-                          </div>
-                        );
-
-                        return parts;
-                      });
-                    })()}
+                          return parts;
+                        });
+                      })()}
+                  </div>
+                  {/* 스크롤 바닥 센티넬 */}
+                  <div ref={messagesEndRef} />
                 </div>
               </div>
 
@@ -977,12 +1044,14 @@ export default function Page() {
               <div className="p-4">
                 <div className="flex items-center gap-3 border border-[#E5E5E5] rounded-lg p-3">
                   <input
+                    ref={inputRef}
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
                         sendMessage();
+                        setTimeout(() => inputRef.current?.focus(), 0);
                       }
                     }}
                     placeholder={
@@ -992,7 +1061,8 @@ export default function Page() {
                         ? "메시지를 보내면 채팅방이 생성됩니다"
                         : "대화 상대를 먼저 선택하세요"
                     }
-                    disabled={(!roomId && !peerId) || sending}
+                    disabled={!roomId && !peerId}
+                    aria-busy={sending || undefined}
                     className="w-full focus:outline-none disabled:opacity-60 bg-transparent"
                   />
                   <ImageIcon
@@ -1005,6 +1075,7 @@ export default function Page() {
                     onClick={sendMessage}
                     disabled={(!roomId && !peerId) || sending || !draft.trim()}
                     className="bg-[#6758FF] p-1.5 rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
+                    onMouseDown={(e) => e.preventDefault()}
                   >
                     <Send className="text-white w-3 h-3" />
                   </button>
