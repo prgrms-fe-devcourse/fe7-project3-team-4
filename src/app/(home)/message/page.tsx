@@ -72,6 +72,17 @@ export default function Page() {
     }
   }, [roomId, peerId]);
 
+  // 아무 방/프리챗도 선택되지 않은 상태가 되면 우측 패널 상태 초기화
+  useEffect(() => {
+    if (!roomId && !peerId) {
+      setPeer(null);
+      setPeerId(null);
+      setMsgs([]);
+      setMyLastReadAt(null);
+      setPeerLastReadAt(null);
+    }
+  }, [roomId, peerId]);
+
   // fetch current user id
   useEffect(() => {
     let active = true;
