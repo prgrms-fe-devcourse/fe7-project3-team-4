@@ -171,32 +171,38 @@ export type Database = {
         Row: {
           created_at: string;
           id: string;
-          user1_id: string | null;
-          user2_id: string | null;
+          pair_min: string | null;
+          pair_max: string | null;
+          last_message_at: string | null;
+          last_message_text: string | null;
         };
         Insert: {
           created_at?: string;
           id?: string;
-          user1_id?: string | null;
-          user2_id?: string | null;
+          pair_min?: string | null;
+          pair_max?: string | null;
+          last_message_at?: string | null;
+          last_message_text?: string | null;
         };
         Update: {
           created_at?: string;
           id?: string;
-          user1_id?: string | null;
-          user2_id?: string | null;
+          pair_min?: string | null;
+          pair_max?: string | null;
+          last_message_at?: string | null;
+          last_message_text?: string | null;
         };
         Relationships: [
           {
-            foreignKeyName: "message_rooms_user1_id_fkey";
-            columns: ["user1_id"];
+            foreignKeyName: "message_rooms_pair_min_fkey";
+            columns: ["pair_min"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "message_rooms_user2_id_fkey";
-            columns: ["user2_id"];
+            foreignKeyName: "message_rooms_pair_max_fkey";
+            columns: ["pair_max"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
