@@ -13,7 +13,6 @@ type ChatProfile = {
   avatar_url: string;
   email: string;
 };
-type ChatRoom = { id: string; pair_min: string; pair_max: string };
 type ChatMessage = {
   id: string;
   created_at: string;
@@ -28,6 +27,7 @@ type RoomListItem = {
   other_avatar: string | null;
   last_message_at: string | null;
   last_message_text: string | null;
+  unread_count: number;
 };
 export default function Page() {
   const supabase = useMemo(() => createClient(), []);
@@ -53,6 +53,8 @@ export default function Page() {
   const [isSearching, setIsSearching] = useState(false);
   const [rooms, setRooms] = useState<RoomListItem[]>([]);
   const [roomsLoading, setRoomsLoading] = useState(false);
+  const [myLastReadAt, setMyLastReadAt] = useState<string | null>(null);
+  const [peerLastReadAt, setPeerLastReadAt] = useState<string | null>(null);
 
   // URL의 peerId를 state로 동기화 (roomId가 없을 때만)
   useEffect(() => {
@@ -97,7 +99,9 @@ export default function Page() {
       // 내가 속한 방 목록
       const { data: rlist, error: rErr } = await supabase
         .from("message_rooms")
-        .select("id, pair_min, pair_max, last_message_at, last_message_text")
+        .select(
+          "id, pair_min, pair_max, last_message_at, last_message_text, last_read_at_min, last_read_at_max"
+        )
         .or(`pair_min.eq.${me},pair_max.eq.${me}`)
         .order("last_message_at", { ascending: false, nullsFirst: false });
       if (rErr || !rlist) {
@@ -130,24 +134,58 @@ export default function Page() {
 
       const byId = new Map(plist?.map((p) => [p.id, p]) ?? []);
 
-      // 룸 리스트 가공
-      const hydrated: RoomListItem[] = rlist.flatMap((r) => {
-        const candidate = r.pair_min === me ? r.pair_max : r.pair_min; // string | null
-        if (!candidate) return []; // 불완전한 행은 스킵
-        const other_id: string = candidate; // 여기서 string 보장
+      // 룸 리스트 가공 (기본 정보 + 내 last_read 기준 임시 저장)
+      const baseList: (RoomListItem & { _lastReadAt: string | null })[] =
+        rlist.flatMap((r) => {
+          const candidate = r.pair_min === me ? r.pair_max : r.pair_min; // string | null
+          if (!candidate) return []; // 불완전한 행은 스킵
+          const other_id: string = candidate; // 여기서 string 보장
+          const p = byId.get(other_id);
+          const lastReadAt =
+            r.pair_min === me ? r.last_read_at_min : r.last_read_at_max;
 
-        const p = byId.get(other_id);
-        return [
-          {
-            id: r.id,
-            other_id,
-            other_name: p?.display_name ?? null,
-            other_avatar: p?.avatar_url ?? null,
-            last_message_at: r.last_message_at ?? null,
-            last_message_text: r.last_message_text ?? null,
-          },
-        ];
-      });
+          return [
+            {
+              id: r.id,
+              other_id,
+              other_name: p?.display_name ?? null,
+              other_avatar: p?.avatar_url ?? null,
+              last_message_at: r.last_message_at ?? null,
+              last_message_text: r.last_message_text ?? null,
+              unread_count: 0, // ⬅︎ 일단 0으로 채워두고
+              _lastReadAt: lastReadAt ?? null, // ⬅︎ 나중에 카운트 쿼리에서 사용
+            },
+          ];
+        });
+
+      // 각 방의 미읽음 개수 계산 (내가 안 읽은, 상대가 보낸 메시지 수)
+      const counts = await Promise.all(
+        baseList.map(async (item) => {
+          let q = supabase
+            .from("messages")
+            .select("id", { count: "exact", head: true })
+            .eq("room_id", item.id)
+            .neq("sender_id", me!); // 상대가 보낸 것만
+
+          if (item._lastReadAt) {
+            q = q.gt("created_at", item._lastReadAt); // 마지막 읽음 이후만
+          }
+
+          const { count } = await q;
+          return count ?? 0;
+        })
+      );
+
+      // 최종 리스트에 unread_count 주입 (불필요한 바인딩 없이 명시적으로 구성)
+      const hydrated: RoomListItem[] = baseList.map((item, idx) => ({
+        id: item.id,
+        other_id: item.other_id,
+        other_name: item.other_name,
+        other_avatar: item.other_avatar,
+        last_message_at: item.last_message_at,
+        last_message_text: item.last_message_text,
+        unread_count: counts[idx],
+      }));
 
       if (!cancelled) {
         setRooms(hydrated);
@@ -176,6 +214,11 @@ export default function Page() {
         },
         (payload) => {
           const r = payload.new;
+          if (roomId === r.id) {
+            const peerLR =
+              r.pair_min === me ? r.last_read_at_max : r.last_read_at_min;
+            setPeerLastReadAt(peerLR ?? null);
+          }
           const other_id = r.pair_min === me ? r.pair_max : r.pair_min;
           setRooms((prev) => {
             const idx = prev.findIndex((x) => x.id === r.id);
@@ -205,6 +248,7 @@ export default function Page() {
                 other_avatar: p?.avatar_url ?? null,
                 last_message_at: r.last_message_at ?? null,
                 last_message_text: r.last_message_text ?? null,
+                unread_count: 0,
               };
               setRooms((cur) => [item, ...cur]);
             })();
@@ -223,6 +267,11 @@ export default function Page() {
         },
         (payload) => {
           const r = payload.new;
+          if (roomId === r.id) {
+            const peerLR =
+              r.pair_min === me ? r.last_read_at_max : r.last_read_at_min;
+            setPeerLastReadAt(peerLR ?? null);
+          }
           const other_id = r.pair_min === me ? r.pair_max : r.pair_min;
           setRooms((prev) => {
             const idx = prev.findIndex((x) => x.id === r.id);
@@ -249,6 +298,7 @@ export default function Page() {
                 other_avatar: p?.avatar_url ?? null,
                 last_message_at: r.last_message_at ?? null,
                 last_message_text: r.last_message_text ?? null,
+                unread_count: 0,
               };
               setRooms((cur) => [item, ...cur]);
             })();
@@ -261,7 +311,7 @@ export default function Page() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [me, supabase]);
+  }, [me, roomId, supabase]);
 
   useEffect(() => {
     let cancelled = false;
@@ -304,10 +354,19 @@ export default function Page() {
       // 방 정보 가져오기
       const { data: room, error: roomErr } = await supabase
         .from("message_rooms")
-        .select("id, pair_min, pair_max")
+        .select("id, pair_min, pair_max, last_read_at_min, last_read_at_max")
         .eq("id", roomId)
         .single();
       if (roomErr || !room || cancelled) return;
+
+      // 내 마지막 읽음 시각을 상태로 보관 (메시지별 unread UI 계산용)
+      const initialMyLR =
+        room.pair_min === me ? room.last_read_at_min : room.last_read_at_max;
+      if (!cancelled) setMyLastReadAt(initialMyLR ?? null);
+      // 상대의 마지막 읽음 시각 (내가 보낸 메시지의 읽음 여부 판단용)
+      const initialPeerLR =
+        room.pair_min === me ? room.last_read_at_max : room.last_read_at_min;
+      setPeerLastReadAt(initialPeerLR ?? null);
 
       const otherId = room.pair_min === me ? room.pair_max : room.pair_min;
 
@@ -332,6 +391,16 @@ export default function Page() {
         .order("created_at", { ascending: true })
         .limit(50);
       if (!cancelled && mlist) setMsgs(mlist as ChatMessage[]);
+      // 읽음 처리: 방 진입 시 내 마지막 읽음 시각 갱신 + 좌측 뱃지 0
+      try {
+        await supabase.rpc("mark_room_read", { room_id: roomId });
+        setMyLastReadAt(new Date().toISOString());
+        setRooms((prev) =>
+          prev.map((x) => (x.id === roomId ? { ...x, unread_count: 0 } : x))
+        );
+      } catch (e) {
+        console.error("mark_room_read failed", e);
+      }
     })();
 
     return () => {
@@ -473,6 +542,10 @@ export default function Page() {
     if (!activeRoomId) {
       setSending(false);
       return;
+    }
+
+    if (activeRoomId === roomId) {
+      setMyLastReadAt(new Date().toISOString());
     }
 
     // 낙관적 UI
@@ -630,13 +703,20 @@ export default function Page() {
                         {r.last_message_text ?? "대화를 시작해보세요"}
                       </div>
                     </div>
-                    <div className="absolute right-4 text-xs text-[#717182]">
-                      {r.last_message_at
-                        ? new Date(r.last_message_at).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        : ""}
+                    <div className="absolute right-4 flex flex-col items-end">
+                      <div className="text-xs text-[#717182]">
+                        {r.last_message_at
+                          ? new Date(r.last_message_at).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : ""}
+                      </div>
+                      {r.unread_count > 0 && (
+                        <span className="mt-1 inline-flex min-w-5 h-5 items-center justify-center rounded-full bg-[#6758FF] text-white text-[10px] px-1">
+                          {r.unread_count > 99 ? "99+" : r.unread_count}
+                        </span>
+                      )}
                     </div>
                   </button>
                 ))}
@@ -728,13 +808,28 @@ export default function Page() {
                     }`}
                   >
                     {mine && (
-                      <span className="text-[#717182] text-xs">
-                        {dt.toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[#717182] text-xs">
+                          {dt.toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                        {(() => {
+                          // 내가 보낸 메시지에 대해, 상대가 아직 읽지 않았다면 점 표시
+                          const unreadByPeer =
+                            !peerLastReadAt || m.created_at > peerLastReadAt;
+                          return unreadByPeer ? (
+                            <span
+                              title="상대 미읽음"
+                              className="inline-block w-2 h-2 rounded-full bg-[#9AA0A6]"
+                            ></span>
+                          ) : null;
+                        })()}
+                      </div>
                     )}
+
+                    {/* 메시지 버블 */}
                     <div
                       className={`${
                         mine
@@ -744,13 +839,27 @@ export default function Page() {
                     >
                       {m.content}
                     </div>
+
+                    {/* 시간 + (상대 메시지일 때만) unread 점표시 */}
                     {!mine && (
-                      <span className="text-[#717182] text-xs">
-                        {dt.toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[#717182] text-xs">
+                          {dt.toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                        {(() => {
+                          const unread =
+                            !myLastReadAt || m.created_at > myLastReadAt;
+                          return unread ? (
+                            <span
+                              title="미읽음"
+                              className="inline-block w-2 h-2 rounded-full bg-[#6758FF]"
+                            ></span>
+                          ) : null;
+                        })()}
+                      </div>
                     )}
                   </div>
                 );
