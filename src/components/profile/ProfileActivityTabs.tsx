@@ -8,13 +8,15 @@ import MyPosts from "@/components/profile/MyPosts";
 import MyComments from "@/components/profile/MyComments";
 import MyBookMark from "@/components/profile/MyBookMark";
 import { NewsItemWithState } from "@/types";
-import { PostType } from "@/types/Post"; // [수정] PostType import 추가
+import { PostType } from "@/types/Post";
 import { Database } from "@/utils/supabase/supabase";
 
 type DbCommentRow = Database["public"]["Tables"]["comments"]["Row"] & {
   content: string | null;
   like_count: number | null;
   reply_count: number | null;
+  comment_likes?: { user_id: string }[] | null;
+  isLiked?: boolean;
 };
 
 export type TabKey = "posts" | "comments" | "bookmarks";
@@ -25,19 +27,20 @@ const TAB_LABEL: Record<TabKey, string> = {
   bookmarks: "북마크",
 };
 
-// [수정] PostType 사용
 type BookmarkedItem =
   | (PostType & { type: "post" })
   | (NewsItemWithState & { type: "news" });
 
 type ProfileActivityTabsProps = {
   initialTab: TabKey;
-  myPosts: PostType[]; // [수정] Post → PostType
+  myPosts: PostType[];
   myComments: DbCommentRow[];
   myBookmarks: BookmarkedItem[];
-  onLikeToggle: (id: string) => void;
+  onLikeToggle: (id: string) => void; // 뉴스 좋아요
   onBookmarkToggle: (id: string, type: "post" | "news") => void;
-  onPostLikeToggle: (id: string) => void;
+  onPostLikeToggle: (id: string) => void; // 게시글 좋아요
+  onCommentLikeToggle: (id: string) => void; // ⭐️ 댓글 좋아요 추가
+  onPostBookmarkToggle: (id: string) => void; // ⭐️ 게시글 북마크 추가
 };
 
 export function ProfileActivityTabs({
@@ -48,6 +51,8 @@ export function ProfileActivityTabs({
   onLikeToggle,
   onBookmarkToggle,
   onPostLikeToggle,
+  onCommentLikeToggle, // ⭐️ 추가
+  onPostBookmarkToggle, // ⭐️ 추가
 }: ProfileActivityTabsProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -103,9 +108,18 @@ export function ProfileActivityTabs({
       {/* 탭 콘텐츠 */}
       <div className="mt-4 lg:mt-6">
         {activeTab === "posts" && (
-          <MyPosts posts={myPosts} onLikeToggle={onPostLikeToggle} />
+          <MyPosts 
+            posts={myPosts} 
+            onLikeToggle={onPostLikeToggle}
+            onBookmarkToggle={onPostBookmarkToggle} // ⭐️ 추가
+          />
         )}
-        {activeTab === "comments" && <MyComments comments={myComments} />}
+        {activeTab === "comments" && (
+          <MyComments 
+            comments={myComments}
+            onLikeToggle={onCommentLikeToggle} // ⭐️ 추가
+          />
+        )}
         {activeTab === "bookmarks" && (
           <MyBookMark
             items={myBookmarks}

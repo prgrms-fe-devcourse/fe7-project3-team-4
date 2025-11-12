@@ -1,14 +1,19 @@
 // src/components/profile/MyPosts.tsx
-import Post from "../home/post/Post";
+import MyPost from "../home/post/MyPost";
 import EmptyActivity from "./EmptyActivity";
 import { PostType } from "@/types/Post";
 
 type MyPostsProps = {
   posts: PostType[];
   onLikeToggle: (id: string) => void;
+  onBookmarkToggle: (id: string) => void; // ⭐️ 추가
 };
 
-export default function MyPosts({ posts, onLikeToggle }: MyPostsProps) {
+export default function MyPosts({ 
+  posts, 
+  onLikeToggle,
+  // onBookmarkToggle // ⭐️ 추가
+}: MyPostsProps) {
   if (!posts || posts.length === 0) {
     return <EmptyActivity message="작성한 게시글이 없습니다" />;
   }
@@ -17,10 +22,11 @@ export default function MyPosts({ posts, onLikeToggle }: MyPostsProps) {
     <div className="space-y-4">
       {posts.map((data) => {
         return (
-          <Post
+          <MyPost
             key={data.id}
             data={data}
             onLikeToggle={onLikeToggle}
+            // onBookmarkToggle={onBookmarkToggle} // ⭐️ 추가
           />
         );
       })}

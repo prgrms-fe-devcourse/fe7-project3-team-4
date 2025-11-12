@@ -1,27 +1,28 @@
 "use client";
 
-import { Bookmark, BookmarkCheck, Heart, MessageSquare } from "lucide-react"; // [수정] Bookmark 임포트
-import React from "react"; // [추가] React 임포트
+import { Bookmark, BookmarkCheck, Eye, Heart, MessageSquare } from "lucide-react";
+import React from "react";
 
-// [수정] Props 인터페이스 확장
 interface PostActionsProps {
   postId: string;
   likeCount: number;
   commentCount: number;
+  viewCount?: number; // ⭐️ 추가
   isLiked?: boolean;
   isBookmarked?: boolean;
   onLikeToggle?: (id: string) => void;
-  onBookmarkToggle?: (id: string, type: "post" | "news") => void; // [수정] 타입 일치
+  onBookmarkToggle?: (id: string, type: "post" | "news") => void;
 }
 
 export default function PostActions({
   postId,
   likeCount,
   commentCount,
-  isLiked = false, // [추가]
-  isBookmarked = false, // [추가]
+  viewCount, // ⭐️ 추가
+  isLiked = false,
+  isBookmarked = false,
   onLikeToggle,
-  onBookmarkToggle, // [추가]
+  onBookmarkToggle,
 }: PostActionsProps) {
   const handleLikeClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -29,11 +30,10 @@ export default function PostActions({
     onLikeToggle?.(postId);
   };
 
-  // [추가] 북마크 핸들러
   const handleBookmarkClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    onBookmarkToggle?.(postId, "post"); // 'post' 타입으로 호출
+    onBookmarkToggle?.(postId, "post");
   };
 
   return (
@@ -46,39 +46,49 @@ export default function PostActions({
         }`}
         onClick={handleLikeClick}
         disabled={!onLikeToggle}
-        aria-pressed={isLiked} // [추가]
+        aria-pressed={isLiked}
         aria-label="좋아요"
       >
-        <div className="flex gap-2 text-sm items-center ">
+        <div className="flex gap-2 text-sm items-center">
           <Heart size={18} fill={"none"} />
           <span>{likeCount}</span>
         </div>
       </button>
-      {/* 댓글 버튼 누르면 댓글창으로 focusing 되도록(예정) */}
+
       <button className="cursor-pointer py-1 px-2 rounded-md hover:bg-gray-200">
         <div className="flex gap-2 text-sm items-center">
           <MessageSquare size={18} />
           <span>{commentCount}</span>
         </div>
       </button>
-      {/* [추가] 북마크 버튼 (NewsItem.tsx 참조) */}
-      <button
-        onClick={handleBookmarkClick}
-        disabled={!onBookmarkToggle}
-        className={`cursor-pointer py-1 px-2 rounded-md transition-colors ${
-          isBookmarked
-            ? "text-[#6758FF] bg-[#D8D4FF]"
-            : "hover:text-[#6758FF] hover:bg-[#D8D4FF]"
-        }`}
-        aria-pressed={isBookmarked}
-        aria-label="북마크"
-      >
-        {isBookmarked ? (
-          <BookmarkCheck size={18} fill={"none"} />
-        ) : (
-          <Bookmark size={18} fill={"none"} />
-        )}
-      </button>
+
+      {/* ⭐️ viewCount가 있으면 조회수 표시, 없으면 북마크 표시 */}
+      {viewCount !== undefined ? (
+        <div className="py-1 px-2">
+          <div className="flex gap-2 text-sm items-center">
+            <Eye size={18} />
+            <span>{viewCount}</span>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={handleBookmarkClick}
+          disabled={!onBookmarkToggle}
+          className={`cursor-pointer py-1 px-2 rounded-md transition-colors ${
+            isBookmarked
+              ? "text-[#6758FF] bg-[#D8D4FF]"
+              : "hover:text-[#6758FF] hover:bg-[#D8D4FF]"
+          }`}
+          aria-pressed={isBookmarked}
+          aria-label="북마크"
+        >
+          {isBookmarked ? (
+            <BookmarkCheck size={18} fill={"none"} />
+          ) : (
+            <Bookmark size={18} fill={"none"} />
+          )}
+        </button>
+      )}
     </div>
   );
 }

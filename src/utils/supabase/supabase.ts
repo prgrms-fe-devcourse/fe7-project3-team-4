@@ -10,6 +10,8 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
+    PostgrestVersion: "13.0.5"
+  }
     PostgrestVersion: "13.0.5";
   };
   graphql_public: {
@@ -221,6 +223,35 @@ export type Database = {
       };
       message_rooms: {
         Row: {
+          created_at: string
+          id: string
+          last_message_at: string | null
+          last_message_text: string | null
+          last_read_at_max: string | null
+          last_read_at_min: string | null
+          pair_max: string | null
+          pair_min: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          last_message_text?: string | null
+          last_read_at_max?: string | null
+          last_read_at_min?: string | null
+          pair_max?: string | null
+          pair_min?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          last_message_text?: string | null
+          last_read_at_max?: string | null
+          last_read_at_min?: string | null
+          pair_max?: string | null
+          pair_min?: string | null
+        }
           created_at: string;
           id: string;
           last_message_at: string;
@@ -263,6 +294,31 @@ export type Database = {
       };
       messages: {
         Row: {
+          content: string | null
+          created_at: string | null
+          id: string
+          image_url: string | null
+          room_id: string
+          sender_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          room_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          room_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
           content: string | null;
           created_at: string | null;
           id: string;
@@ -454,6 +510,37 @@ export type Database = {
       };
       profiles: {
         Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          display_name: string | null
+          email: string | null
+          followed_count: number | null
+          following_count: number | null
+          id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          email?: string | null
+          followed_count?: number | null
+          following_count?: number | null
+          id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          email?: string | null
+          followed_count?: number | null
+          following_count?: number | null
+          id?: string
+        }
+        Relationships: []
+      }
           avatar_url: string | null;
           bio: string | null;
           created_at: string | null;
@@ -616,6 +703,9 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      ensure_direct_room: { Args: { other_user_id: string }; Returns: string }
+      mark_room_read: { Args: { room_id: string }; Returns: undefined }
+    }
       ensure_direct_room: { Args: { other_user_id: string }; Returns: string };
     };
     Enums: {
@@ -771,9 +861,6 @@ export type CompositeTypes<
   : never;
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       comment_target_type: ["posts", "news"],

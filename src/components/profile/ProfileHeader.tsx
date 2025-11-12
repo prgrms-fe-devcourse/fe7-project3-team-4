@@ -71,10 +71,10 @@ export function ProfileHeader({
           <div className="lg:flex justify-between items-end space-y-2 lg:space-y-0">
             <div className="flex gap-5 text-lg">
               <p>
-                <span>1234</span> <span className="text-[#717182]">팔로잉</span>
+                <span>{profile?.following_count}</span> <span className="text-[#717182]">팔로잉</span>
               </p>
               <p>
-                <span>5678</span> <span className="text-[#717182]">팔로워</span>
+                <span>{profile?.followed_count}</span> <span className="text-[#717182]">팔로워</span>
               </p>
             </div>
             <div className="flex items-center gap-1 text-[#717182]">
