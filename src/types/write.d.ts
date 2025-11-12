@@ -1,3 +1,3 @@
 type PostType = "prompt" | "free" | "weekly";
-type ResultMode = "text" | "image";
+type ResultMode = "Text" | "Image";
 type ModelType = "GPT" | "Gemini";

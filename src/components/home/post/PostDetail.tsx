@@ -1,4 +1,3 @@
-// src/app/(home)/post/[id]/PostDetail.tsx
 "use client";
 
 import { ArrowLeft, ArrowUpDown } from "lucide-react";
@@ -11,6 +10,10 @@ import CommentForm from "./CommentForm";
 import PostActions from "./PostAction";
 import { createClient } from "@/utils/supabase/client";
 import PromptDetail from "./PromptDetail";
+import {
+  extractImageSrcArr,
+  pickNthParagraphDoc,
+} from "@/utils/extractTextFromJson";
 import Link from "next/link"; // ⭐️ 추가
 
 type RawComment = {
@@ -49,7 +52,7 @@ export default function PostDetail({
   const [isFollowing, setIsFollowing] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
-  
+
   const supabase = createClient();
   const authorName = post.profiles?.display_name || "익명";
   const authorEmail = post.profiles?.email || "";
@@ -58,7 +61,9 @@ export default function PostDetail({
 
   useEffect(() => {
     const getCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setCurrentUserId(user?.id || null);
     };
     getCurrentUser();
@@ -66,12 +71,12 @@ export default function PostDetail({
 
   useEffect(() => {
     const incrementViewCount = async () => {
-      const { error } = await supabase.rpc('increment_view_count', {
-        post_id: post.id
+      const { error } = await supabase.rpc("increment_view_count", {
+        post_id: post.id,
       });
-      
+
       if (error) {
-        console.error('Error incrementing view count:', error);
+        console.error("Error incrementing view count:", error);
       }
     };
 
@@ -81,12 +86,12 @@ export default function PostDetail({
   useEffect(() => {
     const checkFollowStatus = async () => {
       if (!currentUserId || !post.user_id) return;
-      
+
       const { data, error } = await supabase
-        .from('follows')
-        .select('id')
-        .eq('follower_id', currentUserId)
-        .eq('following_id', post.user_id)
+        .from("follows")
+        .select("id")
+        .eq("follower_id", currentUserId)
+        .eq("following_id", post.user_id)
         .single();
 
       if (!error && data) {
@@ -99,12 +104,12 @@ export default function PostDetail({
 
   const handleFollowToggle = async () => {
     if (!currentUserId || !post.user_id) {
-      alert('로그인이 필요합니다.');
+      alert("로그인이 필요합니다.");
       return;
     }
 
     if (currentUserId === post.user_id) {
-      alert('자기 자신을 팔로우할 수 없습니다.');
+      alert("자기 자신을 팔로우할 수 없습니다.");
       return;
     }
 
@@ -113,10 +118,10 @@ export default function PostDetail({
     try {
       if (isFollowing) {
         const { error } = await supabase
-          .from('follows')
+          .from("follows")
           .delete()
-          .eq('follower_id', currentUserId)
-          .eq('following_id', post.user_id);
+          .eq("follower_id", currentUserId)
+          .eq("following_id", post.user_id);
 
         if (error) throw error;
         setIsFollowing(false);
@@ -132,8 +137,8 @@ export default function PostDetail({
         setIsFollowing(true);
       }
     } catch (error) {
-      console.error('Error toggling follow:', error);
-      alert('팔로우 처리 중 오류가 발생했습니다.');
+      console.error("Error toggling follow:", error);
+      alert("팔로우 처리 중 오류가 발생했습니다.");
     } finally {
       setIsFollowLoading(false);
     }
@@ -269,7 +274,7 @@ export default function PostDetail({
       </button>
       <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
         {/* 작성자 정보 */}
-        <div className="pb-7">
+        <div>
           <div className="flex justify-between">
             <div className="flex gap-3 items-center">
               {/* ⭐️ Link로 감싸서 클릭 시 프로필 이동 */}
@@ -321,9 +326,23 @@ export default function PostDetail({
           <div className="mt-5">
             <div className="space-y-4">
               <p className="text-[18px] font-medium">{post.title}</p>
-              <div className="mt-4">
-                <RichTextRenderer content={post.content} showImage={true} />
-              </div>
+              {/* 이미지 */}
+              {post.thumbnail === "" ? null : (
+                <div className="relative">
+                  <Image
+                    src={extractImageSrcArr(post.content)[0]}
+                    alt={post.title}
+                    width={800}
+                    height={800}
+                    className="object-cover"
+                  />
+                </div>
+              )}
+              {/* content */}
+              <RichTextRenderer
+                content={pickNthParagraphDoc(post.content, 0)}
+                showImage={false}
+              />
             </div>
           </div>
           {/* 태그 */}
@@ -350,7 +369,7 @@ export default function PostDetail({
 
       {/* 프롬프트 세부 */}
       <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
-        <PromptDetail />
+        <PromptDetail post={post} />
       </div>
 
       <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
@@ -391,16 +410,20 @@ export default function PostDetail({
               </div>
             </div>
             {currentUserId && currentUserId !== post.user_id && (
-              <button 
+              <button
                 onClick={handleFollowToggle}
                 disabled={isFollowLoading}
                 className={`cursor-pointer leading-none rounded-lg py-1.5 px-2 text-sm transition-colors ${
-                  isFollowing 
-                    ? 'text-gray-600 bg-gray-100 hover:bg-gray-200' 
-                    : 'text-[#6758FF] bg-[#6758FF]/10 hover:bg-[#6758FF]/20'
+                  isFollowing
+                    ? "text-gray-600 bg-gray-100 hover:bg-gray-200"
+                    : "text-[#6758FF] bg-[#6758FF]/10 hover:bg-[#6758FF]/20"
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                {isFollowLoading ? '처리중...' : isFollowing ? '팔로잉' : '+ 팔로우'}
+                {isFollowLoading
+                  ? "처리중..."
+                  : isFollowing
+                  ? "팔로잉"
+                  : "+ 팔로우"}
               </button>
             )}
           </div>

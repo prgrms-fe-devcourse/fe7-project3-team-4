@@ -47,6 +47,7 @@ type SupabasePostItem = {
   comment_count: number | null;
   user_id: string | null;
   model: string | null;
+  result_mode: string | null;
   email: string | null;
   thumbnail: string | null;
   subtitle: string | null;
@@ -149,6 +150,7 @@ export default function Page() {
           view_count: item.view_count || 0,
           user_id: item.user_id || "",
           model: (item.model as "GPT" | "Gemini") || undefined,
+          result_mode: (item.result_mode as "text" | "image") || undefined,
           thumbnail: item.thumbnail || "",
           subtitle: item.subtitle || "",
           isLiked: !!(item.user_post_likes && item.user_post_likes.length > 0),
@@ -250,7 +252,7 @@ export default function Page() {
   const handleBack = () => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("id");
-    params.delete("posttype"); 
+    params.delete("posttype");
     router.push(`/?${params.toString()}`, { scroll: false });
   };
 
