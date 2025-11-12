@@ -2,6 +2,7 @@ import { Trophy } from "lucide-react";
 import Box from "./Box";
 import { createClient } from "@/utils/supabase/server";
 import Image from "next/image";
+import RankFollowButton from "./RankFollowButton";
 
 const getOrdinalSuffix = (n: number) => {
   if (n % 100 >= 11 && n % 100 <= 13) {
@@ -22,6 +23,10 @@ const getOrdinalSuffix = (n: number) => {
 export default async function Rank() {
   const supabase = await createClient();
 
+  // 현재 로그인한 사용자 정보 가져오기
+  const { data: { user } } = await supabase.auth.getUser();
+  const currentUserId = user?.id || null;
+
   const { data, error } = await supabase
     .from("posts")
     .select(
@@ -38,7 +43,7 @@ export default async function Rank() {
     `
     )
     .eq("post_type", "prompt")
-    .order("like_count", { ascending: false }); // 좋아요 순 정렬
+    .order("like_count", { ascending: false });
 
   if (error) console.error(error);
 
@@ -52,17 +57,28 @@ export default async function Rank() {
     );
   }
 
-  // user_id(문자열) 기준으로 중복 제거 (가장 like_count 높은 게시글만 남기기)
+  // user_id 기준으로 중복 제거
   const uniqueMap = new Map();
   for (const post of data) {
-    // 맵에 user_id가 아직 없으면(해당 유저의 첫 번째=좋아요 가장 높은 게시물) 추가
     if (!uniqueMap.has(post.user_id)) {
       uniqueMap.set(post.user_id, post);
     }
   }
   const uniqueByUser = Array.from(uniqueMap.values());
-
   const topUsers = uniqueByUser.slice(0, 4);
+
+  // 현재 사용자의 팔로우 상태 조회
+  let followingIds: Set<string> = new Set();
+  if (currentUserId) {
+    const { data: followData } = await supabase
+      .from("follows")
+      .select("following_id")
+      .eq("follower_id", currentUserId);
+    
+    if (followData) {
+      followingIds = new Set(followData.map(f => f.following_id));
+    }
+  }
 
   return (
     <Box height="284px" icon={<Trophy />} title="지난 주 챌린지 순위">
@@ -74,6 +90,8 @@ export default async function Rank() {
           const displayName = profile?.display_name ?? "익명";
           const email = profile?.email ?? "이메일 없음";
           const avatar = profile?.avatar_url;
+          const isFollowing = followingIds.has(item.user_id);
+          const isSelf = currentUserId === item.user_id;
 
           const rankColor =
             rankNumber === 1
@@ -119,12 +137,13 @@ export default async function Rank() {
               </div>
 
               <div className="shrink-0">
-                <button
-                  className="cursor-pointer text-sm px-4 py-1.5 text-white bg-[#6758FF] rounded-lg"
-                  // 팔로우 로직 연결
-                >
-                  팔로우
-                </button>
+                {!isSelf && (
+                  <RankFollowButton
+                    targetUserId={item.user_id}
+                    initialIsFollowing={isFollowing}
+                    currentUserId={currentUserId}
+                  />
+                )}
               </div>
             </div>
           );

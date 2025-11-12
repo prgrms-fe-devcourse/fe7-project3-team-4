@@ -28,12 +28,14 @@ type RawComment = {
     bio?: string | null;
   } | null;
 };
+
 interface PostDetailProps {
   post: PostType;
   onBack: () => void;
   onLikeToggle?: (id: string) => void;
   onBookmarkToggle?: (id: string, type: "post" | "news") => void;
 }
+
 export default function PostDetail({
   post,
   onLikeToggle,
@@ -42,11 +44,104 @@ export default function PostDetail({
 }: PostDetailProps) {
   const [comments, setComments] = useState<PostComment[]>([]);
   const [sortOrder, setSortOrder] = useState<"latest" | "popular">("latest");
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
+  
   const supabase = createClient();
   const authorName = post.profiles?.display_name || "익명";
   const authorEmail = post.profiles?.email || "";
   const authorAvatar = post.profiles?.avatar_url || null;
   const displayDate = (post.created_at || "").slice(0, 10);
+
+  // ✅ 현재 사용자 정보 가져오기
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+    };
+    getCurrentUser();
+  }, [supabase]);
+
+  // ✅ 조회수 증가
+  useEffect(() => {
+    const incrementViewCount = async () => {
+      const { error } = await supabase.rpc('increment_view_count', {
+        post_id: post.id
+      });
+      
+      if (error) {
+        console.error('Error incrementing view count:', error);
+      }
+    };
+
+    incrementViewCount();
+  }, [post.id, supabase]);
+
+  // ✅ 팔로우 상태 확인
+  useEffect(() => {
+    const checkFollowStatus = async () => {
+      if (!currentUserId || !post.user_id) return;
+      
+      const { data, error } = await supabase
+        .from('follows')
+        .select('id')
+        .eq('follower_id', currentUserId)
+        .eq('following_id', post.user_id)
+        .single();
+
+      if (!error && data) {
+        setIsFollowing(true);
+      }
+    };
+
+    checkFollowStatus();
+  }, [currentUserId, post.user_id, supabase]);
+
+  // ✅ 팔로우/언팔로우 핸들러
+  const handleFollowToggle = async () => {
+    if (!currentUserId || !post.user_id) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    if (currentUserId === post.user_id) {
+      alert('자기 자신을 팔로우할 수 없습니다.');
+      return;
+    }
+
+    setIsFollowLoading(true);
+
+    try {
+      if (isFollowing) {
+        // 언팔로우
+        const { error } = await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', currentUserId)
+          .eq('following_id', post.user_id);
+
+        if (error) throw error;
+        setIsFollowing(false);
+      } else {
+        // 팔로우
+        const { error } = await supabase
+          .from('follows')
+          .insert({
+            follower_id: currentUserId,
+            following_id: post.user_id
+          });
+
+        if (error) throw error;
+        setIsFollowing(true);
+      }
+    } catch (error) {
+      console.error('Error toggling follow:', error);
+      alert('팔로우 처리 중 오류가 발생했습니다.');
+    } finally {
+      setIsFollowLoading(false);
+    }
+  };
 
   // ✅ 댓글 가져오기
   const fetchComments = useCallback(async () => {
@@ -171,6 +266,7 @@ export default function PostDetail({
   const handleCommentAdded = () => {
     fetchComments();
   };
+
   return (
     <div className="space-y-6 pb-6">
       <button
@@ -287,9 +383,19 @@ export default function PostDetail({
                 </p>
               </div>
             </div>
-            <button className="cursor-pointer leading-none text-[#6758FF] bg-[#6758FF]/10 rounded-lg py-1.5 px-2 text-sm">
-              + 팔로우
-            </button>
+            {currentUserId && currentUserId !== post.user_id && (
+              <button 
+                onClick={handleFollowToggle}
+                disabled={isFollowLoading}
+                className={`cursor-pointer leading-none rounded-lg py-1.5 px-2 text-sm transition-colors ${
+                  isFollowing 
+                    ? 'text-gray-600 bg-gray-100 hover:bg-gray-200' 
+                    : 'text-[#6758FF] bg-[#6758FF]/10 hover:bg-[#6758FF]/20'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                {isFollowLoading ? '처리중...' : isFollowing ? '팔로잉' : '+ 팔로우'}
+              </button>
+            )}
           </div>
         </div>
 
