@@ -1,5 +1,4 @@
 // src/components/profile/ProfileActivityTabs.tsx
-
 "use client";
 
 import { useSearchParams, usePathname } from "next/navigation";
@@ -36,11 +35,11 @@ type ProfileActivityTabsProps = {
   myPosts: PostType[];
   myComments: DbCommentRow[];
   myBookmarks: BookmarkedItem[];
-  onLikeToggle: (id: string) => void; // 뉴스 좋아요
+  onLikeToggle: (id: string) => void;
   onBookmarkToggle: (id: string, type: "post" | "news") => void;
-  onPostLikeToggle: (id: string) => void; // 게시글 좋아요
-  onCommentLikeToggle: (id: string) => void; // ⭐️ 댓글 좋아요 추가
-  onPostBookmarkToggle: (id: string) => void; // ⭐️ 게시글 북마크 추가
+  onPostLikeToggle: (id: string) => void;
+  onCommentLikeToggle: (id: string) => void;
+  onPostBookmarkToggle: (id: string) => void;
 };
 
 export function ProfileActivityTabs({
@@ -51,8 +50,8 @@ export function ProfileActivityTabs({
   onLikeToggle,
   onBookmarkToggle,
   onPostLikeToggle,
-  onCommentLikeToggle, // ⭐️ 추가
-  onPostBookmarkToggle, // ⭐️ 추가
+  onCommentLikeToggle,
+  // onPostBookmarkToggle,
 }: ProfileActivityTabsProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -72,7 +71,6 @@ export function ProfileActivityTabs({
 
   return (
     <>
-      {/* 탭 버튼 */}
       <div className="bg-white/40 border border-white/20 rounded-xl shadow-xl">
         <div className="mt-6 p-1 w-full flex gap-1 leading-none">
           <Link
@@ -105,19 +103,18 @@ export function ProfileActivityTabs({
         </div>
       </div>
 
-      {/* 탭 콘텐츠 */}
       <div className="mt-4 lg:mt-6">
         {activeTab === "posts" && (
           <MyPosts 
             posts={myPosts} 
             onLikeToggle={onPostLikeToggle}
-            onBookmarkToggle={onPostBookmarkToggle} // ⭐️ 추가
+            // onBookmarkToggle={onPostBookmarkToggle}
           />
         )}
         {activeTab === "comments" && (
           <MyComments 
             comments={myComments}
-            onLikeToggle={onCommentLikeToggle} // ⭐️ 추가
+            onLikeToggle={onCommentLikeToggle}
           />
         )}
         {activeTab === "bookmarks" && (
