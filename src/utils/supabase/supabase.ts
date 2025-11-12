@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       comment_likes: {
@@ -382,6 +407,7 @@ export type Database = {
           like_count: number | null
           model: string | null
           post_type: string | null
+          result_mode: string | null
           subtitle: string | null
           thumbnail: string | null
           title: string | null
@@ -399,6 +425,7 @@ export type Database = {
           like_count?: number | null
           model?: string | null
           post_type?: string | null
+          result_mode?: string | null
           subtitle?: string | null
           thumbnail?: string | null
           title?: string | null
@@ -416,6 +443,7 @@ export type Database = {
           like_count?: number | null
           model?: string | null
           post_type?: string | null
+          result_mode?: string | null
           subtitle?: string | null
           thumbnail?: string | null
           title?: string | null
@@ -604,6 +632,17 @@ export type Database = {
     }
     Functions: {
       ensure_direct_room: { Args: { other_user_id: string }; Returns: string }
+      get_notifications_with_details: {
+        Args: never
+        Returns: {
+          content: string
+          created_at: string
+          id: string
+          is_read: boolean
+          sender: Json
+          type: Database["public"]["Enums"]["notification_type"]
+        }[]
+      }
       increment_view_count: { Args: { post_id: string }; Returns: undefined }
       mark_room_read: { Args: { room_id: string }; Returns: undefined }
     }
@@ -757,6 +796,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       comment_target_type: ["posts", "news"],
