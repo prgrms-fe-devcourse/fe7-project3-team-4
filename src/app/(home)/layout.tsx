@@ -17,9 +17,7 @@ export default function RootLayout({
           <NewsFeedProvider>
             <div className="p-6 grid lg:grid-cols-[208px_minmax(0,1fr)_332px] gap-6 h-screen">
               <LeftSidebar />
-              <DragScrollMain>
-                <section className="max-w-2xl mx-auto">{children}</section>
-              </DragScrollMain>
+              <DragScrollMain>{children}</DragScrollMain>
               <RightSidebar />
             </div>
           </NewsFeedProvider>

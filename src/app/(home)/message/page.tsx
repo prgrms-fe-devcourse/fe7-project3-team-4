@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient } from "@/utils/supabase/client";
-import { Image as ImageIcon, Search, Send } from "lucide-react";
+import { Image as ImageIcon, Search, Send, Trash, X } from "lucide-react";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -55,6 +55,9 @@ export default function Page() {
   const [roomsLoading, setRoomsLoading] = useState(false);
   const [myLastReadAt, setMyLastReadAt] = useState<string | null>(null);
   const [peerLastReadAt, setPeerLastReadAt] = useState<string | null>(null);
+
+  /* 모바일 */
+  const isThreadOpen = !!(roomId || peerId);
 
   // URL의 peerId를 state로 동기화 (roomId가 없을 때만)
   useEffect(() => {
@@ -625,321 +628,392 @@ export default function Page() {
     setSending(false);
   };
 
+  const goBackToList = () => {
+    const sp = new URLSearchParams(searchParams.toString());
+    sp.delete("roomId");
+    sp.delete("peerId");
+    router.push(`/message?${sp.toString()}`, { scroll: false });
+  };
+
   return (
-    <div className="flex flex-col md:flex-row max-w-[1092px] min-h-[814px] pb-4 rounded-xl shadow-xl">
-      {/* 왼쪽 */}
-      <div className="flex-1 shrink-0">
-        {/* 헤더 - 검색바 */}
-        <div className="flex items-center bg-white/40 h-[76px] px-8 shadow-[0_4px_4px_rgba(0,0,0,0.1)]">
-          <div className="flex items-center gap-3 border border-[#E5E5E5] rounded-lg p-3">
-            <Search className="text-[#DBDBDB]" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              onFocus={() => setIsSearching(true)}
-              onBlur={() => {
-                // 입력값이 비어 있으면 검색 모드 종료
-                if (!q.trim()) setIsSearching(false);
-              }}
-              placeholder="대화 상대 검색..."
-              className="w-full bg-transparent focus:outline-none"
-            />
-          </div>
-          {isSearching && (
-            <button
-              type="button"
-              onClick={() => {
-                setQ("");
-                setIsSearching(false);
-              }}
-              className="ml-3 text-xs text-[#717182] hover:underline"
+    <>
+      <div className="w-full h-full lg:p-18">
+        <div className="lg:max-w-250 mx-auto">
+          <div className="bg-white/40 rounded-xl shadow-xl h-200 lg:w-250 flex flex-row">
+            {/* 왼쪽 */}
+            <div
+              className={`flex-none h-full w-full lg:w-auto
+              ${isThreadOpen ? "hidden" : "block"} lg:block`}
             >
-              종료
-            </button>
-          )}
-        </div>
-        {/* 목록: 검색 모드 vs 최근 채팅방 */}
-        <div className="divide-y divide-black/5">
-          {isSearching ? (
-            <>
-              {!debouncedQ && (
-                <div className="px-8 py-4 text-sm text-[#717182]">
-                  검색어를 입력해보세요.
-                </div>
-              )}
-              {debouncedQ && isLoading && (
-                <div className="px-8 py-4 text-sm text-[#717182]">검색 중…</div>
-              )}
-              {debouncedQ && !isLoading && results.length === 0 && (
-                <div className="px-8 py-4 text-sm text-[#717182]">
-                  검색 결과가 없어요.
-                </div>
-              )}
-              {debouncedQ &&
-                !isLoading &&
-                results.map((u) => (
-                  <button
-                    key={u.id}
-                    type="button"
-                    onClick={() => openRoomWith(u.id)}
-                    className="relative flex w-full items-center gap-3 h-[76px] px-8 transition-colors duration-150 hover:bg-[#F2F0FF] cursor-pointer rounded-lg"
-                  >
-                    <div className="w-11 h-11 bg-[#6D6D6D] rounded-full overflow-hidden flex items-center justify-center">
-                      <Image
-                        src={u.avatar_url ?? ""}
-                        alt={`${u.display_name} avatar`}
-                        width={44}
-                        height={44}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="text-left">
-                      <div className="text-[#0A0A0A]">{u.display_name}</div>
-                    </div>
-                  </button>
-                ))}
-            </>
-          ) : (
-            <>
-              {roomsLoading && (
-                <div className="px-8 py-4 text-sm text-[#717182]">
-                  채팅방을 불러오는 중…
-                </div>
-              )}
-              {!roomsLoading && rooms.length === 0 && (
-                <div className="px-8 py-4 text-sm text-[#717182]">
-                  아직 대화 내역이 없어요. 상단 검색바로 대화를 시작해보세요!
-                </div>
-              )}
-              {!roomsLoading &&
-                rooms.map((r) => (
-                  <button
-                    key={r.id}
-                    type="button"
-                    onClick={() => {
-                      const sp = new URLSearchParams(searchParams.toString());
-                      sp.set("roomId", r.id);
-                      router.push(`/message?${sp.toString()}`, {
-                        scroll: false,
-                      });
+              {/* Top */}
+              <div className="p-4 bg-white/40 rounded-tl-xl border-b border-b-[#E5E5E5]">
+                <div className="relative flex items-center gap-3 border border-[#E5E5E5] rounded-lg p-3">
+                  <Search className="text-[#DBDBDB]" />
+                  <input
+                    value={q}
+                    onChange={(e) => setQ(e.target.value)}
+                    onFocus={() => setIsSearching(true)}
+                    onBlur={() => {
+                      // 입력값이 비어 있으면 검색 모드 종료
+                      if (!q.trim()) setIsSearching(false);
                     }}
-                    className="relative flex w-full items-center gap-3 h-[76px] px-8 transition-colors duration-150 hover:bg-[#F2F0FF] cursor-pointer rounded-lg"
-                  >
-                    <div className="w-11 h-11 bg-[#6D6D6D] rounded-full overflow-hidden flex items-center justify-center">
+                    placeholder="대화 상대 검색..."
+                    className="w-full bg-transparent focus:outline-none"
+                  />
+                  {isSearching && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQ("");
+                        setIsSearching(false);
+                      }}
+                      className="cursor-pointer absolute right-2 text-xs text-[#717182]"
+                    >
+                      <X />
+                    </button>
+                  )}
+                </div>
+              </div>
+              {/* 대화 상대 */}
+              <div>
+                {/* 목록: 검색 모드 vs 최근 채팅방 */}
+                <div className="divide-y divide-black/5">
+                  {isSearching ? (
+                    <>
+                      {debouncedQ && isLoading && (
+                        <div className="flex items-center justify-center min-h-180 text-[#717182] text-center">
+                          <p>검색 중…</p>
+                        </div>
+                      )}
+                      {debouncedQ && !isLoading && results.length === 0 && (
+                        <div className="flex items-center justify-center min-h-180 text-[#717182] text-center">
+                          <p>검색 결과가 없어요.</p>
+                        </div>
+                      )}
+
+                      {debouncedQ &&
+                        !isLoading &&
+                        results.map((u) => (
+                          <button
+                            key={u.id}
+                            type="button"
+                            onClick={() => openRoomWith(u.id)}
+                            className="cursor-pointer relative flex w-full items-center gap-3 px-6 py-4 hover:bg-[#EAE8FF]"
+                          >
+                            <div className="w-11 h-11 bg-[#6D6D6D] rounded-full overflow-hidden flex items-center justify-center">
+                              <Image
+                                src={u.avatar_url ?? ""}
+                                alt={`${u.display_name} avatar`}
+                                width={44}
+                                height={44}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="text-left">
+                              <div className="text-[#0A0A0A]">
+                                {u.display_name}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                    </>
+                  ) : (
+                    <>
+                      {roomsLoading && (
+                        <div className="p-4 pt-10 text-[#717182] text-center">
+                          <p>채팅방을 불러오는 중…</p>
+                        </div>
+                      )}
+                      {!roomsLoading && rooms.length === 0 && (
+                        <div className="flex items-center justify-center min-h-180 text-[#717182] text-center">
+                          <p>
+                            아직 대화 내역이 없어요.
+                            <br />
+                            상단 검색바로 대화를 시작해보세요!
+                          </p>
+                        </div>
+                      )}
+
+                      {!roomsLoading &&
+                        rooms.map((r) => (
+                          <button
+                            key={r.id}
+                            type="button"
+                            onClick={() => {
+                              const sp = new URLSearchParams(
+                                searchParams.toString()
+                              );
+                              sp.set("roomId", r.id);
+                              router.push(`/message?${sp.toString()}`, {
+                                scroll: false,
+                              });
+                            }}
+                            className="relative flex w-full items-center gap-3 px-6 py-4 hover:bg-[#EAE8FF] cursor-pointer"
+                          >
+                            <div className="w-11 h-11 bg-[#6D6D6D] rounded-full overflow-hidden flex items-center justify-center">
+                              <Image
+                                src={r.other_avatar ?? ""}
+                                alt={`${r.other_name ?? "profile"} avatar`}
+                                width={44}
+                                height={44}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="text-left">
+                              <div className="text-[#0A0A0A]">
+                                {r.other_name ?? "대화 상대"}
+                              </div>
+                              <div className="text-sm text-[#717182] truncate max-w-[420px]">
+                                {r.last_message_text ?? "대화를 시작해보세요"}
+                              </div>
+                            </div>
+                            <div className="absolute right-4 flex flex-col items-end">
+                              <div className="text-xs text-[#717182]">
+                                {r.last_message_at
+                                  ? new Date(
+                                      r.last_message_at
+                                    ).toLocaleTimeString([], {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })
+                                  : ""}
+                              </div>
+                              {r.unread_count > 0 && (
+                                <span className="mt-1 inline-flex min-w-5 h-5 items-center justify-center rounded-full bg-[#6758FF] text-white text-[10px] px-1">
+                                  {r.unread_count > 99 ? "99+" : r.unread_count}
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+            {/* 오른쪽 */}
+            <div
+              className={`${isThreadOpen ? "flex" : "hidden"} lg:flex
+              flex-1 flex-col justify-between h-full`}
+            >
+              {/* Top */}
+              <div className="flex justify-between p-4 bg-white/40 rounded-tr-xl border-b border-b-[#E5E5E5]">
+                {/* 모바일 전용 뒤로가기 */}
+                <button
+                  type="button"
+                  onClick={goBackToList}
+                  className="lg:hidden pl-3 text-[#717182]"
+                  aria-label="목록으로"
+                  title="목록으로"
+                >
+                  {/* lucide-react에서 ArrowLeft 써도 좋아요 */}
+                  <X size={26} />
+                </button>
+                <div className="flex gap-3 items-center">
+                  {/* 이미지 */}
+                  <div className="w-[50px] h-[50px] bg-gray-400 rounded-full">
+                    {peer?.avatar_url ? (
                       <Image
-                        src={r.other_avatar ?? ""}
-                        alt={`${r.other_name ?? "profile"} avatar`}
+                        src={peer?.avatar_url ?? "/default-avatar.png"}
+                        alt={`${peer?.display_name ?? "profile"} avatar`}
                         width={44}
                         height={44}
-                        className="w-full h-full object-cover"
+                        className="rounded-full object-cover"
                       />
-                    </div>
-                    <div className="text-left">
-                      <div className="text-[#0A0A0A]">
-                        {r.other_name ?? "대화 상대"}
-                      </div>
-                      <div className="text-sm text-[#717182] truncate max-w-[420px]">
-                        {r.last_message_text ?? "대화를 시작해보세요"}
-                      </div>
-                    </div>
-                    <div className="absolute right-4 flex flex-col items-end">
-                      <div className="text-xs text-[#717182]">
-                        {r.last_message_at
-                          ? new Date(r.last_message_at).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : ""}
-                      </div>
-                      {r.unread_count > 0 && (
-                        <span className="mt-1 inline-flex min-w-5 h-5 items-center justify-center rounded-full bg-[#6758FF] text-white text-[10px] px-1">
-                          {r.unread_count > 99 ? "99+" : r.unread_count}
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                ))}
-            </>
-          )}
-        </div>
-      </div>
-      {/* 오른쪽 */}
-      <div className="flex flex-col min-h-[814px] flex-1">
-        {/* 헤더 - 채팅상대 */}
-        <div className="relative flex items-center gap-3 h-[76px] p-4 bg-white/40 shadow-[0_4px_4px_rgba(0,0,0,0.1)]">
-          <div className="w-11 h-11 rounded-full overflow-hidden bg-[#D9D9D9] flex items-center justify-center">
-            {peer?.avatar_url ? (
-              <Image
-                src={peer?.avatar_url ?? "/default-avatar.png"}
-                alt={`${peer?.display_name ?? "profile"} avatar`}
-                width={44}
-                height={44}
-                className="rounded-full object-cover"
-              />
-            ) : (
-              <span className="text-xs text-[#717182]">profile</span>
-            )}
-          </div>
-          <div>
-            <div className="text-[#0A0A0A]">
-              {peer?.display_name ?? (roomId ? "대화 상대" : "대화 상대 선택")}
-            </div>
-            <div className="text-sm text-[#717182]">
-              {peer
-                ? `${peer.email}`
-                : roomId
-                ? "상대 정보를 불러오는 중..."
-                : ""}
-            </div>
-          </div>
-        </div>
-        {/* 대화 내용 */}
-        <div className="relative flex flex-col gap-2 p-4 min-h-[300px]">
-          {!roomId && !peerId && (
-            <div className="mx-auto mt-12 text-center text-sm text-[#717182]">
-              좌측에서 유저를 검색해 대화를 시작해보세요!
-            </div>
-          )}
-          {!roomId && peerId && (
-            <div className="mx-auto mt-12 text-center text-sm text-[#717182]">
-              첫 대화를 나눠보세요! (메시지를 보내면 채팅방이 생성됩니다)
-            </div>
-          )}
-          {roomId && msgs.length === 0 && (
-            <div className="mx-auto mt-12 text-center text-sm text-[#717182]">
-              아직 메시지가 없어요. 대화를 시작해보세요!
-            </div>
-          )}
-          {roomId &&
-            (() => {
-              let lastDateKey = "";
-              return msgs.flatMap((m) => {
-                const mine = m.sender_id === me;
-                const dt = new Date(m.created_at);
-                const dateKey = dt.toISOString().slice(0, 10); // YYYY-MM-DD
-                const needSep = dateKey !== lastDateKey;
-                lastDateKey = dateKey;
-
-                const parts: JSX.Element[] = [];
-
-                if (needSep) {
-                  const label = dt.toLocaleDateString("ko-KR", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                    weekday: "short",
-                  });
-                  parts.push(
-                    <div key={`sep-${dateKey}`} className="relative my-4">
-                      <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-black/10"></div>
-                      <div className="relative mx-auto w-fit rounded-full border border-black/10 bg-white/60 px-3 py-1 text-[11px] text-[#4B4B57] backdrop-blur">
-                        {label}
-                      </div>
-                    </div>
-                  );
-                }
-
-                parts.push(
-                  <div
-                    key={m.id}
-                    className={`flex items-end gap-1 ${
-                      mine ? "justify-end" : ""
-                    }`}
-                  >
-                    {mine && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#717182] text-xs">
-                          {dt.toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                        {(() => {
-                          // 내가 보낸 메시지에 대해, 상대가 아직 읽지 않았다면 점 표시
-                          const unreadByPeer =
-                            !peerLastReadAt || m.created_at > peerLastReadAt;
-                          return unreadByPeer ? (
-                            <span
-                              title="상대 미읽음"
-                              className="inline-block w-2 h-2 rounded-full bg-[#9AA0A6]"
-                            ></span>
-                          ) : null;
-                        })()}
-                      </div>
-                    )}
-
-                    {/* 메시지 버블 */}
-                    <div
-                      className={`${
-                        mine
-                          ? "bg-[#6758FF] text-white"
-                          : "bg-white/50 text-[#0A0A0A]"
-                      } border border-[#6758FF]/30 rounded-xl px-4 py-2 max-w-[70%]`}
-                    >
-                      {m.content}
-                    </div>
-
-                    {/* 시간 + (상대 메시지일 때만) unread 점표시 */}
-                    {!mine && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#717182] text-xs">
-                          {dt.toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                        {(() => {
-                          const unread =
-                            !myLastReadAt || m.created_at > myLastReadAt;
-                          return unread ? (
-                            <span
-                              title="미읽음"
-                              className="inline-block w-2 h-2 rounded-full bg-[#6758FF]"
-                            ></span>
-                          ) : null;
-                        })()}
-                      </div>
+                    ) : (
+                      <span className="text-xs text-[#717182]">profile</span>
                     )}
                   </div>
-                );
+                  {/* 이름 및 이메일 */}
+                  <div>
+                    <p>
+                      {peer?.display_name ??
+                        (roomId ? "대화 상대" : "대화 상대 선택")}
+                    </p>
+                    <p className="text-[#717182] text-sm">
+                      {peer
+                        ? `${peer.email}`
+                        : roomId
+                        ? "상대 정보를 불러오는 중..."
+                        : ""}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="cursor-pointer text-[#717182] pr-3"
+                >
+                  <Trash />
+                </button>
+              </div>
 
-                return parts;
-              });
-            })()}
-        </div>
-        {/* 메시지 입력창 */}
-        <div className="mt-auto flex items-center gap-3 border border-[#E5E5E5] rounded-lg p-3">
-          <input
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-              }
-            }}
-            placeholder={
-              roomId
-                ? "메시지 입력..."
-                : peerId
-                ? "메시지를 보내면 채팅방이 생성됩니다"
-                : "대화 상대를 먼저 선택하세요"
-            }
-            disabled={(!roomId && !peerId) || sending}
-            className="w-full focus:outline-none disabled:opacity-60 bg-transparent"
-          />
-          <ImageIcon className="text-[#717182] w-6 h-6" strokeWidth={1} />
+              {/* 대화 내용 */}
+              <div className="p-6 flex flex-col justify-center gap-2">
+                {/* 대화 내용 영역 */}
+                <div>
+                  {!roomId && !peerId && (
+                    <div className="flex items-center justify-center text-[#717182]">
+                      <p>좌측에서 유저를 검색해 대화를 시작해보세요!</p>
+                    </div>
+                  )}
+                  {!roomId && peerId && (
+                    <div className="flex items-center justify-center text-[#717182]">
+                      <p>
+                        첫 대화를 나눠보세요! (메시지를 보내면 채팅방이
+                        생성됩니다)
+                      </p>
+                    </div>
+                  )}
+                  {roomId && msgs.length === 0 && (
+                    <div className="flex items-center justify-center text-[#717182]">
+                      <p>아직 메시지가 없어요. 대화를 시작해보세요!</p>
+                    </div>
+                  )}
+                  {roomId &&
+                    (() => {
+                      let lastDateKey = "";
+                      return msgs.flatMap((m) => {
+                        const mine = m.sender_id === me;
+                        const dt = new Date(m.created_at);
+                        const dateKey = dt.toISOString().slice(0, 10); // YYYY-MM-DD
+                        const needSep = dateKey !== lastDateKey;
+                        lastDateKey = dateKey;
 
-          <button
-            type="button"
-            onClick={sendMessage}
-            disabled={(!roomId && !peerId) || sending || !draft.trim()}
-            className="bg-[#6758FF] p-1.5 rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            <Send className="text-white w-3 h-3" />
-          </button>
+                        const parts: JSX.Element[] = [];
+
+                        if (needSep) {
+                          const label = dt.toLocaleDateString("ko-KR", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            weekday: "short",
+                          });
+                          parts.push(
+                            <div
+                              key={`sep-${dateKey}`}
+                              className="relative my-4"
+                            >
+                              <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-black/10"></div>
+                              <div className="relative mx-auto w-fit rounded-full border border-black/10 bg-white/60 px-3 py-1 text-[11px] text-[#4B4B57] backdrop-blur">
+                                {label}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        parts.push(
+                          <div
+                            key={m.id}
+                            className={`flex items-end gap-1 ${
+                              mine ? "justify-end" : ""
+                            }`}
+                          >
+                            {mine && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-[#717182] text-xs">
+                                  {dt.toLocaleTimeString([], {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </span>
+                                {(() => {
+                                  // 내가 보낸 메시지에 대해, 상대가 아직 읽지 않았다면 점 표시
+                                  const unreadByPeer =
+                                    !peerLastReadAt ||
+                                    m.created_at > peerLastReadAt;
+                                  return unreadByPeer ? (
+                                    <span
+                                      title="상대 미읽음"
+                                      className="inline-block w-2 h-2 rounded-full bg-[#9AA0A6]"
+                                    ></span>
+                                  ) : null;
+                                })()}
+                              </div>
+                            )}
+
+                            {/* 메시지 버블 */}
+                            <div
+                              className={`${
+                                mine
+                                  ? "bg-[#6758FF] text-white"
+                                  : "bg-white/50 text-[#0A0A0A]"
+                              } border border-[#6758FF]/30 rounded-xl px-4 py-2 max-w-[70%]`}
+                            >
+                              {m.content}
+                            </div>
+
+                            {/* 시간 + (상대 메시지일 때만) unread 점표시 */}
+                            {!mine && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-[#717182] text-xs">
+                                  {dt.toLocaleTimeString([], {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </span>
+                                {(() => {
+                                  const unread =
+                                    !myLastReadAt ||
+                                    m.created_at > myLastReadAt;
+                                  return unread ? (
+                                    <span
+                                      title="미읽음"
+                                      className="inline-block w-2 h-2 rounded-full bg-[#6758FF]"
+                                    ></span>
+                                  ) : null;
+                                })()}
+                              </div>
+                            )}
+                          </div>
+                        );
+
+                        return parts;
+                      });
+                    })()}
+                </div>
+              </div>
+
+              {/* 메시지 입력창 */}
+              <div className="p-4">
+                <div className="flex items-center gap-3 border border-[#E5E5E5] rounded-lg p-3">
+                  <input
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                      }
+                    }}
+                    placeholder={
+                      roomId
+                        ? "메시지 입력..."
+                        : peerId
+                        ? "메시지를 보내면 채팅방이 생성됩니다"
+                        : "대화 상대를 먼저 선택하세요"
+                    }
+                    disabled={(!roomId && !peerId) || sending}
+                    className="w-full focus:outline-none disabled:opacity-60 bg-transparent"
+                  />
+                  <ImageIcon
+                    className="text-[#717182] w-6 h-6"
+                    strokeWidth={1}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={sendMessage}
+                    disabled={(!roomId && !peerId) || sending || !draft.trim()}
+                    className="bg-[#6758FF] p-1.5 rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <Send className="text-white w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

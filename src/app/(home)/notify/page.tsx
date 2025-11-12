@@ -33,22 +33,24 @@ const MOCK_NOTIFICATIONS: Notify[] = [
 export default function Page() {
   return (
     <>
-      <div className="mt-6 space-y-6">
-        {/* 상단 */}
-        <div className="flex justify-between items-center">
-          <h3 className="ml-2 text-xl font-semibold">알림 목록</h3>
-          <button className="cursor-pointer leading-none border-b text-[#717182]">
-            알림 삭제
-          </button>
-        </div>
+      <section className="relative max-w-2xl mx-auto">
+        <div className="mt-6 space-y-6">
+          {/* 상단 */}
+          <div className="flex justify-between items-center">
+            <h3 className="ml-2 text-xl font-semibold">알림 목록</h3>
+            <button className="cursor-pointer leading-none border-b text-[#717182]">
+              알림 삭제
+            </button>
+          </div>
 
-        {/* 알림 목록 */}
-        <div className="space-y-4">
-          {MOCK_NOTIFICATIONS.map((n) => (
-            <NotificationItem key={n.id} data={n} />
-          ))}
+          {/* 알림 목록 */}
+          <div className="space-y-4">
+            {MOCK_NOTIFICATIONS.map((n) => (
+              <NotificationItem key={n.id} data={n} />
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
     </>
   );
 }

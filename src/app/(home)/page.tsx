@@ -387,114 +387,118 @@ export default function Page() {
 
   return (
     <>
-      <IntroAnimation />
-      <input
-        type="file"
-        ref={fileInputRef}
-        accept=".html,.htm"
-        onChange={handleFileChange}
-        className="hidden"
-        aria-hidden="true"
-      />
-
-      <div className="mb-5 sticky top-0 z-20">
-        <TopBar
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          sortBy={sortBy}
-          onSortChange={handleSortChange}
-          loadingUpload={loadingUpload}
-          onAddPostClick={triggerFileInput}
+      <section className="relative max-w-2xl mx-auto">
+        <IntroAnimation />
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept=".html,.htm"
+          onChange={handleFileChange}
+          className="hidden"
+          aria-hidden="true"
         />
-      </div>
 
-      {selectedPost ? (
-        <PostDetail
-          post={selectedPost}
-          onBack={handleBack}
-          onLikeToggle={handlePostLikeToggle} // ✅ 추가
-          onBookmarkToggle={handlePostBookmarkToggle} // ✅ 추가
-        />
-      ) : (
-        <>
-          <div className="space-y-8 pb-6">
-            {activeTab === "전체" && (
-              <All
-                posts={posts}
-                news={newsList}
-                isLoading={postsLoading || newsLoading}
-                sortBy={sortBy} // [추가] sortBy prop 전달
-                onNewsLikeToggle={handleNewsLikeToggle}
-                onNewsBookmarkToggle={handleNewsBookmarkToggle}
-                onPostLikeToggle={handlePostLikeToggle}
-                onPostBookmarkToggle={handlePostBookmarkToggle}
-                newsLoadingMore={newsLoadingMore}
-                hasNextPage={hasNextPage}
-                loadMoreTriggerRef={loadMoreTriggerRef}
-              />
-            )}
+        <div className="mb-5 sticky top-0 z-20">
+          <TopBar
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            sortBy={sortBy}
+            onSortChange={handleSortChange}
+            loadingUpload={loadingUpload}
+            onAddPostClick={triggerFileInput}
+          />
+        </div>
 
-            {activeTab === "뉴스" && (
-              <section aria-label="뉴스 피드">
-                <FeedStatus
-                  isLoading={newsLoading}
-                  listLength={newsList.length}
-                  message={loadingUpload ? "업로드 중..." : message}
+        {selectedPost ? (
+          <PostDetail
+            post={selectedPost}
+            onBack={handleBack}
+            onLikeToggle={handlePostLikeToggle} // ✅ 추가
+            onBookmarkToggle={handlePostBookmarkToggle} // ✅ 추가
+          />
+        ) : (
+          <>
+            <div className="space-y-8 pb-6">
+              {activeTab === "전체" && (
+                <All
+                  posts={posts}
+                  news={newsList}
+                  isLoading={postsLoading || newsLoading}
+                  sortBy={sortBy} // [추가] sortBy prop 전달
+                  onNewsLikeToggle={handleNewsLikeToggle}
+                  onNewsBookmarkToggle={handleNewsBookmarkToggle}
+                  onPostLikeToggle={handlePostLikeToggle}
+                  onPostBookmarkToggle={handlePostBookmarkToggle}
+                  newsLoadingMore={newsLoadingMore}
+                  hasNextPage={hasNextPage}
+                  loadMoreTriggerRef={loadMoreTriggerRef}
                 />
-                <NewsFeed
-                  newsList={newsList}
-                  onLikeToggle={handleNewsLikeToggle}
-                  onBookmarkToggle={handleNewsBookmarkToggle}
-                  isLoading={newsLoading}
-                />
-                <div
-                  className="flex justify-center items-center py-6"
-                  role="status"
-                >
-                  {newsLoadingMore && (
-                    <>
-                      <span className="sr-only">추가 로딩 중...</span>
-                      <FadeLoader color="#808080" />
-                    </>
-                  )}
-                  {!newsLoadingMore && !hasNextPage && newsList.length > 0 && (
-                    <p className="text-center text-gray-500">
-                      모든 뉴스를 불러왔습니다.
-                    </p>
-                  )}
-                </div>
-                <div
-                  ref={loadMoreTriggerRef}
-                  style={{ height: "1px" }}
-                  aria-hidden="true"
-                />
-              </section>
-            )}
+              )}
 
-            {activeTab === "프롬프트" && (
-              <Prompt
-                data={postsByType.prompt}
-                onLikeToggle={handlePostLikeToggle}
-                onBookmarkToggle={handlePostBookmarkToggle}
-              />
-            )}
-            {activeTab === "자유" && (
-              <Free
-                data={postsByType.free}
-                onLikeToggle={handlePostLikeToggle}
-                onBookmarkToggle={handlePostBookmarkToggle}
-              />
-            )}
-            {activeTab === "주간" && (
-              <Weekly
-                data={postsByType.weekly}
-                onLikeToggle={handlePostLikeToggle}
-                onBookmarkToggle={handlePostBookmarkToggle}
-              />
-            )}
-          </div>
-        </>
-      )}
+              {activeTab === "뉴스" && (
+                <section aria-label="뉴스 피드">
+                  <FeedStatus
+                    isLoading={newsLoading}
+                    listLength={newsList.length}
+                    message={loadingUpload ? "업로드 중..." : message}
+                  />
+                  <NewsFeed
+                    newsList={newsList}
+                    onLikeToggle={handleNewsLikeToggle}
+                    onBookmarkToggle={handleNewsBookmarkToggle}
+                    isLoading={newsLoading}
+                  />
+                  <div
+                    className="flex justify-center items-center py-6"
+                    role="status"
+                  >
+                    {newsLoadingMore && (
+                      <>
+                        <span className="sr-only">추가 로딩 중...</span>
+                        <FadeLoader color="#808080" />
+                      </>
+                    )}
+                    {!newsLoadingMore &&
+                      !hasNextPage &&
+                      newsList.length > 0 && (
+                        <p className="text-center text-gray-500">
+                          모든 뉴스를 불러왔습니다.
+                        </p>
+                      )}
+                  </div>
+                  <div
+                    ref={loadMoreTriggerRef}
+                    style={{ height: "1px" }}
+                    aria-hidden="true"
+                  />
+                </section>
+              )}
+
+              {activeTab === "프롬프트" && (
+                <Prompt
+                  data={postsByType.prompt}
+                  onLikeToggle={handlePostLikeToggle}
+                  onBookmarkToggle={handlePostBookmarkToggle}
+                />
+              )}
+              {activeTab === "자유" && (
+                <Free
+                  data={postsByType.free}
+                  onLikeToggle={handlePostLikeToggle}
+                  onBookmarkToggle={handlePostBookmarkToggle}
+                />
+              )}
+              {activeTab === "주간" && (
+                <Weekly
+                  data={postsByType.weekly}
+                  onLikeToggle={handlePostLikeToggle}
+                  onBookmarkToggle={handlePostBookmarkToggle}
+                />
+              )}
+            </div>
+          </>
+        )}
+      </section>
     </>
   );
 }
