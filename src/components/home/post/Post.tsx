@@ -49,7 +49,7 @@ export default function Post({
           </div>
         </div>
 
-        <Link href={postUrl} className="block my-5">
+        <Link href={postUrl} className="block my-5 space-y-4">
           {/* 중간: 제목 */}
           <h3 className="text-[18px] font-semibold">{data.title}</h3>
           {/* 썸네일 이미지 (thumbnail) - 존재할 경우에만 렌더링 */}
