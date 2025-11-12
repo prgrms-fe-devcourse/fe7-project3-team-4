@@ -27,20 +27,16 @@ export default function NewsFeedContainer() {
   } = useNewsFeed("published_at"); // 기본 정렬 '최신순'
 
   // 2. 파일 업로드 로직 가져오기
-  const {
-    fileInputRef,
-    loadingUpload,
-    handleFileChange,
-    triggerFileInput,
-  } = useNewsUpload({
-    // 콜백 함수를 연결하여 훅끼리 통신
-    onUploadStart: () => setMessage("업로드 중..."),
-    onUploadSuccess: () => {
-      setMessage("✅ 기사 저장 완료! 목록을 새로고침합니다.");
-      refreshFeed(); // 피드 훅의 새로고침 함수 호출
-    },
-    onUploadError: (errorMessage) => setMessage(errorMessage),
-  });
+  const { fileInputRef, loadingUpload, handleFileChange, triggerFileInput } =
+    useNewsUpload({
+      // 콜백 함수를 연결하여 훅끼리 통신
+      onUploadStart: () => setMessage("업로드 중..."),
+      onUploadSuccess: () => {
+        setMessage("✅ 기사 저장 완료! 목록을 새로고침합니다.");
+        refreshFeed(); // 피드 훅의 새로고침 함수 호출
+      },
+      onUploadError: (errorMessage) => setMessage(errorMessage),
+    });
 
   // 3. UI 렌더링 (상태와 핸들러를 컴포넌트에 주입)
   return (
@@ -56,15 +52,12 @@ export default function NewsFeedContainer() {
       />
 
       {/* 최신 뉴스 캐러셀 - 우측 상단 고정 */}
-      {latestNews.length > 0 && (
-        <LatestNewsCarousel newsList={latestNews} />
-      )}
+      {latestNews.length > 0 && <LatestNewsCarousel />}
 
       {/* 메인 피드 영역 */}
       <div className="flex justify-center max-w-7xl mx-auto">
         <main className="flex-1 p-0">
           <div className="max-w-2xl mx-auto w-full">
-            
             {/* 헤더 컴포넌트 (정렬, 새 게시글 버튼) */}
             <NewsHeader
               sortBy={sortBy}
@@ -76,7 +69,6 @@ export default function NewsFeedContainer() {
             {/* 본문 영역 (피드 목록) */}
             <div className="p-6 pt-4 bg-white rounded-b-xl min-h-[calc(100vh-60px)]">
               <section aria-label="뉴스 피드">
-                
                 <FeedStatus
                   isLoading={isLoading}
                   listLength={newsList.length}
@@ -90,7 +82,10 @@ export default function NewsFeedContainer() {
                   isLoading={isLoading} // 1번: 스켈레톤을 위한 로딩 상태
                 />
 
-                <div className="flex justify-center items-center py-6" role="status">
+                <div
+                  className="flex justify-center items-center py-6"
+                  role="status"
+                >
                   {isLoadingMore && (
                     <>
                       <span className="sr-only">추가 로딩 중...</span>
@@ -104,10 +99,10 @@ export default function NewsFeedContainer() {
                   )}
                 </div>
 
-                <div 
-                  ref={loadMoreTriggerRef} 
-                  style={{ height: "1px" }} 
-                  aria-hidden="true" 
+                <div
+                  ref={loadMoreTriggerRef}
+                  style={{ height: "1px" }}
+                  aria-hidden="true"
                 />
               </section>
             </div>
