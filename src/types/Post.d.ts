@@ -12,6 +12,8 @@ export interface PostType {
   isLiked?: boolean;
   isBookmarked?: boolean;
   model?: string;
+  thumbnail?: string | null;
+  subtitle?: string | null;
   profiles?: {
     display_name: string | null;
     email: string | null;
