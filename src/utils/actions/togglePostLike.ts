@@ -24,7 +24,7 @@ export async function togglePostLike(postId: string) {
       .eq("user_id", user.id)
       .eq("post_id", postId);
   } else {
-    await supabase.rpc("increment_like_count", { post_id: postId });
+    await supabase.rpc("increment_like_count", { p_comment_id: postId });
     await supabase
       .from("user_post_likes")
       .insert({ user_id: user.id, post_id: postId });

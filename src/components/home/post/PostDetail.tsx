@@ -1,9 +1,4 @@
-"use client";
-
-import {
-  ArrowLeft,
-  ArrowUpDown,
-} from "lucide-react";
+import { ArrowLeft, ArrowUpDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import Comments from "./Comments";
 import RichTextRenderer from "@/components/common/RichTextRenderer";
@@ -12,7 +7,6 @@ import Image from "next/image";
 import CommentForm from "./CommentForm";
 import PostActions from "./PostAction"; // ✅ PostActions 컴포넌트 import
 import { createClient } from "@/utils/supabase/client";
-
 export type PostComment = {
   id: string;
   content: string;
@@ -26,37 +20,32 @@ export type PostComment = {
   avatar_url?: string;
   user_id: string;
 };
-
 interface PostDetailProps {
   post: PostType;
   onBack: () => void;
   onLikeToggle?: (id: string) => void;
   onBookmarkToggle?: (id: string, type: "post" | "news") => void;
 }
-
 export default function PostDetail({
   post,
   onLikeToggle,
   onBookmarkToggle,
   onBack,
-  onLikeToggle,
-  onBookmarkToggle,
 }: PostDetailProps) {
   const [comments, setComments] = useState<PostComment[]>([]);
   const [sortOrder, setSortOrder] = useState<"latest" | "popular">("latest");
   const supabase = createClient();
-
   // 작성자 정보
   const authorName = post.profiles?.display_name || "익명";
   const authorEmail = post.profiles?.email || "";
   const authorAvatar = post.profiles?.avatar_url || null;
   const displayDate = (post.created_at || "").slice(0, 10);
-
   // 댓글 조회 함수
   const fetchComments = async () => {
     const { data, error } = await supabase
       .from("comments")
-      .select(`
+      .select(
+        `
         id,
         content,
         created_at,
@@ -71,18 +60,17 @@ export default function PostDetail({
           avatar_url,
           bio
         )
-      `)
+      `
+      )
       .eq("target_id", post.id)
       .is("parent_id", null)
       .order(sortOrder === "latest" ? "created_at" : "like_count", {
         ascending: false,
       });
-
     if (error) {
       console.error("Error fetching comments:", error);
       return;
     }
-
     if (data) {
       const formattedComments: PostComment[] = data.map((comment: any) => ({
         id: comment.id,
@@ -101,12 +89,10 @@ export default function PostDetail({
       setComments(formattedComments);
     }
   };
-
   // 초기 로드 및 정렬 변경 시 댓글 조회
   useEffect(() => {
     fetchComments();
   }, [post.id, sortOrder]);
-
   // ✅ Realtime: comments 구독
   useEffect(() => {
     const channel = supabase
@@ -124,12 +110,10 @@ export default function PostDetail({
         }
       )
       .subscribe();
-
     return () => {
       supabase.removeChannel(channel);
     };
   }, [post.id]);
-
   // ✅ Realtime: posts.comment_count 구독
   useEffect(() => {
     const channel = supabase
@@ -144,23 +128,27 @@ export default function PostDetail({
         },
         (payload) => {
           // comment_count 변경사항 반영
-          const updatedPost = payload.new as { comment_count: number; like_count: number; };
+          const updatedPost = payload.new as {
+            comment_count: number;
+            like_count: number;
+          };
           // post 객체는 props이므로 불변, 필요시 부모에게 알림
-          console.log("실시간 업데이트:", updatedPost.comment_count, updatedPost.like_count);
+          console.log(
+            "실시간 업데이트:",
+            updatedPost.comment_count,
+            updatedPost.like_count
+          );
         }
       )
       .subscribe();
-
     return () => {
       supabase.removeChannel(channel);
     };
   }, [post.id]);
-
   // ✅ 댓글 작성 후 콜백
   const handleCommentAdded = () => {
     fetchComments();
   };
-
   return (
     <div className="space-y-6 pb-6">
       <button
@@ -170,7 +158,6 @@ export default function PostDetail({
         <ArrowLeft className="arrow-wiggle" />
         뒤로
       </button>
-
       <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
         {/* 게시글 정보 */}
         <div className="pb-7">
@@ -192,7 +179,6 @@ export default function PostDetail({
                   </span>
                 )}
               </div>
-
               <div className="space-y-1 leading-none">
                 <p>{authorName}</p>
                 <p className="text-[#717182] text-sm">
@@ -201,7 +187,6 @@ export default function PostDetail({
                 </p>
               </div>
             </div>
-
             {post.model && (
               <div
                 className={`h-[22px] text-xs font-semibold text-white px-3 py-1 ${
@@ -212,7 +197,6 @@ export default function PostDetail({
               </div>
             )}
           </div>
-
           {/* 게시글 내용 */}
           <div className="my-5">
             <div className="mb-6 space-y-4">
@@ -222,7 +206,6 @@ export default function PostDetail({
               </div>
             </div>
           </div>
-
           {/* 태그 */}
           {post.hashtags && post.hashtags.length > 0 && (
             <div className="flex flex-row flex-wrap gap-2 mt-5 text-sm text-[#248AFF]">
@@ -232,9 +215,8 @@ export default function PostDetail({
             </div>
           )}
         </div>
-
         {/* ✅ PostActions 컴포넌트 사용 - 좋아요/북마크 핸들러 연결 */}
-         <PostActions
+        <PostActions
           postId={post.id}
           likeCount={post.like_count}
           commentCount={comments.length} // ✅ 실제 댓글 수 사용
@@ -243,7 +225,6 @@ export default function PostDetail({
           onLikeToggle={onLikeToggle}
           onBookmarkToggle={onBookmarkToggle}
         />
-
         {/* 작성자 소개 */}
         <div>
           <p className="ml-2 mb-2 text-ms font-medium">작성자 소개</p>
@@ -264,7 +245,6 @@ export default function PostDetail({
                   </span>
                 )}
               </div>
-
               <div className="flex-1 space-y-1 leading-none">
                 <p>
                   {authorName}
@@ -282,10 +262,8 @@ export default function PostDetail({
             </button>
           </div>
         </div>
-
         {/* ✅ 댓글 입력 창 - onCommentAdded 콜백 전달 */}
         <CommentForm postId={post.id} onCommentAdded={handleCommentAdded} />
-
         {/* 댓글 영역 */}
         <div className="space-y-5">
           <div className="p-1 flex items-center gap-3 py-1 px-4 bg-white rounded-lg border border-[#F2F2F4]">
@@ -309,7 +287,6 @@ export default function PostDetail({
               </button>
             </div>
           </div>
-
           <div className="px-9">
             {comments.length === 0 ? (
               <p className="text-center text-gray-500 py-8">
