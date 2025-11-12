@@ -9,6 +9,7 @@ import Image from "next/image";
 import CommentForm from "./CommentForm";
 import PostActions from "./PostAction";
 import { createClient } from "@/utils/supabase/client";
+import PromptDetail from "./PromptDetail";
 
 type RawComment = {
   id: string;
@@ -42,7 +43,6 @@ export default function PostDetail({
   const [comments, setComments] = useState<PostComment[]>([]);
   const [sortOrder, setSortOrder] = useState<"latest" | "popular">("latest");
   const supabase = createClient();
-
   const authorName = post.profiles?.display_name || "익명";
   const authorEmail = post.profiles?.email || "";
   const authorAvatar = post.profiles?.avatar_url || null;
@@ -219,8 +219,8 @@ export default function PostDetail({
             )}
           </div>
           {/* 게시글 내용 */}
-          <div className="my-5">
-            <div className="mb-6 space-y-4">
+          <div className="mt-5">
+            <div className="space-y-4">
               <p className="text-[18px] font-medium">{post.title}</p>
               <div className="mt-4">
                 <RichTextRenderer content={post.content} showImage={true} />
@@ -247,6 +247,14 @@ export default function PostDetail({
           onLikeToggle={onLikeToggle}
           onBookmarkToggle={onBookmarkToggle}
         />
+      </div>
+
+      {/* 프롬프트 세부 */}
+      <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
+        <PromptDetail />
+      </div>
+
+      <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
         {/* 작성자 소개 */}
         <div>
           <p className="ml-2 mb-2 text-ms font-medium">작성자 소개</p>
