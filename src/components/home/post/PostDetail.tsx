@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft, ArrowUpDown } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react"; // ⭐️ useRef 추가
 import Comments from "./Comments";
 import RichTextRenderer from "@/components/common/RichTextRenderer";
 import { PostType } from "@/types/Post";
@@ -10,11 +10,10 @@ import CommentForm from "./CommentForm";
 import PostActions from "./PostAction";
 import { createClient } from "@/utils/supabase/client";
 import PromptDetail from "./PromptDetail";
-import {
-  extractImageSrcArr,
-  pickNthParagraphDoc,
-} from "@/utils/extractTextFromJson";
-import Link from "next/link"; // ⭐️ 추가
+import Link from "next/link";
+import { RealtimeChannel } from "@supabase/supabase-js";
+
+const FOLLOWS_CHANNEL = "follows-update-channel";
 
 type RawComment = {
   id: string;
@@ -54,11 +53,16 @@ export default function PostDetail({
   const [isFollowLoading, setIsFollowLoading] = useState(false);
 
   const supabase = createClient();
+
+  // ⭐️ broadcast 채널을 useRef로 관리
+  const broadcastChannelRef = useRef<RealtimeChannel | null>(null);
+
   const authorName = post.profiles?.display_name || "익명";
   const authorEmail = post.profiles?.email || "";
   const authorAvatar = post.profiles?.avatar_url || null;
-  // const displayDate = (post.created_at || "").slice(0, 10);
+  const authorUserId = post.user_id;
 
+  // 현재 사용자 정보 가져오기
   useEffect(() => {
     const getCurrentUser = async () => {
       const {
@@ -69,6 +73,7 @@ export default function PostDetail({
     getCurrentUser();
   }, [supabase]);
 
+  // 조회수 증가
   useEffect(() => {
     const incrementViewCount = async () => {
       const { error } = await supabase.rpc("increment_view_count", {
@@ -83,67 +88,29 @@ export default function PostDetail({
     incrementViewCount();
   }, [post.id, supabase]);
 
+  // 팔로우 상태 확인
   useEffect(() => {
     const checkFollowStatus = async () => {
-      if (!currentUserId || !post.user_id) return;
+      if (!currentUserId || !authorUserId) return;
 
       const { data, error } = await supabase
         .from("follows")
         .select("id")
         .eq("follower_id", currentUserId)
-        .eq("following_id", post.user_id)
+        .eq("following_id", authorUserId)
         .single();
 
       if (!error && data) {
         setIsFollowing(true);
+      } else {
+        setIsFollowing(false);
       }
     };
 
     checkFollowStatus();
-  }, [currentUserId, post.user_id, supabase]);
+  }, [currentUserId, authorUserId, supabase]);
 
-  const handleFollowToggle = async () => {
-    if (!currentUserId || !post.user_id) {
-      alert("로그인이 필요합니다.");
-      return;
-    }
-
-    if (currentUserId === post.user_id) {
-      alert("자기 자신을 팔로우할 수 없습니다.");
-      return;
-    }
-
-    setIsFollowLoading(true);
-
-    try {
-      if (isFollowing) {
-        const { error } = await supabase
-          .from("follows")
-          .delete()
-          .eq("follower_id", currentUserId)
-          .eq("following_id", post.user_id);
-
-        if (error) throw error;
-        setIsFollowing(false);
-      } else {
-        const { error } = await supabase
-          .from('follows')
-          .insert({
-            follower_id: currentUserId,
-            following_id: post.user_id
-          });
-
-        if (error) throw error;
-        setIsFollowing(true);
-      }
-    } catch (error) {
-      console.error("Error toggling follow:", error);
-      alert("팔로우 처리 중 오류가 발생했습니다.");
-    } finally {
-      setIsFollowLoading(false);
-    }
-  };
-
+  // 댓글 목록 가져오기
   const fetchComments = useCallback(async () => {
     const { data, error } = await supabase
       .from("comments")
@@ -209,8 +176,10 @@ export default function PostDetail({
     fetchComments();
   }, [fetchComments]);
 
+  // ⭐️ Realtime 구독 (수정됨)
   useEffect(() => {
-    const channel = supabase
+    // 댓글 변경 감지
+    const commentsChannel = supabase
       .channel(`comments:${post.id}`)
       .on(
         "postgres_changes",
@@ -225,13 +194,9 @@ export default function PostDetail({
         }
       )
       .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [post.id, supabase, fetchComments]);
 
-  useEffect(() => {
-    const channel = supabase
+    // 게시글 업데이트 감지
+    const postChannel = supabase
       .channel(`post:${post.id}`)
       .on(
         "postgres_changes",
@@ -247,17 +212,114 @@ export default function PostDetail({
             like_count?: number;
           };
           console.log(
-            "실시간 업데이트:",
+            "[PostDetail] 게시글 실시간 업데이트:",
             updatedPost.comment_count,
             updatedPost.like_count
           );
         }
       )
       .subscribe();
+
+    // ⭐️ 팔로우 Broadcast 구독 (항상 구독, 메시지는 필터링)
+    const followBroadcastChannel = supabase.channel(FOLLOWS_CHANNEL, {
+      config: { broadcast: { ack: true } },
+    });
+
+    // ✅ 해결: 채널 생성 직후 ref에 즉시 할당합니다.
+    broadcastChannelRef.current = followBroadcastChannel;
+    console.log(
+      "[PostDetail] 🔵 Channel instance created and assigned to ref."
+    );
+
+    followBroadcastChannel
+      .on("broadcast", { event: "follow-update" }, (payload) => {
+        console.log("[PostDetail] 📥 Broadcast received:", payload);
+        const { targetUserId, isFollowing: newIsFollowing } =
+          payload.payload as {
+            targetUserId: string;
+            isFollowing: boolean;
+          };
+
+        if (targetUserId === authorUserId) {
+          setIsFollowing(newIsFollowing);
+        }
+      })
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          console.log("[PostDetail] ✅ Subscribed to Broadcast");
+          // ❗️ Ref 할당 로직이 여기서 제거되었습니다.
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          console.error(
+            `[PostDetail] ❌ Broadcast subscription failed: ${status}`
+          );
+        }
+      });
+
+    // Cleanup
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(commentsChannel);
+      supabase.removeChannel(postChannel);
+      supabase.removeChannel(followBroadcastChannel);
+      broadcastChannelRef.current = null;
     };
-  }, [post.id, supabase]);
+  }, [post.id, supabase, fetchComments, authorUserId]);
+
+  // ⭐️ 팔로우 토글 핸들러 (수정됨)
+  const handleFollowToggle = async () => {
+    if (!currentUserId || !authorUserId) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+    if (currentUserId === authorUserId) {
+      alert("자기 자신을 팔로우할 수 없습니다.");
+      return;
+    }
+
+    setIsFollowLoading(true);
+    const newIsFollowing = !isFollowing;
+
+    // 1. 낙관적 UI 업데이트
+    setIsFollowing(newIsFollowing);
+
+    try {
+      // 2. DB 작업
+      if (newIsFollowing) {
+        const { error } = await supabase
+          .from("follows")
+          .insert({ follower_id: currentUserId, following_id: authorUserId });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("follows")
+          .delete()
+          .eq("follower_id", currentUserId)
+          .eq("following_id", authorUserId);
+        if (error) throw error;
+      }
+
+      // 3. ⭐️ ref에 저장된 채널로 broadcast 발송
+      if (broadcastChannelRef.current) {
+        await broadcastChannelRef.current.send({
+          type: "broadcast",
+          event: "follow-update",
+          payload: { targetUserId: authorUserId, isFollowing: newIsFollowing },
+        });
+        console.log("[PostDetail] 📤 Broadcast sent:", {
+          targetUserId: authorUserId,
+          isFollowing: newIsFollowing,
+        });
+      } else {
+        console.warn("[PostDetail] ⚠️ Broadcast channel not ready");
+      }
+    } catch (error) {
+      console.error("Error toggling follow:", error);
+      alert("팔로우 처리 중 오류가 발생했습니다.");
+      // 4. 롤백
+      setIsFollowing(!newIsFollowing);
+    } finally {
+      setIsFollowLoading(false);
+    }
+  };
 
   const handleCommentAdded = () => {
     fetchComments();
@@ -272,13 +334,12 @@ export default function PostDetail({
         <ArrowLeft className="arrow-wiggle" />
         뒤로
       </button>
+
       <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
-        {/* 작성자 정보 */}
-        <div>
+        <div className="pb-7">
           <div className="flex justify-between">
             <div className="flex gap-3 items-center">
-              {/* ⭐️ Link로 감싸서 클릭 시 프로필 이동 */}
-              <Link 
+              <Link
                 href={`/profile?userId=${post.user_id}`}
                 className="relative w-11 h-11 bg-gray-300 rounded-full overflow-hidden hover:opacity-80 transition-opacity"
               >
@@ -296,8 +357,7 @@ export default function PostDetail({
                   </span>
                 )}
               </Link>
-              {/* ⭐️ 작성자 정보 텍스트도 Link로 감싸기 */}
-              <Link 
+              <Link
                 href={`/profile?userId=${post.user_id}`}
                 className="flex-1 space-y-1 leading-none hover:underline"
               >
@@ -322,7 +382,7 @@ export default function PostDetail({
               </div>
             )}
           </div>
-          {/* 게시글 내용 */}
+
           <div className="mt-5">
             <div className="space-y-4">
               <p className="text-[18px] font-medium">{post.title}</p>
@@ -345,7 +405,7 @@ export default function PostDetail({
               />
             </div>
           </div>
-          {/* 태그 */}
+
           {post.hashtags && post.hashtags.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-5 text-sm text-[#248AFF]">
               {post.hashtags.map((tag, i) => (
@@ -355,7 +415,6 @@ export default function PostDetail({
           )}
         </div>
 
-        {/* 좋아요/북마크 */}
         <PostActions
           postId={post.id}
           likeCount={post.like_count}
@@ -367,19 +426,16 @@ export default function PostDetail({
         />
       </div>
 
-      {/* 프롬프트 세부 */}
       <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
         <PromptDetail post={post} />
       </div>
 
       <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
-        {/* 작성자 소개 */}
         <div>
           <p className="ml-2 mb-2 text-ms font-medium">작성자 소개</p>
           <div className="flex justify-between items-start gap-3 p-3 bg-white rounded-lg">
             <div className="flex-1 flex gap-3">
-              {/* ⭐️ 작성자 프로필 이미지 Link 추가 */}
-              <Link 
+              <Link
                 href={`/profile?userId=${post.user_id}`}
                 className="relative w-11 h-11 bg-gray-300 rounded-full overflow-hidden hover:opacity-80 transition-opacity"
               >
@@ -429,10 +485,8 @@ export default function PostDetail({
           </div>
         </div>
 
-        {/* 댓글 작성 */}
         <CommentForm postId={post.id} onCommentAdded={handleCommentAdded} />
 
-        {/* 댓글 목록 */}
         <div className="space-y-5">
           <div className="p-1 flex items-center gap-3 py-1 px-4 bg-white rounded-lg border border-[#F2F2F4]">
             <ArrowUpDown size={12} />

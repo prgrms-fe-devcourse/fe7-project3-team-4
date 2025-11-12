@@ -398,59 +398,59 @@ export type Database = {
       };
       posts: {
         Row: {
-          comment_count: number | null;
-          content: Json | null;
-          created_at: string | null;
-          hashtags: Database["public"]["Enums"]["hashtag_type"][] | null;
-          id: string;
-          is_prompt_like: boolean | null;
-          like_count: number | null;
-          model: string | null;
-          post_type: string | null;
-          result_mode: string | null;
-          subtitle: string | null;
-          thumbnail: string | null;
-          title: string | null;
-          updated_at: string | null;
-          user_id: string | null;
-          view_count: number | null;
-        };
+          comment_count: number | null
+          content: Json | null
+          created_at: string | null
+          hashtags: Database["public"]["Enums"]["hashtag_type"][] | null
+          id: string
+          is_prompt_like: boolean | null
+          like_count: number | null
+          model: string | null
+          post_type: string | null
+          result_mode: string | null
+          subtitle: string | null
+          thumbnail: string | null
+          title: string | null
+          updated_at: string | null
+          user_id: string | null
+          view_count: number | null
+        }
         Insert: {
-          comment_count?: number | null;
-          content?: Json | null;
-          created_at?: string | null;
-          hashtags?: Database["public"]["Enums"]["hashtag_type"][] | null;
-          id?: string;
-          is_prompt_like?: boolean | null;
-          like_count?: number | null;
-          model?: string | null;
-          post_type?: string | null;
-          result_mode?: string | null;
-          subtitle?: string | null;
-          thumbnail?: string | null;
-          title?: string | null;
-          updated_at?: string | null;
-          user_id?: string | null;
-          view_count?: number | null;
-        };
+          comment_count?: number | null
+          content?: Json | null
+          created_at?: string | null
+          hashtags?: Database["public"]["Enums"]["hashtag_type"][] | null
+          id?: string
+          is_prompt_like?: boolean | null
+          like_count?: number | null
+          model?: string | null
+          post_type?: string | null
+          result_mode?: string | null
+          subtitle?: string | null
+          thumbnail?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          view_count?: number | null
+        }
         Update: {
-          comment_count?: number | null;
-          content?: Json | null;
-          created_at?: string | null;
-          hashtags?: Database["public"]["Enums"]["hashtag_type"][] | null;
-          id?: string;
-          is_prompt_like?: boolean | null;
-          like_count?: number | null;
-          model?: string | null;
-          post_type?: string | null;
-          result_mode?: string | null;
-          subtitle?: string | null;
-          thumbnail?: string | null;
-          title?: string | null;
-          updated_at?: string | null;
-          user_id?: string | null;
-          view_count?: number | null;
-        };
+          comment_count?: number | null
+          content?: Json | null
+          created_at?: string | null
+          hashtags?: Database["public"]["Enums"]["hashtag_type"][] | null
+          id?: string
+          is_prompt_like?: boolean | null
+          like_count?: number | null
+          model?: string | null
+          post_type?: string | null
+          result_mode?: string | null
+          subtitle?: string | null
+          thumbnail?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          view_count?: number | null
+        }
         Relationships: [
           {
             foreignKeyName: "posts_user_id_fkey";
