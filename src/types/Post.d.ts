@@ -16,10 +16,13 @@ export interface PostType {
     display_name: string | null;
     email: string | null;
     avatar_url?: string | null;
+    bio?: string | null;
   };
 }
+
 // WeeklyModel 타입 정의
 export type WeeklyModel = "텍스트" | "이미지";
+
 // WeeklyPostType 예시 (PostType 확장 + 추가 필드)
 export interface WeeklyPostType extends PostType {
   model?: WeeklyModel;
@@ -29,5 +32,6 @@ export interface WeeklyPostType extends PostType {
     display_name: string | null;
     email: string | null;
     avatar_url?: string | null;
+    bio?: string | null;
   };
 }

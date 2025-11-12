@@ -1,6 +1,6 @@
 import Link from "next/link";
 import PostActions from "./PostAction";
-import { TextPreview, ImagePreview } from '@/components/common/FeedRenderer';
+import { TextPreview, ImagePreview } from "@/components/common/FeedRenderer";
 import { PostType } from "@/types/Post";
 import Image from "next/image";
 
@@ -52,9 +52,7 @@ export default function Post({
 
         {/* 중간: 제목, 텍스트 미리보기 - Link로 감싸기 */}
         <Link href={postUrl} className="block my-5">
-          <h3 className="text-[18px] font-semibold hover:underline">
-            {data.title}
-          </h3>
+          <h3 className="text-[18px] font-semibold">{data.title}</h3>
           {/* 텍스트 미리보기 (이미지 제외, 3줄 제한) */}
           <div className="line-clamp-3 text-gray-700">
             <TextPreview content={data.content} />
@@ -62,11 +60,11 @@ export default function Post({
         </Link>
 
         {/* 이미지 렌더링 - 별도 Link로 감싸기 (imageOnly 내부에서) */}
-      <ImagePreview 
-        content={data.content}
-        postUrl={postUrl}
-        title={data.title}
-      />
+        <ImagePreview
+          content={data.content}
+          postUrl={postUrl}
+          title={data.title}
+        />
 
         {/* 해시태그 */}
         {data.hashtags && data.hashtags.length > 0 && (
