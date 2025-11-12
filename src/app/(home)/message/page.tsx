@@ -639,7 +639,7 @@ export default function Page() {
     <>
       <div className="w-full h-full lg:p-18">
         <div className="lg:max-w-250 mx-auto">
-          <div className="bg-white/40 rounded-xl shadow-xl h-200 lg:w-250 flex flex-row">
+          <div className="bg-white/40 rounded-xl shadow-xl h-200 lg:min-w-50 flex flex-row">
             {/* 왼쪽 */}
             <div
               className={`flex-none h-full w-full lg:w-auto
