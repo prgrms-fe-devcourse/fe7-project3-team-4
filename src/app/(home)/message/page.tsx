@@ -78,6 +78,57 @@ export default function Page() {
     });
   };
 
+  // 자정 리렌더용 상태
+  const [nowTs, setNowTs] = useState<number>(() => Date.now());
+
+  // 다음 자정까지 대기했다가 nowTs 갱신 → 리렌더 유도
+  useEffect(() => {
+    const now = new Date();
+    const nextMidnight = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 1, // 내일 00:00
+      0,
+      0,
+      0,
+      0
+    );
+    const ms = nextMidnight.getTime() - now.getTime();
+
+    const t = setTimeout(() => {
+      setNowTs(Date.now()); // 상태만 바꿔도 리렌더됨
+    }, ms);
+
+    return () => clearTimeout(t);
+  }, [nowTs]);
+
+  // 한국시간 기준으로 만들기
+  const ymdLocal = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}년 ${m}월 ${day}일`;
+  };
+
+  // 날짜 라벨: 오늘/어제는 접두어 + (YYYY-MM-DD, 요일), 그 외는 YYYY-MM-DD (요일)
+  const formatDateLabel = (d: Date) => {
+    const today = new Date();
+    const yesterday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate() - 1
+    );
+
+    const kToday = ymdLocal(today);
+    const kYesterday = ymdLocal(yesterday);
+    const kTarget = ymdLocal(d);
+    const weekday = d.toLocaleDateString("ko-KR", { weekday: "short" }); // 예: (목)
+
+    if (kTarget === kToday) return `${kTarget} ${weekday}요일`;
+    if (kTarget === kYesterday) return `${kTarget} ${weekday}요일`;
+    return `${kTarget} (${weekday})`;
+  };
+
   // URL의 peerId를 state로 동기화 (roomId가 없을 때만)
   useEffect(() => {
     if (roomId) return; // room 모드가 우선
@@ -931,25 +982,20 @@ export default function Page() {
                     </div>
                   )}
                   <div className="space-y-2">
-                    {roomId &&
+                    {(roomId || peerId) &&
                       (() => {
                         let lastDateKey = "";
-                        return msgs.flatMap((m) => {
+                        const blocks = msgs.flatMap((m) => {
                           const mine = m.sender_id === me;
                           const dt = new Date(m.created_at);
-                          const dateKey = dt.toISOString().slice(0, 10); // YYYY-MM-DD
+                          const dateKey = ymdLocal(dt); // YYYY-MM-DD
                           const needSep = dateKey !== lastDateKey;
                           lastDateKey = dateKey;
 
                           const parts: JSX.Element[] = [];
 
                           if (needSep) {
-                            const label = dt.toLocaleDateString("ko-KR", {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                              weekday: "short",
-                            });
+                            const label = formatDateLabel(dt);
                             parts.push(
                               <div
                                 key={`sep-${dateKey}`}
@@ -1033,6 +1079,27 @@ export default function Page() {
 
                           return parts;
                         });
+
+                        // 자정을 지나 ‘오늘’이 되었는데 아직 오늘 메시지가 하나도 없으면, 맨 아래에 "오늘" 구분선 가상 추가
+                        const todayKey = ymdLocal(new Date(nowTs));
+                        const hasToday = msgs.some(
+                          (m) => ymdLocal(new Date(m.created_at)) === todayKey
+                        );
+                        if (!hasToday) {
+                          blocks.push(
+                            <div
+                              key={`sep-${todayKey}`}
+                              className="relative my-4"
+                            >
+                              <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-black/10"></div>
+                              <div className="relative mx-auto w-fit rounded-full border border-black/10 bg-white/60 px-3 py-1 text-xs text-[#4B4B57] backdrop-blur">
+                                {formatDateLabel(new Date(nowTs))}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        return blocks;
                       })()}
                   </div>
                   {/* 스크롤 바닥 센티넬 */}
