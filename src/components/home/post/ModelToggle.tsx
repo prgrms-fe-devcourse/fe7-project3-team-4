@@ -1,7 +1,6 @@
 "use client";
 
-type PromptModel = "GPT" | "Gemini";
-type WeeklyModel = "텍스트" | "이미지";
+import { PromptModel, WeeklyModel } from "@/types/Post";
 
 type ModelToggleProps =
   | {
@@ -54,10 +53,10 @@ export default function ModelToggle(props: ModelToggleProps) {
         <>
           <button
             type="button"
-            onClick={() => props.onChange("텍스트")}
+            onClick={() => props.onChange("Text")}
             className={
               baseBtn +
-              (props.active === "텍스트"
+              (props.active === "Text"
                 ? " bg-[#6758FF] text-white"
                 : " bg-transparent text-[#717182] hover:bg-[#ECE9FF]")
             }
@@ -66,10 +65,10 @@ export default function ModelToggle(props: ModelToggleProps) {
           </button>
           <button
             type="button"
-            onClick={() => props.onChange("이미지")}
+            onClick={() => props.onChange("Image")}
             className={
               baseBtn +
-              (props.active === "이미지"
+              (props.active === "Image"
                 ? " bg-[#FF569B] text-white"
                 : " bg-transparent text-[#717182] hover:bg-[#FFE5F0]")
             }

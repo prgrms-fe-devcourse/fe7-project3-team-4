@@ -25,7 +25,7 @@ export interface PostType {
 }
 
 // WeeklyModel 타입 정의
-export type WeeklyModel = "텍스트" | "이미지";
+export type WeeklyModel = "Text" | "Image";
 
 // WeeklyPostType 예시 (PostType 확장 + 추가 필드)
 export interface WeeklyPostType extends PostType {
@@ -39,3 +39,5 @@ export interface WeeklyPostType extends PostType {
     bio?: string | null;
   };
 }
+
+type PromptModel = "GPT" | "Gemini";
