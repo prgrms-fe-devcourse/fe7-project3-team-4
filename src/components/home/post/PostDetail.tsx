@@ -3,7 +3,6 @@
 import { ArrowLeft, ArrowUpDown, Edit, Trash } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import Comments from "./Comments";
-import RichTextRenderer from "@/components/common/RichTextRenderer";
 import { PostType } from "@/types/Post";
 import Image from "next/image";
 import CommentForm from "./CommentForm";
@@ -11,13 +10,10 @@ import PostActions from "./PostAction";
 import { createClient } from "@/utils/supabase/client";
 import PromptDetail from "./PromptDetail";
 import Link from "next/link";
-import {
-  extractImageSrcArr,
-  pickNthParagraphDoc,
-} from "@/utils/extractTextFromJson";
+import { extractImageSrcArr } from "@/utils/extractTextFromJson";
 import { useFollow } from "@/context/FollowContext";
-import { useRouter } from "next/navigation";
 import { getTranslatedTag } from "@/utils/tagTranslator"; // [✅ 추가] 임포트
+import { useRouter } from "next/navigation";
 
 type RawComment = {
   id: string;
@@ -299,11 +295,20 @@ export default function PostDetail({
         {post.user_id === currentUserId && (
           <div className="flex gap-4 px-2 items-center">
             {/* 수정 */}
-            <button className="leading-none cursor-pointer flex items-center gap-2 text-[#555555]">
-              <Edit />
+            <button
+              type="button"
+              onClick={() =>
+                router.push(
+                  `/write?mode=edit&postId=${post.id}&type=${post.post_type}`
+                )
+              }
+              className="w-6 h-6 leading-none cursor-pointer flex justify-center items-center gap-2 text-white bg-[#6758FF] rounded-md"
+            >
+              <Edit size={18} />
             </button>
             {/* 삭제 */}
             <button
+              type="button"
               onClick={handleDeletePost}
               disabled={isDeleting}
               className="leading-none cursor-pointer flex items-center gap-2 text-[#ff4646]"
@@ -373,10 +378,7 @@ export default function PostDetail({
                   />
                 </div>
               )}
-              <RichTextRenderer
-                content={pickNthParagraphDoc(post.content, 0)}
-                showImage={false}
-              />
+              <p>{post.subtitle}</p>
             </div>
           </div>
 

@@ -4,11 +4,31 @@ import { X } from "lucide-react";
 import Image from "next/image";
 import { useState, ChangeEvent, useId, useRef } from "react";
 
-export function PromptResultSection() {
+type PromptResultSectionProps = {
+  initialModel: ModelType;
+  initialResultMode: ResultMode;
+  initialPromptInput?: string;
+  initialPromptResult?: string;
+  initialResultLink?: string;
+};
+
+export function PromptResultSection({
+  initialModel,
+  initialResultMode,
+  initialPromptInput,
+  initialPromptResult,
+  initialResultLink,
+}: PromptResultSectionProps) {
   const inputId = useId();
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [resultMode, setResultMode] = useState<ResultMode>("Text");
-  const [model, setModel] = useState<ModelType>("GPT");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    initialResultMode === "Image" ? initialPromptResult ?? null : null
+  );
+  const [resultMode, setResultMode] = useState<ResultMode>(
+    initialResultMode ? initialResultMode : "Text"
+  );
+  const [model, setModel] = useState<ModelType>(
+    initialModel ? initialModel : "GPT"
+  );
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleImgFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -91,6 +111,7 @@ export function PromptResultSection() {
         <textarea
           name="promptInput"
           placeholder="입력한 프롬프트"
+          defaultValue={initialPromptInput ?? ""}
           className="border border-[#D9D9D9] rounded-lg h-40 p-4 outline-none mb-8"
         />
 
@@ -99,6 +120,7 @@ export function PromptResultSection() {
           <textarea
             name="promptResult"
             placeholder="프롬프트의 결과"
+            defaultValue={initialPromptResult ?? ""}
             className="bg-[#D9D9D9]/20 rounded-lg h-40 p-4 outline-none border border-[#D9D9D9] mb-8"
           />
         ) : (
@@ -157,6 +179,7 @@ export function PromptResultSection() {
           placeholder="결과 링크(https:// …)"
           autoComplete="off"
           className="border border-[#D9D9D9] rounded-lg p-4 outline-none"
+          defaultValue={initialResultLink ?? ""}
         />
       </div>
     </>
