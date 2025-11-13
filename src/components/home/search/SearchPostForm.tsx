@@ -5,9 +5,13 @@ import Link from "next/link";
 import { Tables } from "@/utils/supabase/supabase";
 import PostWrapper from "../post/PostWrapper";
 
-// [수정] Supabase 쿼리 결과의 타입을 정의합니다. (Join 포함)
+type ProfileData = Pick<
+  Tables<"profiles">,
+  "email" | "display_name" | "avatar_url" | "bio" // [수정] 'bio' 추가
+>;
+
 type PostQueryData = Tables<"posts"> & {
-  profiles: Pick<Tables<"profiles">, "email"> | null;
+  profiles: ProfileData | null; // [수정] email:string 객체가 아닌 ProfileData 타입으로
   user_post_bookmarks: Pick<Tables<"user_post_bookmarks">, "user_id">[];
   user_post_likes: Pick<Tables<"user_post_likes">, "user_id">[];
 };
@@ -39,6 +43,7 @@ type TransformedPostData = {
   user_id: string;
   view_count: number;
   email: string;
+  profiles: ProfileData | undefined;
   image?: string;
   hashtags: string[];
   isBookmarked: boolean;
@@ -82,7 +87,7 @@ export default async function SearchPostForm({
   let query = supabase.from("posts").select(
     `
     *,
-    profiles!posts_user_id_fkey ( email ),
+    profiles!posts_user_id_fkey ( email, display_name, avatar_url, bio ),
     user_post_bookmarks!left ( user_id ),
     user_post_likes!left ( user_id )
   `
@@ -130,9 +135,9 @@ export default async function SearchPostForm({
             contentJson?.prompt_result_image_url ||
             undefined,
           email: post.profiles?.email ?? "이메일 없음",
+          profiles: post.profiles ?? undefined,
           isBookmarked: post.user_post_bookmarks.length > 0,
           isLiked: post.user_post_likes.length > 0,
-
           hashtags: (post.hashtags as string[]) ?? [],
           post_type: post.post_type as "prompt" | "free" | "weekly",
           like_count: post.like_count ?? 0,
