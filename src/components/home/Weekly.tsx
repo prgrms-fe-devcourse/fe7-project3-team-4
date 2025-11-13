@@ -6,9 +6,7 @@ import ModelToggle from "./post/ModelToggle";
 import TextWeekly from "./weekly/TextWeekly";
 import ImgWeekly from "./weekly/ImgWeekly";
 import WeeklyNotice from "./weekly/WeeklyNotice";
-import { PostType } from "@/types/Post";
-
-type WeeklyModel = "텍스트" | "이미지";
+import { PostType, WeeklyModel } from "@/types/Post";
 
 // [수정] Props 타입 정의 및 핸들러 추가
 type WeeklyProps = {
@@ -41,7 +39,7 @@ export default function Weekly({
   const filtered = useMemo(
     () =>
       data.filter(
-        (post) => post.model?.toLowerCase() === activeModel.toLowerCase()
+        (post) => post.result_mode?.toLowerCase() === activeModel.toLowerCase()
       ),
     [data, activeModel]
   );
@@ -94,7 +92,7 @@ export default function Weekly({
       </div>
 
       {/* [수정] 핸들러 props 전달 */}
-      {activeModel === "텍스트" && (
+      {activeModel === "Text" && (
         <TextWeekly
           data={filtered}
           onLikeToggle={onLikeToggle}
@@ -102,7 +100,7 @@ export default function Weekly({
           subType={activeModel}
         />
       )}
-      {activeModel === "이미지" && (
+      {activeModel === "Image" && (
         <ImgWeekly
           data={filtered}
           onLikeToggle={onLikeToggle}
