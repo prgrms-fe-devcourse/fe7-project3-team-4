@@ -1,4 +1,3 @@
-// src/components/profile/MyBookMark.tsx
 import Post from "../home/post/Post";
 import NewsItem from "../news/NewsItem";
 import EmptyActivity from "./EmptyActivity";

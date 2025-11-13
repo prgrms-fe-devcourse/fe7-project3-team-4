@@ -1,5 +1,3 @@
-// src/components/profile/ProfileDataLoader.tsx
-
 import { createClient } from "@/utils/supabase/server";
 import { FormState, NewsRow, Profile } from "@/types";
 import { Database } from "@/utils/supabase/supabase";
@@ -8,7 +6,11 @@ import { redirect } from "next/navigation";
 import { PostType } from "@/types/Post";
 
 type DbPostRow = Database["public"]["Tables"]["posts"]["Row"] & {
-  profiles?: { display_name: string | null; email: string | null; avatar_url: string | null; } | null;
+  profiles?: {
+    display_name: string | null;
+    email: string | null;
+    avatar_url: string | null;
+  } | null;
   user_post_likes?: { user_id: string }[] | null;
   user_post_bookmarks?: { user_id: string }[] | null;
 };
@@ -27,13 +29,17 @@ type BookmarkedNewsRow = NewsRow & {
 type BookmarkedPostRow = {
   posts:
     | (DbPostRow & {
-        profiles?: { display_name: string | null; email: string | null; avatar_url: string | null; } | null;
+        profiles?: {
+          display_name: string | null;
+          email: string | null;
+          avatar_url: string | null;
+        } | null;
         user_post_likes?: { user_id: string }[] | null;
       })
     | null;
 };
 
-function dbPostToPostType(dbPost: DbPostRow, ): PostType {
+function dbPostToPostType(dbPost: DbPostRow): PostType {
   return {
     id: dbPost.id,
     title: dbPost.title ?? "제목 없음",
@@ -44,10 +50,13 @@ function dbPostToPostType(dbPost: DbPostRow, ): PostType {
     like_count: dbPost.like_count ?? 0,
     comment_count: dbPost.comment_count ?? 0,
     view_count: dbPost.view_count ?? 0,
-    model: (dbPost.model as "GPT" | "Gemini" | "텍스트" | "이미지") ?? undefined,
+    model:
+      (dbPost.model as "GPT" | "Gemini" | "텍스트" | "이미지") ?? undefined,
     user_id: dbPost.user_id ?? "",
     isLiked: !!(dbPost.user_post_likes && dbPost.user_post_likes.length > 0),
-    isBookmarked: !!(dbPost.user_post_bookmarks && dbPost.user_post_bookmarks.length > 0),
+    isBookmarked: !!(
+      dbPost.user_post_bookmarks && dbPost.user_post_bookmarks.length > 0
+    ),
     profiles: dbPost.profiles
       ? {
           display_name: dbPost.profiles.display_name ?? null,
@@ -82,7 +91,6 @@ export default async function ProfileDataLoader({
   updateProfile,
   updateAvatarUrl,
   togglePostBookmark,
-  toggleFollow,
 }: ProfileDataLoaderProps) {
   const supabase = await createClient();
 
@@ -218,7 +226,8 @@ export default async function ProfileDataLoader({
   }
 
   // ⭐️ 팔로우 상태 결정
-  const isFollowing = userId !== targetUserId ? !!followStatusResult.data : false;
+  const isFollowing =
+    userId !== targetUserId ? !!followStatusResult.data : false;
 
   return (
     <ProfilePageClient
@@ -230,7 +239,6 @@ export default async function ProfileDataLoader({
       updateProfile={updateProfile}
       updateAvatarUrl={updateAvatarUrl}
       togglePostBookmark={togglePostBookmark}
-      toggleFollow={toggleFollow}
       initialMyPosts={myPosts}
       initialBookmarkedPosts={bookmarkedPosts}
       initialBookmarkedNews={bookmarkedNews}

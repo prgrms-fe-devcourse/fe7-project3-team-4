@@ -17,6 +17,8 @@ export default function MyPost({
   const displayDate = (data.created_at || "").slice(0, 10);
   const postUrl = `/?type=${data.post_type}&id=${data.id}`;
 
+  console.log(data.thumbnail);
+
   return (
     <article className="bg-white/40 border border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl overflow-hidden">
       <div className="p-6 pb-0">
@@ -50,14 +52,10 @@ export default function MyPost({
 
         {/* 중간: 제목 */}
         <Link href={postUrl} className="block my-5">
-          <h3 className="text-[18px] font-semibold hover:underline">
-            {data.title}
-          </h3>
-        </Link>
+          <h3 className="text-[18px] font-semibold">{data.title}</h3>
 
-        {/* 썸네일 이미지 (thumbnail) - 존재할 경우에만 렌더링 */}
-        {data.thumbnail && (
-          <Link href={postUrl} className="block my-5">
+          {/* 썸네일 이미지 (thumbnail) - 존재할 경우에만 렌더링 */}
+          {data.thumbnail && (
             <div className="relative w-full aspect-video overflow-hidden rounded-lg">
               <Image
                 src={data.thumbnail}
@@ -67,17 +65,13 @@ export default function MyPost({
                 loading="lazy"
               />
             </div>
-          </Link>
-        )}
+          )}
 
-        {/* 부제목 (subtitle) - 존재할 경우에만 렌더링 */}
-        {data.subtitle && (
-          <Link href={postUrl} className="block my-5">
-            <div className="line-clamp-3 text-gray-700">
-              {data.subtitle}
-            </div>
-          </Link>
-        )}
+          {/* 부제목 (subtitle) - 존재할 경우에만 렌더링 */}
+          {data.subtitle && (
+            <div className="line-clamp-3 text-gray-700">{data.subtitle}</div>
+          )}
+        </Link>
 
         {/* 해시태그 */}
         {data.hashtags && data.hashtags.length > 0 && (

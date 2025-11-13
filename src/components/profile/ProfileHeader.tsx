@@ -1,4 +1,3 @@
-// src/components/profile/ProfileHeader.tsx
 "use client";
 
 import { Profile } from "@/types";
@@ -44,7 +43,7 @@ export function ProfileHeader({
             src={profile.avatar_url}
             alt="프로필 이미지"
             fill
-            className="object-cover rounded-full" 
+            className="object-cover rounded-full"
           />
         ) : (
           <span className="flex items-center justify-center h-full text-gray-500 group-hover:text-white">
@@ -96,10 +95,12 @@ export function ProfileHeader({
           <div className="lg:flex justify-between items-end space-y-2 lg:space-y-0">
             <div className="flex gap-5 text-lg">
               <p>
-                <span>{profile?.following_count}</span> <span className="text-[#717182]">팔로잉</span>
+                <span>{profile?.following_count}</span>{" "}
+                <span className="text-[#717182]">팔로잉</span>
               </p>
               <p>
-                <span>{profile?.followed_count}</span> <span className="text-[#717182]">팔로워</span>
+                <span>{profile?.followed_count}</span>{" "}
+                <span className="text-[#717182]">팔로워</span>
               </p>
             </div>
             <div className="flex items-center gap-1 text-[#717182]">

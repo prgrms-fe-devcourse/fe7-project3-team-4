@@ -1,4 +1,3 @@
-// src/components/profile/ProfileHeaderSkeleton.tsx
 "use client";
 
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";

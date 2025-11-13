@@ -30,12 +30,6 @@ export default async function Page() {
   return (
     <>
       <div className="mt-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <h3 className="ml-2 text-xl font-semibold">알림 목록</h3>
-          <button className="cursor-pointer leading-none border-b text-[#717182]">
-            알림 삭제
-          </button>
-        </div>
         <NotificationList
           initialNotifications={initialNotifications}
           userId={user.id}

@@ -15,7 +15,7 @@ import GPT from "../../../assets/svg/GPT";
 import Write from "../../../assets/svg/Write";
 import Logo from "../../../assets/svg/Logo";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 
@@ -38,7 +38,12 @@ const MENU_ITEMS = [
   { title: "프로필", icon: <User />, url: "profile" },
 ];
 
-function isActivePath(pathname: string, url: string): boolean {
+function isActivePath(
+  pathname: string,
+  url: string,
+  currentUserId: string | null,
+  profileUserId: string | null
+): boolean {
   if (!url || url.startsWith("http")) return false;
 
   const target = url.startsWith("/") ? url : `/${url}`;
@@ -47,13 +52,27 @@ function isActivePath(pathname: string, url: string): boolean {
     return pathname === "/";
   }
 
+  // 프로필 페이지인 경우, 로그인한 사용자 본인의 프로필일 때만 active
+  if (target === "/profile") {
+    if (pathname === target || pathname.startsWith(`${target}/`)) {
+      // userId 파라미터가 없거나, 현재 사용자 ID와 같을 때만 active
+      return !profileUserId || profileUserId === currentUserId;
+    }
+    return false;
+  }
+
   return pathname === target || pathname.startsWith(`${target}/`);
 }
 
 export default function LeftSidebar() {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isLogin, setIsLogin] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // URL에서 userId 파라미터 가져오기
+  const profileUserId = searchParams.get("userId");
 
   useEffect(() => {
     const run = async () => {
@@ -62,6 +81,7 @@ export default function LeftSidebar() {
         data: { user },
       } = await supabase.auth.getUser();
       setIsLogin(!!user);
+      setCurrentUserId(user?.id || null);
     };
     run();
   }, []);
@@ -70,6 +90,7 @@ export default function LeftSidebar() {
     const supabase = await createClient();
     await supabase.auth.signOut();
     setIsLogin(false);
+    setCurrentUserId(null);
     router.refresh(); // Supabase 세션 반영된 서버 컴포넌트들 새로고침
     router.push("/auth/login"); // 원하는 경로로 이동
   };
@@ -88,7 +109,7 @@ export default function LeftSidebar() {
               icon={menu.icon}
               title={menu.title}
               url={menu.url}
-              active={isActivePath(pathname, menu.url)}
+              active={isActivePath(pathname, menu.url, currentUserId, profileUserId)}
             />
           ))}
           <li className="flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer hover:bg-white hover:shadow-xl">
