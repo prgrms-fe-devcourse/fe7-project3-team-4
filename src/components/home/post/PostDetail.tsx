@@ -16,7 +16,6 @@ import {
   pickNthParagraphDoc,
 } from "@/utils/extractTextFromJson";
 import { useFollow } from "@/context/FollowContext";
-import { useRouter } from "next/navigation";
 
 type RawComment = {
   id: string;
@@ -55,7 +54,6 @@ export default function PostDetail({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const supabase = createClient();
-  const router = useRouter();
 
   // ✅ Follow Context 사용
   const { isFollowing, toggleFollow, currentUserId } = useFollow();
@@ -276,8 +274,7 @@ export default function PostDetail({
       }
 
       alert("게시글이 삭제되었습니다.");
-      router.push(`/?type=${post.post_type}`); // 삭제 후 해당 게시글의 post_type으로 이동
-      router.refresh();
+      window.location.href = `/?type=${post.post_type}`;
     } catch (error) {
       console.error("Unexpected error while deleting post:", error);
       alert("삭제 처리 중 알 수 없는 오류가 발생했습니다.");
