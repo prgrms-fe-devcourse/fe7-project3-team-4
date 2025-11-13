@@ -1,6 +1,3 @@
-Need to install the following packages:
-supabase@2.58.5
-Ok to proceed? (y) 
 export type Json =
   | string
   | number
@@ -617,6 +614,8 @@ export type Database = {
           created_at: string
           id: string
           is_read: boolean
+          post_id: string
+          post_type: string
           sender: Json
           type: Database["public"]["Enums"]["notification_type"]
         }[]
