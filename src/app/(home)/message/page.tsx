@@ -13,6 +13,7 @@ import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { JSX } from "react";
+import Link from "next/link";
 
 type ChatProfile = {
   id: string;
@@ -811,13 +812,19 @@ export default function Page() {
                             className="cursor-pointer relative flex w-full items-center gap-3 px-6 py-4 hover:bg-[#EAE8FF]"
                           >
                             <div className="w-11 h-11 bg-[#6D6D6D] rounded-full overflow-hidden flex items-center justify-center">
-                              <Image
-                                src={u.avatar_url ?? ""}
-                                alt={`${u.display_name} avatar`}
-                                width={44}
-                                height={44}
-                                className="w-full h-full object-cover"
-                              />
+                              <Link
+                                href={`/profile?userId=${u.id}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-11 h-11 bg-[#6D6D6D] rounded-full overflow-hidden flex items-center justify-center hover:opacity-80 transition-opacity"
+                              >
+                                <Image
+                                  src={u.avatar_url ?? ""}
+                                  alt={`${u.display_name} avatar`}
+                                  width={44}
+                                  height={44}
+                                  className="w-full h-full object-cover"
+                                />
+                              </Link>
                             </div>
                             <div className="text-left">
                               <div className="text-[#0A0A0A]">
@@ -861,13 +868,19 @@ export default function Page() {
                             className="relative flex w-full items-center gap-3 px-6 py-4 hover:bg-[#EAE8FF] cursor-pointer"
                           >
                             <div className="w-11 h-11 bg-[#6D6D6D] rounded-full overflow-hidden flex items-center justify-center">
-                              <Image
-                                src={r.other_avatar ?? ""}
-                                alt={`${r.other_name ?? "profile"} avatar`}
-                                width={44}
-                                height={44}
-                                className="w-full h-full object-cover"
-                              />
+                              <Link
+                                href={`/profile?userId=${r.other_id}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-11 h-11 bg-[#6D6D6D] rounded-full overflow-hidden flex items-center justify-center hover:opacity-80 transition-opacity"
+                              >
+                                <Image
+                                  src={r.other_avatar ?? ""}
+                                  alt={`${r.other_name ?? "profile"} avatar`}
+                                  width={44}
+                                  height={44}
+                                  className="w-full h-full object-cover"
+                                />
+                              </Link>
                             </div>
                             <div className="text-left">
                               <div className="text-[#0A0A0A]">
@@ -922,17 +935,24 @@ export default function Page() {
                 <div className="flex gap-3 items-center">
                   {/* 이미지 */}
                   <div className="w-[50px] h-[50px] bg-gray-400 rounded-full">
-                    {peer?.avatar_url ? (
-                      <Image
-                        src={peer?.avatar_url ?? "/default-avatar.png"}
-                        alt={`${peer?.display_name ?? "profile"} avatar`}
-                        width={44}
-                        height={44}
-                        className="rounded-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-xs text-[#717182]">profile</span>
-                    )}
+                    <Link
+                      href={peer ? `/profile?userId=${peer.id}` : "#"}
+                      className={`w-[50px] h-[50px] bg-gray-400 rounded-full overflow-hidden flex items-center justify-center ${
+                        peer ? "hover:opacity-80 transition-opacity" : ""
+                      }`}
+                    >
+                      {peer?.avatar_url ? (
+                        <Image
+                          src={peer?.avatar_url ?? "/default-avatar.png"}
+                          alt={`${peer?.display_name ?? "profile"} avatar`}
+                          width={50}
+                          height={50}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-xs text-[#717182]">profile</span>
+                      )}
+                    </Link>
                   </div>
                   {/* 이름 및 이메일 */}
                   <div>

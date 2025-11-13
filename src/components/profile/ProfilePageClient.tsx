@@ -14,9 +14,7 @@ import { useNewsFeedContext } from "@/context/NewsFeedContext";
 import { Database } from "@/utils/supabase/supabase";
 import { createClient } from "@/utils/supabase/client";
 import { RealtimeChannel } from "@supabase/supabase-js";
-
-// ⭐️ 브로드캐스트 채널 이름
-const FOLLOWS_CHANNEL = "follows-update-channel";
+import { useFollow } from "@/context/FollowContext";
 
 type DbCommentRow = Database["public"]["Tables"]["comments"]["Row"] & {
   content: string | null;
@@ -50,8 +48,6 @@ type ProfilePageClientProps = {
     currentUserId: string,
     isBookmarked: boolean
   ) => Promise<FormState>;
-  // ⭐️ Server Action인 'toggleFollow' prop 제거
-  // toggleFollow: (targetId: string) => Promise<{ success: boolean }>;
   initialMyPosts: PostType[];
   initialBookmarkedPosts: PostType[];
   initialBookmarkedNews: BookmarkedNewsRow[];
@@ -67,8 +63,6 @@ export default function ProfilePageClient({
   updateProfile,
   updateAvatarUrl,
   togglePostBookmark,
-  // ⭐️ 'toggleFollow' prop 제거
-  // toggleFollow,
   initialMyPosts,
   initialBookmarkedPosts,
   initialBookmarkedNews,
@@ -79,16 +73,17 @@ export default function ProfilePageClient({
   const [supabase] = useState(() => createClient());
   const channelRef = useRef<RealtimeChannel | null>(null);
 
-  const broadcastChannelRef = useRef<RealtimeChannel | null>(null);
-
   const {
     handleLikeToggle: handleNewsLikeToggle,
     handleBookmarkToggle: handleNewsBookmarkToggle,
   } = useNewsFeedContext();
 
+  // ✅ Follow Context 사용
+  const { isFollowing: isFollowingFromContext, toggleFollow } = useFollow();
+
   const isOwnProfile = currentUserId === targetUserId;
 
-  const [localProfile, setLocalProfile] = useState<Profile>(profile); // ⭐️ Realtime 업데이트용
+  const [localProfile, setLocalProfile] = useState<Profile>(profile);
   const [myPosts, setMyPosts] = useState<PostType[]>(initialMyPosts);
   const [myComments, setMyComments] = useState<DbCommentRow[]>(
     initialMyComments.map((c) => ({
@@ -117,11 +112,13 @@ export default function ProfilePageClient({
 
   const [myBookmarks, setMyBookmarks] =
     useState<BookmarkedItem[]>(initialBookmarks);
-  const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
 
-  // ⭐️ targetUserId 변경 시 모든 state 강제 리셋
+  // ✅ Context에서 팔로우 상태 가져오기
+  const isFollowing = isFollowingFromContext(targetUserId);
+
+  // targetUserId 변경 시 모든 state 강제 리셋
   useEffect(() => {
-    setLocalProfile(profile); // ⭐️ 프로필 리셋
+    setLocalProfile(profile);
     setMyPosts(initialMyPosts);
     setMyComments(
       initialMyComments.map((c) => ({
@@ -130,66 +127,37 @@ export default function ProfilePageClient({
       }))
     );
     setMyBookmarks(initialBookmarks);
-    setIsFollowing(initialIsFollowing);
 
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
     }
   }, [
     targetUserId,
-    profile, // ⭐️ profile 의존성
+    profile,
     initialMyPosts,
     initialMyComments,
     initialBookmarks,
-    initialIsFollowing,
     supabase,
   ]);
 
-  // ⭐️ handleFollowToggle 수정
+  // ✅ Follow Context의 toggleFollow 사용
   const handleFollowToggle = useCallback(async () => {
     if (currentUserId === targetUserId) return;
 
-    const newIsFollowing = !isFollowing;
-
-    // 1. 낙관적 UI
-    setIsFollowing(newIsFollowing);
-
     try {
-      // 2. DB 작업
-      if (newIsFollowing) {
-        const { error } = await supabase
-          .from("follows")
-          .insert({ follower_id: currentUserId, following_id: targetUserId });
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("follows")
-          .delete()
-          .eq("follower_id", currentUserId)
-          .eq("following_id", targetUserId);
-        if (error) throw error;
-      }
-
-      // 3. ⭐️ ref에 저장된 채널로 broadcast 발송
-      if (broadcastChannelRef.current) {
-        await broadcastChannelRef.current.send({
-          type: "broadcast",
-          event: "follow-update",
-          payload: { targetUserId: targetUserId, isFollowing: newIsFollowing },
-        });
-        console.log("[Profile] 📤 Broadcast sent:", {
-          targetUserId,
-          isFollowing: newIsFollowing,
-        });
-      } else {
-        console.warn("[Profile] ⚠️ Broadcast channel not ready");
-      }
+      await toggleFollow(targetUserId);
     } catch (error) {
-      console.error("Follow toggle failed, rolling back:", error);
-      // 4. 롤백
-      setIsFollowing(!newIsFollowing);
+      console.error("Follow toggle failed:", error);
+      
+      // 사용자에게 에러 메시지 표시
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("팔로우 처리 중 오류가 발생했습니다.");
+      }
     }
-  }, [supabase, currentUserId, targetUserId, isFollowing]);
+  }, [toggleFollow, currentUserId, targetUserId]);
 
   const bookmarkedNewsIds = useMemo(
     () =>
@@ -199,26 +167,23 @@ export default function ProfilePageClient({
     [myBookmarks]
   );
 
-  // ⭐️ Realtime 구독 수정
+  // 메인 Realtime 구독 (팔로우 제외)
   useEffect(() => {
     if (!targetUserId || !currentUserId) return;
 
-    let cleanupFn: (() => void) | null = null;
-
-    const setupRealtime = async () => {
+    const setupRealtime = () => {
       if (channelRef.current) {
-        await supabase.removeChannel(channelRef.current);
-      }
-      if (broadcastChannelRef.current) {
-        await supabase.removeChannel(broadcastChannelRef.current);
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
       }
 
       const channelName = `profile-activity:${targetUserId}:${currentUserId}`;
       const channel = supabase.channel(channelName);
+      channelRef.current = channel;
 
       console.log(`[ProfilePageClient] 🚀 Subscribing to: ${channelName}`);
 
-      // ⭐️ 1. profiles (팔로워/팔로잉 수) - DB 트리거가 작동하므로 유지
+      // 1. profiles
       channel.on(
         "postgres_changes",
         {
@@ -244,7 +209,7 @@ export default function ProfilePageClient({
         }
       );
 
-      // ⭐️ 2. posts 업데이트
+      // 2. posts
       channel.on(
         "postgres_changes",
         {
@@ -255,8 +220,6 @@ export default function ProfilePageClient({
         },
         (payload) => {
           const updatedPost = payload.new as PostType;
-          console.log(`[posts UPDATE]`, updatedPost);
-
           setMyPosts((prev) =>
             prev.map((post) =>
               post.id === updatedPost.id
@@ -278,7 +241,7 @@ export default function ProfilePageClient({
         }
       );
 
-      // ⭐️ 3. comments 업데이트
+      // 3. comments
       channel.on(
         "postgres_changes",
         {
@@ -289,8 +252,6 @@ export default function ProfilePageClient({
         },
         (payload) => {
           const updatedComment = payload.new as DbCommentRow;
-          console.log(`[comments UPDATE]`, updatedComment);
-
           setMyComments((prev) =>
             prev.map((comment) =>
               comment.id === updatedComment.id
@@ -301,7 +262,7 @@ export default function ProfilePageClient({
         }
       );
 
-      // ⭐️ 4. news 업데이트
+      // 4. news
       if (bookmarkedNewsIds.length > 0) {
         channel.on(
           "postgres_changes",
@@ -313,8 +274,6 @@ export default function ProfilePageClient({
           },
           (payload) => {
             const updatedNews = payload.new as NewsRow;
-            console.log(`[news UPDATE]`, updatedNews);
-
             setMyBookmarks((prev) =>
               prev.map((item) => {
                 if (item.type === "news" && item.id === updatedNews.id) {
@@ -331,7 +290,7 @@ export default function ProfilePageClient({
         );
       }
 
-      // ⭐️ 5. user_post_likes 변경
+      // 5. user_post_likes
       channel.on(
         "postgres_changes",
         {
@@ -341,8 +300,6 @@ export default function ProfilePageClient({
           filter: `user_id=eq.${currentUserId}`,
         },
         (payload) => {
-          console.log(`[user_post_likes ${payload.eventType}]`, payload);
-
           if (payload.eventType === "INSERT") {
             const newLike = payload.new as { post_id: string };
             updatePostLikeState(newLike.post_id, true);
@@ -353,7 +310,7 @@ export default function ProfilePageClient({
         }
       );
 
-      // ⭐️ 6. comment_likes 변경
+      // 6. comment_likes
       channel.on(
         "postgres_changes",
         {
@@ -363,8 +320,6 @@ export default function ProfilePageClient({
           filter: `user_id=eq.${currentUserId}`,
         },
         (payload) => {
-          console.log(`[comment_likes ${payload.eventType}]`, payload);
-
           if (payload.eventType === "INSERT") {
             const newLike = payload.new as { comment_id: string };
             updateCommentLikeState(newLike.comment_id, true);
@@ -375,7 +330,7 @@ export default function ProfilePageClient({
         }
       );
 
-      // ⭐️ 7. user_news_likes 변경
+      // 7. user_news_likes
       channel.on(
         "postgres_changes",
         {
@@ -385,8 +340,6 @@ export default function ProfilePageClient({
           filter: `user_id=eq.${currentUserId}`,
         },
         (payload) => {
-          console.log(`[user_news_likes ${payload.eventType}]`, payload);
-
           if (payload.eventType === "INSERT") {
             const newLike = payload.new as { news_id: string };
             updateNewsLikeState(newLike.news_id, true);
@@ -397,7 +350,7 @@ export default function ProfilePageClient({
         }
       );
 
-      // ⭐️ 8. 북마크 삭제
+      // 8. user_news_bookmarks DELETE
       channel.on(
         "postgres_changes",
         {
@@ -417,6 +370,7 @@ export default function ProfilePageClient({
         }
       );
 
+      // 9. user_post_bookmarks DELETE
       channel.on(
         "postgres_changes",
         {
@@ -433,7 +387,6 @@ export default function ProfilePageClient({
                 !(item.type === "post" && item.id === oldBookmark.post_id)
             )
           );
-
           setMyPosts((prev) =>
             prev.map((post) =>
               post.id === oldBookmark.post_id
@@ -444,7 +397,7 @@ export default function ProfilePageClient({
         }
       );
 
-      // ⭐️ 9. 북마크 추가
+      // 10. user_post_bookmarks INSERT
       channel.on(
         "postgres_changes",
         {
@@ -476,44 +429,8 @@ export default function ProfilePageClient({
         }
       );
 
-      // ⭐️ 팔로우 브로드캐스트 채널 설정
-      const followBroadcastChannel = supabase.channel(FOLLOWS_CHANNEL, {
-        config: { broadcast: { ack: true } },
-      });
-
-      // ✅ 해결: 채널 생성 직후 ref에 즉시 할당합니다.
-      broadcastChannelRef.current = followBroadcastChannel;
-      console.log(
-        "[ProfilePageClient] 🔵 Channel instance created and assigned to ref."
-      );
-
-      followBroadcastChannel
-        .on("broadcast", { event: "follow-update" }, (payload) => {
-          console.log("[ProfilePageClient] 📥 Broadcast received:", payload);
-          const { targetUserId: updatedUserId, isFollowing: newIsFollowing } =
-            payload.payload as {
-              targetUserId: string;
-              isFollowing: boolean;
-            };
-
-          if (updatedUserId === targetUserId) {
-            setIsFollowing(newIsFollowing);
-          }
-        })
-        .subscribe((status) => {
-          if (status === "SUBSCRIBED") {
-            console.log("[ProfilePageClient] ✅ Subscribed to Broadcast");
-            // ❗️ Ref 할당 로직이 여기서 제거되었습니다.
-          } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-            console.error(
-              `[ProfilePageClient] ❌ Broadcast subscription failed: ${status}`
-            );
-          }
-        });
-
       channel.subscribe((status, err) => {
         console.log(`[ProfilePageClient] Subscription status: ${status}`);
-
         if (status === "SUBSCRIBED") {
           console.log(`[ProfilePageClient] ✅ SUBSCRIBED successfully`);
         } else if (status === "CHANNEL_ERROR") {
@@ -524,31 +441,17 @@ export default function ProfilePageClient({
           setTimeout(() => setupRealtime(), 3000);
         }
       });
-
-      channelRef.current = channel;
-
-      // ⭐️ cleanup 함수 정의
-      cleanupFn = () => {
-        console.log(`[ProfilePageClient] 🧹 Cleaning up channels`);
-        if (channelRef.current) {
-          supabase.removeChannel(channelRef.current);
-          channelRef.current = null;
-        }
-        if (broadcastChannelRef.current) {
-          supabase.removeChannel(broadcastChannelRef.current);
-          broadcastChannelRef.current = null;
-        }
-      };
     };
 
     setupRealtime();
 
     return () => {
-      if (cleanupFn) cleanupFn();
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, [targetUserId, currentUserId, supabase, bookmarkedNewsIds]);
-
-  // --- Realtime용 상태 업데이트 헬퍼 ---
 
   const updatePostLikeState = (postId: string, isLiked: boolean) => {
     setMyPosts((prev) =>
@@ -577,9 +480,6 @@ export default function ProfilePageClient({
     );
   };
 
-  // --- 핸들러 함수 (✅ 개선 4: 함수형 업데이트 및 의존성 최적화) ---
-
-  // 게시글 좋아요 토글
   const handlePostLikeToggle = useCallback(
     async (id: string) => {
       if (!currentUserId) return;
@@ -587,7 +487,6 @@ export default function ProfilePageClient({
       let originalPostInMyPosts: PostType | undefined;
       let originalPostInBookmarks: BookmarkedItem | undefined;
 
-      // 1. 낙관적 업데이트
       setMyPosts((prev) => {
         originalPostInMyPosts = prev.find((p) => p.id === id);
         return prev.map((post) =>
@@ -621,7 +520,6 @@ export default function ProfilePageClient({
         });
       });
 
-      // 2. DB 작업
       try {
         const isCurrentlyLiked =
           originalPostInMyPosts?.isLiked ??
@@ -642,7 +540,6 @@ export default function ProfilePageClient({
       } catch (error) {
         console.error("Post like toggle failed:", error);
 
-        // 3. 롤백
         if (originalPostInMyPosts) {
           setMyPosts((prev) =>
             prev.map((post) => (post.id === id ? originalPostInMyPosts! : post))
@@ -662,7 +559,6 @@ export default function ProfilePageClient({
     [supabase, currentUserId]
   );
 
-  // 게시글 북마크 토글
   const handlePostBookmarkToggle = useCallback(
     async (id: string) => {
       if (!currentUserId) return;
@@ -743,7 +639,6 @@ export default function ProfilePageClient({
     [currentUserId, togglePostBookmark]
   );
 
-  // 댓글 좋아요 토글
   const handleCommentLikeToggle = useCallback(
     async (id: string) => {
       if (!currentUserId) return;
@@ -793,7 +688,6 @@ export default function ProfilePageClient({
     [supabase, currentUserId]
   );
 
-  // 북마크 탭에서 북마크 해제
   const handleProfileBookmarkToggle = useCallback(
     async (id: string, type: "post" | "news") => {
       if (!currentUserId) return;
@@ -825,7 +719,6 @@ export default function ProfilePageClient({
     [currentUserId, handleNewsBookmarkToggle, togglePostBookmark]
   );
 
-  // 뉴스 좋아요 토글
   const handleProfileNewsLikeToggle = useCallback(
     async (id: string) => {
       if (!currentUserId) return;
