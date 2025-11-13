@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft, ArrowUpDown } from "lucide-react";
-import { useEffect, useState, useCallback, useRef } from "react"; // ⭐️ useRef 추가
+import { useEffect, useState, useCallback } from "react";
 import Comments from "./Comments";
 import RichTextRenderer from "@/components/common/RichTextRenderer";
 import { PostType } from "@/types/Post";
@@ -11,13 +11,11 @@ import PostActions from "./PostAction";
 import { createClient } from "@/utils/supabase/client";
 import PromptDetail from "./PromptDetail";
 import Link from "next/link";
-import { RealtimeChannel } from "@supabase/supabase-js";
 import {
   extractImageSrcArr,
   pickNthParagraphDoc,
 } from "@/utils/extractTextFromJson";
-
-const FOLLOWS_CHANNEL = "follows-update-channel";
+import { useFollow } from "@/context/FollowContext";
 
 type RawComment = {
   id: string;
@@ -52,32 +50,21 @@ export default function PostDetail({
 }: PostDetailProps) {
   const [comments, setComments] = useState<PostComment[]>([]);
   const [sortOrder, setSortOrder] = useState<"latest" | "popular">("latest");
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
 
   const supabase = createClient();
-
-  // ⭐️ broadcast 채널을 useRef로 관리
-  const broadcastChannelRef = useRef<RealtimeChannel | null>(null);
+  
+  // ✅ Follow Context 사용
+  const { isFollowing, toggleFollow, currentUserId } = useFollow();
 
   const authorName = post.profiles?.display_name || "익명";
   const authorEmail = post.profiles?.email || "";
   const authorAvatar = post.profiles?.avatar_url || null;
   const authorUserId = post.user_id;
 
-  // 현재 사용자 정보 가져오기
-  useEffect(() => {
-    const getCurrentUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setCurrentUserId(user?.id || null);
-    };
-    getCurrentUser();
-  }, [supabase]);
+  // 팔로우 상태는 Context에서 가져옴
+  const isAuthorFollowing = isFollowing(authorUserId);
 
-  // 조회수 증가
   useEffect(() => {
     const incrementViewCount = async () => {
       const { error } = await supabase.rpc("increment_view_count", {
@@ -92,29 +79,6 @@ export default function PostDetail({
     incrementViewCount();
   }, [post.id, supabase]);
 
-  // 팔로우 상태 확인
-  useEffect(() => {
-    const checkFollowStatus = async () => {
-      if (!currentUserId || !authorUserId) return;
-
-      const { data, error } = await supabase
-        .from("follows")
-        .select("id")
-        .eq("follower_id", currentUserId)
-        .eq("following_id", authorUserId)
-        .single();
-
-      if (!error && data) {
-        setIsFollowing(true);
-      } else {
-        setIsFollowing(false);
-      }
-    };
-
-    checkFollowStatus();
-  }, [currentUserId, authorUserId, supabase]);
-
-  // 댓글 목록 가져오기
   const fetchComments = useCallback(async () => {
     const { data, error } = await supabase
       .from("comments")
@@ -180,9 +144,8 @@ export default function PostDetail({
     fetchComments();
   }, [fetchComments]);
 
-  // ⭐️ Realtime 구독 (수정됨)
+  // 댓글 및 게시글 Realtime 구독
   useEffect(() => {
-    // 댓글 변경 감지
     const commentsChannel = supabase
       .channel(`comments:${post.id}`)
       .on(
@@ -199,7 +162,6 @@ export default function PostDetail({
       )
       .subscribe();
 
-    // 게시글 업데이트 감지
     const postChannel = supabase
       .channel(`post:${post.id}`)
       .on(
@@ -224,51 +186,13 @@ export default function PostDetail({
       )
       .subscribe();
 
-    // ⭐️ 팔로우 Broadcast 구독 (항상 구독, 메시지는 필터링)
-    const followBroadcastChannel = supabase.channel(FOLLOWS_CHANNEL, {
-      config: { broadcast: { ack: true } },
-    });
-
-    // ✅ 해결: 채널 생성 직후 ref에 즉시 할당합니다.
-    broadcastChannelRef.current = followBroadcastChannel;
-    console.log(
-      "[PostDetail] 🔵 Channel instance created and assigned to ref."
-    );
-
-    followBroadcastChannel
-      .on("broadcast", { event: "follow-update" }, (payload) => {
-        console.log("[PostDetail] 📥 Broadcast received:", payload);
-        const { targetUserId, isFollowing: newIsFollowing } =
-          payload.payload as {
-            targetUserId: string;
-            isFollowing: boolean;
-          };
-
-        if (targetUserId === authorUserId) {
-          setIsFollowing(newIsFollowing);
-        }
-      })
-      .subscribe((status) => {
-        if (status === "SUBSCRIBED") {
-          console.log("[PostDetail] ✅ Subscribed to Broadcast");
-          // ❗️ Ref 할당 로직이 여기서 제거되었습니다.
-        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-          console.error(
-            `[PostDetail] ❌ Broadcast subscription failed: ${status}`
-          );
-        }
-      });
-
-    // Cleanup
     return () => {
       supabase.removeChannel(commentsChannel);
       supabase.removeChannel(postChannel);
-      supabase.removeChannel(followBroadcastChannel);
-      broadcastChannelRef.current = null;
     };
-  }, [post.id, supabase, fetchComments, authorUserId]);
+  }, [post.id, supabase, fetchComments]);
 
-  // ⭐️ 팔로우 토글 핸들러 (수정됨)
+  // ✅ Follow Context의 toggleFollow 사용
   const handleFollowToggle = async () => {
     if (!currentUserId || !authorUserId) {
       alert("로그인이 필요합니다.");
@@ -280,46 +204,18 @@ export default function PostDetail({
     }
 
     setIsFollowLoading(true);
-    const newIsFollowing = !isFollowing;
-
-    // 1. 낙관적 UI 업데이트
-    setIsFollowing(newIsFollowing);
 
     try {
-      // 2. DB 작업
-      if (newIsFollowing) {
-        const { error } = await supabase
-          .from("follows")
-          .insert({ follower_id: currentUserId, following_id: authorUserId });
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("follows")
-          .delete()
-          .eq("follower_id", currentUserId)
-          .eq("following_id", authorUserId);
-        if (error) throw error;
-      }
-
-      // 3. ⭐️ ref에 저장된 채널로 broadcast 발송
-      if (broadcastChannelRef.current) {
-        await broadcastChannelRef.current.send({
-          type: "broadcast",
-          event: "follow-update",
-          payload: { targetUserId: authorUserId, isFollowing: newIsFollowing },
-        });
-        console.log("[PostDetail] 📤 Broadcast sent:", {
-          targetUserId: authorUserId,
-          isFollowing: newIsFollowing,
-        });
-      } else {
-        console.warn("[PostDetail] ⚠️ Broadcast channel not ready");
-      }
+      await toggleFollow(authorUserId);
     } catch (error) {
       console.error("Error toggling follow:", error);
-      alert("팔로우 처리 중 오류가 발생했습니다.");
-      // 4. 롤백
-      setIsFollowing(!newIsFollowing);
+      
+      // 사용자에게 에러 메시지 표시
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("팔로우 처리 중 오류가 발생했습니다.");
+      }
     } finally {
       setIsFollowLoading(false);
     }
@@ -390,7 +286,6 @@ export default function PostDetail({
           <div className="mt-5">
             <div className="space-y-4">
               <p className="text-[18px] font-medium">{post.title}</p>
-              {/* 이미지 */}
               {post.thumbnail === "" ? null : (
                 <div className="relative">
                   <Image
@@ -402,7 +297,6 @@ export default function PostDetail({
                   />
                 </div>
               )}
-              {/* content */}
               <RichTextRenderer
                 content={pickNthParagraphDoc(post.content, 0)}
                 showImage={false}
@@ -474,14 +368,14 @@ export default function PostDetail({
                 onClick={handleFollowToggle}
                 disabled={isFollowLoading}
                 className={`cursor-pointer leading-none rounded-lg py-1.5 px-2 text-sm transition-colors ${
-                  isFollowing
+                  isAuthorFollowing
                     ? "text-gray-600 bg-gray-100 hover:bg-gray-200"
                     : "text-[#6758FF] bg-[#6758FF]/10 hover:bg-[#6758FF]/20"
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {isFollowLoading
                   ? "처리중..."
-                  : isFollowing
+                  : isAuthorFollowing
                   ? "팔로잉"
                   : "+ 팔로우"}
               </button>
