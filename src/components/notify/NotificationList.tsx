@@ -22,7 +22,6 @@ export function NotificationList({
     useState<NotificationWithDetails[]>(initialNotifications);
 
   const fetchAllNotifications = useCallback(async () => {
-    console.log("🔄 Fetching all notifications...");
     const { data, error } = await supabase.rpc(
       "get_notifications_with_details"
     );
@@ -46,27 +45,31 @@ export function NotificationList({
           filter: `recipient_id=eq.${userId}`,
         },
         (payload) => {
-          console.log("✅ New notification received!", payload);
           fetchAllNotifications();
         }
       )
       .subscribe();
 
-    console.log(`Subscribed to notifications for user: ${userId}`);
-
     return () => {
-      console.log("Unsubscribing from notifications");
       supabase.removeChannel(channel);
     };
   }, [supabase, userId, fetchAllNotifications]);
 
   return (
-    <div className="space-y-4">
-      {notifications.length === 0 ? (
-        <p className="text-center text-gray-500">새 알림이 없습니다.</p>
-      ) : (
-        notifications.map((n) => <NotificationItem key={n.id} data={n} />)
-      )}
-    </div>
+    <>
+      <div className="flex justify-between items-center">
+        <h3 className="ml-2 text-xl font-semibold">알림 목록</h3>
+        <button className="cursor-pointer leading-none border-b text-[#717182]">
+          알림 삭제
+        </button>
+      </div>
+      <div className="space-y-4">
+        {notifications.length === 0 ? (
+          <p className="text-center text-gray-500">새 알림이 없습니다.</p>
+        ) : (
+          notifications.map((n) => <NotificationItem key={n.id} data={n} />)
+        )}
+      </div>
+    </>
   );
 }
