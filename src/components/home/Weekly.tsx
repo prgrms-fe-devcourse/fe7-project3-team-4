@@ -25,8 +25,8 @@ export default function Weekly({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeModel, setActiveModel] = useState<WeeklyModel>(() => {
-    if (activeSubType === "이미지") return "이미지";
-    return "텍스트";
+    if (activeSubType === "Image") return "Image";
+    return "Text";
   });
 
   const handleModelChange = (model: WeeklyModel) => {

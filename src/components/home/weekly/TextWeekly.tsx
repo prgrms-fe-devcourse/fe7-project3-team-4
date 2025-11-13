@@ -6,7 +6,7 @@ type TextWeeklyProps = {
   data: PostType[];
   onLikeToggle?: (id: string) => void;
   onBookmarkToggle?: (id: string, type: "post" | "news") => void;
-  subType: "텍스트" | "이미지"; // [✅ 추가]
+  subType: "Text" | "Image"; // [✅ 추가]
 };
 
 export default function TextWeekly({
@@ -18,7 +18,7 @@ export default function TextWeekly({
   if (!data || data.length === 0) {
     return <NoPosts />;
   }
-  
+
   return (
     <div className="space-y-8">
       {data.map((post) => (
