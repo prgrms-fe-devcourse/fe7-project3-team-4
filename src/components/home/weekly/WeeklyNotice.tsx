@@ -69,7 +69,7 @@ export default function WeeklyNotice({ active }: { active: WeeklyModel }) {
         <div className="bg-white/40 border border-white/20 rounded-xl shadow-xl p-6 space-y-3">
           <div className="space-y-1">
             <p className="font-medium text-lg">
-              이번 주 {active} 주제:{" "}
+              이번 주 {active === "Image" ? "이미지" : "텍스트"} 주제:{" "}
               <b className="text-[#ff2424]">“AI한테 고백하기”</b>
             </p>
             <p className="ml-3">
