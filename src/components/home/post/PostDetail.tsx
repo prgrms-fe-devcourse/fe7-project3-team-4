@@ -400,9 +400,12 @@ export default function PostDetail({
         />
       </div>
 
-      <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
-        <PromptDetail post={post} />
-      </div>
+      {post.post_type === "prompt" ||
+        (post.post_type === "weekly" && (
+          <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
+            <PromptDetail post={post} />
+          </div>
+        ))}
 
       <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
         <div>
