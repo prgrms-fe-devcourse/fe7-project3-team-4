@@ -29,12 +29,14 @@ export default async function Page() {
 
   return (
     <>
-      <div className="mt-6 space-y-6">
-        <NotificationList
-          initialNotifications={initialNotifications}
-          userId={user.id}
-        />
-      </div>
+      <section className="relative max-w-2xl mx-auto">
+        <div className="mt-6 space-y-6">
+          <NotificationList
+            initialNotifications={initialNotifications}
+            userId={user.id}
+          />
+        </div>
+      </section>
     </>
   );
 }
