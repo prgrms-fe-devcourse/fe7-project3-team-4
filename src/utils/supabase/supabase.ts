@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       comment_likes: {
@@ -620,6 +645,8 @@ export type Database = {
           type: Database["public"]["Enums"]["notification_type"]
         }[]
       }
+      get_unread_chat_count: { Args: never; Returns: number }
+      get_unread_message_count: { Args: never; Returns: number }
       increment_view_count: { Args: { post_id: string }; Returns: undefined }
       mark_room_read: { Args: { room_id: string }; Returns: undefined }
     }
@@ -773,6 +800,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       comment_target_type: ["posts", "news"],
