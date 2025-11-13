@@ -2,21 +2,46 @@ import Link from "next/link";
 import PostActions from "./PostAction";
 import { PostType } from "@/types/Post";
 import Image from "next/image";
+import { useMemo } from "react"; // [✅ 추가] useMemo 임포트
+import { getTranslatedTag } from "@/utils/tagTranslator"; // [✅ 추가] 임포트
+
+// [✅ 추가] Tab 타입 정의
+type Tab = "전체" | "뉴스" | "프롬프트" | "자유" | "주간";
+type SubType = "GPT" | "Gemini" | "텍스트" | "이미지";
 
 export default function Post({
   data,
   onLikeToggle,
   onBookmarkToggle,
+  activeTab, // [✅ 추가] activeTab prop
+  subType,
 }: {
   data: PostType;
   onLikeToggle?: (id: string) => void;
   onBookmarkToggle?: (id: string, type: "post" | "news") => void;
+  activeTab?: Tab; // [✅ 추가]
+  subType?: SubType | string;
 }) {
   const authorName = data.profiles?.display_name || "익명";
   const authorEmail = data.profiles?.email || "";
   const authorAvatar = data.profiles?.avatar_url;
   const displayDate = (data.created_at || "").slice(0, 10);
-  const postUrl = `/?type=${data.post_type}&id=${data.id}`;
+
+// [✅ 수정] postUrl 로직 수정
+  const postUrl = useMemo(() => {
+    if (activeTab === "전체") {
+      // '전체' 탭에서 클릭 시 'type=all'을 유지 (이전 수정)
+      return `/?type=all&id=${data.id}`;
+    }
+
+    // '프롬프트' 또는 '주간' 탭에서 클릭 시 sub_type을 포함
+    if (subType) {
+      return `/?type=${data.post_type}&id=${data.id}&sub_type=${subType}`;
+    }
+
+    // 기본 동작 (e.g., '자유' 탭)
+    return `/?type=${data.post_type}&id=${data.id}`;
+  }, [activeTab, data.id, data.post_type, subType]); // [✅ 수정] subType 의존성 추가
 
   return (
     <article className="bg-white/40 border border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl overflow-hidden">
@@ -74,7 +99,7 @@ export default function Post({
         {data.hashtags && data.hashtags.length > 0 && (
           <div className="space-x-2 text-sm text-[#248AFF] mt-4">
             {data.hashtags.map((tag, i) => (
-              <span key={i}>{tag.startsWith("#") ? tag : `#${tag}`}</span>
+              <span key={i}>#{getTranslatedTag(tag)}</span> // [✅ 수정]
             ))}
           </div>
         )}

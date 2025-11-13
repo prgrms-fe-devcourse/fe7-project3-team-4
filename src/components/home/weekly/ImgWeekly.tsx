@@ -7,12 +7,14 @@ type ImgWeeklyProps = {
   data: PostType[];
   onLikeToggle?: (id: string) => void;
   onBookmarkToggle?: (id: string, type: "post" | "news") => void;
+  subType: "텍스트" | "이미지"; // [✅ 수정] subType prop 추가
 };
 
 export default function ImgWeekly({
   data,
   onLikeToggle,
   onBookmarkToggle,
+  subType, // [✅ 수정]
 }: ImgWeeklyProps) {
   if (!data || data.length === 0) {
     return <NoPosts />;
@@ -28,6 +30,7 @@ export default function ImgWeekly({
             data={post}
             onLikeToggle={onLikeToggle} // [추가]
             onBookmarkToggle={onBookmarkToggle} // [추가]
+            subType={subType} // [✅ 수정]
           />
         );
       })}

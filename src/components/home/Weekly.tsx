@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import ModelToggle from "./post/ModelToggle";
 import TextWeekly from "./weekly/TextWeekly";
 import ImgWeekly from "./weekly/ImgWeekly";
@@ -14,14 +15,28 @@ type WeeklyProps = {
   data: PostType[];
   onLikeToggle?: (id: string) => void;
   onBookmarkToggle?: (id: string, type: "post" | "news") => void;
+  activeSubType: string | null;
 };
 
 export default function Weekly({
   data,
   onLikeToggle,
   onBookmarkToggle,
+  activeSubType,
 }: WeeklyProps) {
-  const [activeModel, setActiveModel] = useState<WeeklyModel>("텍스트");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [activeModel, setActiveModel] = useState<WeeklyModel>(() => {
+    if (activeSubType === "이미지") return "이미지";
+    return "텍스트";
+  });
+
+  const handleModelChange = (model: WeeklyModel) => {
+    setActiveModel(model);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("sub_type", model);
+    router.push(`/?${params.toString()}`, { scroll: false });
+  };
 
   const filtered = useMemo(
     () =>
@@ -36,7 +51,7 @@ export default function Weekly({
       <ModelToggle
         mode="weekly"
         active={activeModel}
-        onChange={setActiveModel}
+        onChange={handleModelChange}
       />
       {/* 주간 챌린지 공지? */}
       <WeeklyNotice active={activeModel} />
@@ -84,6 +99,7 @@ export default function Weekly({
           data={filtered}
           onLikeToggle={onLikeToggle}
           onBookmarkToggle={onBookmarkToggle}
+          subType={activeModel}
         />
       )}
       {activeModel === "이미지" && (
@@ -91,6 +107,7 @@ export default function Weekly({
           data={filtered}
           onLikeToggle={onLikeToggle}
           onBookmarkToggle={onBookmarkToggle}
+          subType={activeModel}
         />
       )}
     </>

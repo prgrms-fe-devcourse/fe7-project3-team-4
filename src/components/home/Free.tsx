@@ -1,35 +1,36 @@
-import NoPosts from "./post/NoPosts";
 import Post from "./post/Post";
+import NoPosts from "./post/NoPosts";
 import { PostType } from "@/types/Post";
 
-// [수정] Props 타입 정의 및 핸들러 추가
-type FreeProps = {
-  data: PostType[];
-  onLikeToggle?: (id: string) => void;
-  onBookmarkToggle?: (id: string, type: "post" | "news") => void;
-};
+// [✅ 추가] Tab 타입 정의
+type Tab = "전체" | "뉴스" | "프롬프트" | "자유" | "주간";
 
 export default function Free({
   data,
   onLikeToggle,
   onBookmarkToggle,
-}: FreeProps) {
-  if (!data || data.length === 0) {
+  activeTab, // [✅ 추가]
+}: {
+  data: PostType[];
+  onLikeToggle: (id: string) => void;
+  onBookmarkToggle: (id: string, type: "post" | "news") => void;
+  activeTab: Tab; // [✅ 추가]
+}) {
+  if (data.length === 0) {
     return <NoPosts />;
   }
+
   return (
-    // [수정] space-y-8 추가 (All.tsx와 일관성)
     <div className="space-y-8">
-      {data.map((post) => {
-        return (
-          <Post
-            key={post.id}
-            data={post}
-            onLikeToggle={onLikeToggle} // [추가]
-            onBookmarkToggle={onBookmarkToggle} // [추가]
-          />
-        );
-      })}
+      {data.map((post) => (
+        <Post
+          key={post.id}
+          data={post}
+          onLikeToggle={onLikeToggle}
+          onBookmarkToggle={onBookmarkToggle}
+          activeTab={activeTab} // [✅ 추가]
+        />
+      ))}
     </div>
   );
 }

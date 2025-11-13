@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowUpDown } from "lucide-react";
+import { ArrowLeft, ArrowUpDown, Edit, Trash } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import Comments from "./Comments";
 import RichTextRenderer from "@/components/common/RichTextRenderer";
@@ -16,6 +16,8 @@ import {
   pickNthParagraphDoc,
 } from "@/utils/extractTextFromJson";
 import { useFollow } from "@/context/FollowContext";
+import { useRouter } from "next/navigation";
+import { getTranslatedTag } from "@/utils/tagTranslator"; // [✅ 추가] 임포트
 
 type RawComment = {
   id: string;
@@ -54,7 +56,8 @@ export default function PostDetail({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const supabase = createClient();
-  
+  const router = useRouter();
+
   // ✅ Follow Context 사용
   const { isFollowing, toggleFollow, currentUserId } = useFollow();
 
@@ -210,7 +213,7 @@ export default function PostDetail({
       await toggleFollow(authorUserId);
     } catch (error) {
       console.error("Error toggling follow:", error);
-      
+
       // 사용자에게 에러 메시지 표시
       if (error instanceof Error) {
         alert(error.message);
@@ -381,7 +384,7 @@ export default function PostDetail({
           {post.hashtags && post.hashtags.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-5 text-sm text-[#248AFF]">
               {post.hashtags.map((tag, i) => (
-                <span key={i}>{tag.startsWith("#") ? tag : `#${tag}`}</span>
+                <span key={i}>#{getTranslatedTag(tag)}</span> // [✅ 수정]
               ))}
             </div>
           )}

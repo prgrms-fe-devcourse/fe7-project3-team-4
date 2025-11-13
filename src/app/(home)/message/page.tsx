@@ -812,11 +812,6 @@ export default function Page() {
                             className="cursor-pointer relative flex w-full items-center gap-3 px-6 py-4 hover:bg-[#EAE8FF]"
                           >
                             <div className="w-11 h-11 bg-[#6D6D6D] rounded-full overflow-hidden flex items-center justify-center">
-                              <Link
-                                href={`/profile?userId=${u.id}`}
-                                onClick={(e) => e.stopPropagation()}
-                                className="w-11 h-11 bg-[#6D6D6D] rounded-full overflow-hidden flex items-center justify-center hover:opacity-80 transition-opacity"
-                              >
                                 <Image
                                   src={u.avatar_url ?? ""}
                                   alt={`${u.display_name} avatar`}
@@ -824,7 +819,6 @@ export default function Page() {
                                   height={44}
                                   className="w-full h-full object-cover"
                                 />
-                              </Link>
                             </div>
                             <div className="text-left">
                               <div className="text-[#0A0A0A]">
@@ -868,11 +862,6 @@ export default function Page() {
                             className="relative flex w-full items-center gap-3 px-6 py-4 hover:bg-[#EAE8FF] cursor-pointer"
                           >
                             <div className="w-11 h-11 bg-[#6D6D6D] rounded-full overflow-hidden flex items-center justify-center">
-                              <Link
-                                href={`/profile?userId=${r.other_id}`}
-                                onClick={(e) => e.stopPropagation()}
-                                className="w-11 h-11 bg-[#6D6D6D] rounded-full overflow-hidden flex items-center justify-center hover:opacity-80 transition-opacity"
-                              >
                                 <Image
                                   src={r.other_avatar ?? ""}
                                   alt={`${r.other_name ?? "profile"} avatar`}
@@ -880,7 +869,6 @@ export default function Page() {
                                   height={44}
                                   className="w-full h-full object-cover"
                                 />
-                              </Link>
                             </div>
                             <div className="text-left">
                               <div className="text-[#0A0A0A]">
