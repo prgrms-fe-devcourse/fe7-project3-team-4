@@ -70,15 +70,15 @@ export default function LeftSidebar() {
   const searchParams = useSearchParams();
   const [isLogin, setIsLogin] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-
-  // 1. 안 읽은 알림 개수를 위한 새 state 추가
+  // 안 읽은 알림 개수
   const [unreadCount, setUnreadCount] = useState(0);
+  // 안 읽은 채팅 개수
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
 
-  // URL에서 userId 파라미터 가져오기
   const profileUserId = searchParams.get("userId");
 
   useEffect(() => {
-    const supabase = createClient(); // 페이지 로드 시 현재 사용자 정보 가져오기
+    const supabase = createClient();
 
     const fetchUser = async () => {
       const {
@@ -97,10 +97,10 @@ export default function LeftSidebar() {
 
         if (event === "SIGNED_OUT") {
           setUnreadCount(0);
+          setUnreadMessageCount(0);
         }
       }
     );
-
     return () => {
       authListener.subscription.unsubscribe();
     };
@@ -146,8 +146,59 @@ export default function LeftSidebar() {
       )
       .subscribe();
 
+    const fetchUnreadMessageCount = async () => {
+      const { data, error } = await supabase.rpc("get_unread_message_count");
+
+      if (error) {
+        console.error("안 읽은 메시지 개수 RPC 조회 오류:", error);
+      } else {
+        setUnreadMessageCount(data ?? 0);
+      }
+    };
+
+    fetchUnreadMessageCount();
+
+    // [신규] 채팅방 테이블 실시간 구독
+    const chatChannel = supabase
+      .channel(`message_rooms-${currentUserId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "message_rooms",
+          filter: `or(pair_max.eq.${currentUserId},pair_min.eq.${currentUserId})`,
+        },
+        (payload) => {
+          console.log("채팅방 '읽음' 상태 변경 감지:", payload);
+          fetchUnreadMessageCount(); // 개수 다시 계산
+        }
+      )
+      .subscribe();
+
+    const newMessagesChannel = supabase
+      .channel(`new-messages-for-${currentUserId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT", // 'messages' 테이블에 새 행이 삽입될 때
+          schema: "public",
+          table: "messages",
+          // ★참고: RLS 정책(1단계 SQL)이 `sender_id != auth.uid()`로
+          // 필터링하므로, 내가 보낸 메시지 INSERT도 여기서 감지되지만
+          // 최종 카운트에는 포함되지 않아 안전합니다.
+        },
+        (payload) => {
+          console.log("새 메시지 'INSERT' 감지:", payload);
+          fetchUnreadMessageCount(); // 개수 다시 계산
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(channel); // 알림 채널
+      supabase.removeChannel(chatChannel); // 채팅방 읽음 채널
+      supabase.removeChannel(newMessagesChannel); // 새 메시지 채널
     };
   }, [currentUserId]);
 
@@ -177,7 +228,13 @@ export default function LeftSidebar() {
                 currentUserId,
                 profileUserId
               )}
-              notificationCount={menu.title === "알림" ? unreadCount : 0}
+              notificationCount={
+                menu.title === "알림"
+                  ? unreadCount
+                  : menu.title === "채팅"
+                  ? unreadMessageCount
+                  : 0
+              }
             />
           ))}
           <li className="flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer hover:bg-white hover:shadow-xl">

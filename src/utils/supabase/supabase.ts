@@ -645,6 +645,8 @@ export type Database = {
           type: Database["public"]["Enums"]["notification_type"]
         }[]
       }
+      get_unread_chat_count: { Args: never; Returns: number }
+      get_unread_message_count: { Args: never; Returns: number }
       increment_view_count: { Args: { post_id: string }; Returns: undefined }
       mark_room_read: { Args: { room_id: string }; Returns: undefined }
     }
