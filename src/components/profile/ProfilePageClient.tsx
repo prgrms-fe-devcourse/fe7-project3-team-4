@@ -1,5 +1,3 @@
-// src/components/profile/ProfilePageClient.tsx
-
 "use client";
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";

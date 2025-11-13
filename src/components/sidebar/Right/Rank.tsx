@@ -271,7 +271,6 @@ export default function Rank() {
     );
   }
 
-  // ⭐️ 11. JSX 렌더링
   return (
     <Box height="284px" icon={<Trophy />} title="지난 주 챌린지 순위">
       <div className="flex flex-col gap-4">
@@ -300,33 +299,38 @@ export default function Rank() {
               key={item.user_id}
               className="flex justify-between items-center"
             >
+              {/* ⭐️ Link로 감싸서 클릭 시 프로필 이동 */}
               <Link
                 href={`/profile?userId=${item.user_id}`}
-                className="flex items-center gap-1.5 flex-1 min-w-0 mr-4 hover:bg-gray-50 rounded-lg p-2 transition-colors"
+                className="flex items-center gap-1.5 flex-1 min-w-0 hover:bg-gray-50 rounded-lg p-2 transition-colors"
               >
                 <div className="w-8" style={{ color: rankColor }}>
                   {rankNumber}
                   {rankSuffix}.
                 </div>
-                <div className="relative w-9 h-9 bg-gray-300 rounded-full overflow-hidden shrink-0">
-                  {avatar ? (
-                    <Image
-                      src={avatar}
-                      alt={displayName}
-                      fill={true}
-                      className="object-cover w-full h-full"
-                    />
-                  ) : (
-                    <span className="flex items-center justify-center h-full w-full text-gray-500 text-lg font-semibold">
-                      {(displayName[0] || "?").toUpperCase()}
-                    </span>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm truncate">{displayName}</p>
-                  <p className="text-[11px] text-[#717182] truncate">
-                    @{email}
-                  </p>
+                <div className="flex-1 flex gap-2">
+                  {/* 이미지 */}
+                  <div className="relative w-9 h-9 bg-gray-300 rounded-full overflow-hidden shrink-0">
+                    {avatar ? (
+                      <Image
+                        src={avatar}
+                        alt={displayName}
+                        fill={true}
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <span className="flex items-center justify-center h-full w-full text-gray-500 text-lg font-semibold">
+                        {(displayName[0] || "?").toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  {/* 유저 정보 */}
+                  <div className="min-w-0">
+                    <p className="text-sm truncate">{displayName}</p>
+                    <p className="text-[11px] text-[#717182] truncate">
+                      {email}
+                    </p>
+                  </div>
                 </div>
               </Link>
               <div className="shrink-0">

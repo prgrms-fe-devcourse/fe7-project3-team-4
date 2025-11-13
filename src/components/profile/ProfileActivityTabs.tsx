@@ -1,4 +1,3 @@
-// src/components/profile/ProfileActivityTabs.tsx
 "use client";
 
 import { useSearchParams, usePathname } from "next/navigation";
@@ -51,8 +50,8 @@ export function ProfileActivityTabs({
   onBookmarkToggle,
   onPostLikeToggle,
   onCommentLikeToggle,
-  // onPostBookmarkToggle,
-}: ProfileActivityTabsProps) {
+}: // onPostBookmarkToggle,
+ProfileActivityTabsProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -105,14 +104,14 @@ export function ProfileActivityTabs({
 
       <div className="mt-4 lg:mt-6">
         {activeTab === "posts" && (
-          <MyPosts 
-            posts={myPosts} 
+          <MyPosts
+            posts={myPosts}
             onLikeToggle={onPostLikeToggle}
             // onBookmarkToggle={onPostBookmarkToggle}
           />
         )}
         {activeTab === "comments" && (
-          <MyComments 
+          <MyComments
             comments={myComments}
             onLikeToggle={onCommentLikeToggle}
           />

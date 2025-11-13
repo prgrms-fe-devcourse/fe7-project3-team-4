@@ -1,5 +1,3 @@
-// src/components/profile/ProfileEditModal.tsx
-
 "use client";
 
 // [1] useActionState, useEffect, MouseEvent 임포트

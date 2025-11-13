@@ -14,7 +14,9 @@ export default async function Page({
 
   return (
     <>
-      <SearchPostForm searchTerm={searchTerm} tagTerm={tagTerm} />
+      <section className="relative max-w-2xl mx-auto">
+        <SearchPostForm searchTerm={searchTerm} tagTerm={tagTerm} />
+      </section>
     </>
   );
 }

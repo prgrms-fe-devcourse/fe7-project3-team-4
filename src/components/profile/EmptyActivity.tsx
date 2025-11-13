@@ -1,4 +1,3 @@
-// src/components/profile/EmptyActivity.tsx
 export default function EmptyActivity({ message }: { message?: string }) {
   return (
     <>

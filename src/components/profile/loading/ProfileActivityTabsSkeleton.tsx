@@ -1,4 +1,3 @@
-// src/components/profile/ProfileActivityTabsSkeleton.tsx
 "use client";
 
 import NewsItemSkeleton from "@/components/news/NewsItemSkeleton";
