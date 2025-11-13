@@ -452,7 +452,13 @@ export function WritePostForm({
           disabled={isSubmitting}
           className="cursor-pointer px-6 py-2.5 rounded-xl bg-[#6758FF] text-white text-lg shadow-sm disabled:opacity-60"
         >
-          {isSubmitting ? "등록 중..." : "게시하기"}
+          {mode === "edit"
+            ? isSubmitting
+              ? "수정 중..."
+              : "수정하기"
+            : isSubmitting
+            ? "등록 중..."
+            : "게시하기"}
         </button>
       </div>
     </form>
