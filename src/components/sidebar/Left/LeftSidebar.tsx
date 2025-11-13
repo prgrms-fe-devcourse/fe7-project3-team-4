@@ -134,14 +134,40 @@ export default function LeftSidebar() {
       .on(
         "postgres_changes",
         {
-          event: "*",
+          event: "INSERT", // 1. 새 알림이 '삽입'될 때
           schema: "public",
           table: "notifications",
           filter: `recipient_id=eq.${currentUserId}`,
         },
         (payload) => {
-          console.log("새 알림 감지!", payload);
-          fetchUnreadCount();
+          console.log("알림 'INSERT' 감지!", payload);
+          fetchUnreadCount(); // 개수 다시 계산
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE", // 2. 알림이 '수정'될 때 (예: is_read 변경)
+          schema: "public",
+          table: "notifications",
+          filter: `recipient_id=eq.${currentUserId}`,
+        },
+        (payload) => {
+          console.log("알림 'UPDATE' 감지!", payload);
+          fetchUnreadCount(); // 개수 다시 계산
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE", // 3. [★핵심★] 알림이 '삭제'될 때
+          schema: "public",
+          table: "notifications", // DELETE는 payload.old 기준으로 필터링됩니다.
+          filter: `recipient_id=eq.${currentUserId}`,
+        },
+        (payload) => {
+          console.log("알림 'DELETE' 감지!", payload);
+          fetchUnreadCount(); // 개수 다시 계산
         }
       )
       .subscribe();
