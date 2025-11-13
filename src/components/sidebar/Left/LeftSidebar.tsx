@@ -167,10 +167,23 @@ export default function LeftSidebar() {
           event: "UPDATE",
           schema: "public",
           table: "message_rooms",
-          filter: `or(pair_max.eq.${currentUserId},pair_min.eq.${currentUserId})`,
+          filter: `pair_max=eq.${currentUserId}`, // 1. 내가 pair_max인 방의 업데이트 감지
         },
         (payload) => {
-          console.log("채팅방 '읽음' 상태 변경 감지:", payload);
+          console.log("채팅방 '읽음' 상태 변경 감지 (max):", payload);
+          fetchUnreadMessageCount(); // 개수 다시 계산
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "message_rooms",
+          filter: `pair_min=eq.${currentUserId}`, // 2. 내가 pair_min인 방의 업데이트 감지
+        },
+        (payload) => {
+          console.log("채팅방 '읽음' 상태 변경 감지 (min):", payload);
           fetchUnreadMessageCount(); // 개수 다시 계산
         }
       )
