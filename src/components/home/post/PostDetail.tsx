@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowUpDown } from "lucide-react";
+import { ArrowLeft, ArrowUpDown, Edit, Trash } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import Comments from "./Comments";
 import RichTextRenderer from "@/components/common/RichTextRenderer";
@@ -16,6 +16,7 @@ import {
   pickNthParagraphDoc,
 } from "@/utils/extractTextFromJson";
 import { useFollow } from "@/context/FollowContext";
+import { useRouter } from "next/navigation";
 
 type RawComment = {
   id: string;
@@ -54,7 +55,8 @@ export default function PostDetail({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const supabase = createClient();
-  
+  const router = useRouter();
+
   // ✅ Follow Context 사용
   const { isFollowing, toggleFollow, currentUserId } = useFollow();
 
@@ -210,7 +212,7 @@ export default function PostDetail({
       await toggleFollow(authorUserId);
     } catch (error) {
       console.error("Error toggling follow:", error);
-      
+
       // 사용자에게 에러 메시지 표시
       if (error instanceof Error) {
         alert(error.message);

@@ -890,7 +890,7 @@ export default function Page() {
               </div>
 
               {/* 대화 내용 (스크롤 영역) */}
-              {/* ✅ overflow-y-auto 로 스크롤 가능, 내부에서 항상 맨 아래로 내리기 위해 센티넬 사용 */}
+              {/* overflow-y-auto 로 스크롤 가능, 내부에서 항상 맨 아래로 내리기 위해 센티넬 사용 */}
               <div className="px-6 py-4 flex flex-col gap-2 overflow-x-hidden overflow-y-auto">
                 <div>
                   {!roomId && !peerId && (
