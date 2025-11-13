@@ -71,34 +71,96 @@ export default function LeftSidebar() {
   const [isLogin, setIsLogin] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
+  // 1. 안 읽은 알림 개수를 위한 새 state 추가
+  const [unreadCount, setUnreadCount] = useState(0);
+
   // URL에서 userId 파라미터 가져오기
   const profileUserId = searchParams.get("userId");
 
   useEffect(() => {
-    const run = async () => {
-      const supabase = await createClient();
+    const supabase = createClient(); // 페이지 로드 시 현재 사용자 정보 가져오기
+
+    const fetchUser = async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       setIsLogin(!!user);
       setCurrentUserId(user?.id || null);
     };
-    run();
+    fetchUser(); // 인증 상태 변경 리스너 (로그인, 로그아웃 감지)
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        const user = session?.user;
+        setIsLogin(!!user);
+        setCurrentUserId(user?.id || null);
+
+        if (event === "SIGNED_OUT") {
+          setUnreadCount(0);
+        }
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
+
+  useEffect(() => {
+    if (!currentUserId) {
+      return;
+    }
+
+    const supabase = createClient();
+
+    const fetchUnreadCount = async () => {
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("recipient_id", currentUserId)
+        .eq("is_read", false);
+
+      if (error) {
+        console.error("알림 개수 조회 오류:", error.message);
+      } else {
+        setUnreadCount(count ?? 0);
+      }
+    };
+
+    fetchUnreadCount();
+
+    const channel = supabase
+      .channel(`notifications-${currentUserId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+          filter: `recipient_id=eq.${currentUserId}`,
+        },
+        (payload) => {
+          console.log("새 알림 감지!", payload);
+          fetchUnreadCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUserId]);
 
   const handleLogout = async () => {
     const supabase = await createClient();
     await supabase.auth.signOut();
-    setIsLogin(false);
-    setCurrentUserId(null);
-    router.refresh(); // Supabase 세션 반영된 서버 컴포넌트들 새로고침
-    router.push("/auth/login"); // 원하는 경로로 이동
+    router.refresh();
+    router.push("/auth/login");
   };
 
   return (
     <>
       <aside className="hidden lg:block h-full p-6 box-border bg-white/40 border border-white/20 rounded-xl shadow-xl">
-        {/* 로고 아이콘 */}
         <Link href={"/"}>
           <Logo />
         </Link>
@@ -109,7 +171,13 @@ export default function LeftSidebar() {
               icon={menu.icon}
               title={menu.title}
               url={menu.url}
-              active={isActivePath(pathname, menu.url, currentUserId, profileUserId)}
+              active={isActivePath(
+                pathname,
+                menu.url,
+                currentUserId,
+                profileUserId
+              )}
+              notificationCount={menu.title === "알림" ? unreadCount : 0}
             />
           ))}
           <li className="flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer hover:bg-white hover:shadow-xl">
