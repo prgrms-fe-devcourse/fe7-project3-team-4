@@ -16,7 +16,6 @@ import {
   pickNthParagraphDoc,
 } from "@/utils/extractTextFromJson";
 import { useFollow } from "@/context/FollowContext";
-import { useRouter } from "next/navigation";
 import { getTranslatedTag } from "@/utils/tagTranslator"; // [✅ 추가] 임포트
 
 type RawComment = {
@@ -56,7 +55,6 @@ export default function PostDetail({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const supabase = createClient();
-  const router = useRouter();
 
   // ✅ Follow Context 사용
   const { isFollowing, toggleFollow, currentUserId } = useFollow();
@@ -299,11 +297,15 @@ export default function PostDetail({
         {post.user_id === currentUserId && (
           <div className="flex gap-4 px-2 items-center">
             {/* 수정 */}
-            <button className="leading-none cursor-pointer flex items-center gap-2 text-[#555555]">
-              <Edit />
+            <button
+              type="button"
+              className="w-6 h-6 leading-none cursor-pointer flex justify-center items-center gap-2 text-white bg-[#6758FF] rounded-md"
+            >
+              <Edit size={18} />
             </button>
             {/* 삭제 */}
             <button
+              type="button"
               onClick={handleDeletePost}
               disabled={isDeleting}
               className="leading-none cursor-pointer flex items-center gap-2 text-[#ff4646]"
