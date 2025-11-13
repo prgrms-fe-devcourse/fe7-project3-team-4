@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { JSX } from "react";
@@ -853,19 +854,24 @@ export default function Page() {
                 </button>
                 <div className="flex gap-3 items-center">
                   <div className="w-[50px] h-[50px] bg-gray-400 rounded-full overflow-hidden">
-                    {peer?.avatar_url ? (
-                      <Image
-                        src={peer?.avatar_url ?? "/default-avatar.png"}
-                        alt={`${peer?.display_name ?? "profile"} avatar`}
-                        width={50}
-                        height={50}
-                        className="w-[50px] h-[50px] object-cover"
-                      />
-                    ) : (
-                      <span className="text-xs text-[#717182] w-full h-full flex items-center justify-center">
-                        profile
-                      </span>
-                    )}
+                    <Link
+                      href={peer ? `/profile?userId=${peer.id}` : "#"}
+                      className={`w-[50px] h-[50px] bg-gray-400 rounded-full overflow-hidden flex items-center justify-center ${
+                        peer ? "hover:opacity-80 transition-opacity" : ""
+                      }`}
+                    >
+                      {peer?.avatar_url ? (
+                        <Image
+                          src={peer?.avatar_url ?? "/default-avatar.png"}
+                          alt={`${peer?.display_name ?? "profile"} avatar`}
+                          width={50}
+                          height={50}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-xs text-[#717182]">profile</span>
+                      )}
+                    </Link>
                   </div>
                   <div>
                     <p>
