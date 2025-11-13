@@ -62,7 +62,7 @@ export default function Rank() {
         )
       `
       )
-      .eq("post_type", "prompt")
+      .eq("post_type", "weekly")
       .order("like_count", { ascending: false });
 
     if (postError) {
@@ -136,7 +136,7 @@ export default function Rank() {
       await toggleFollow(targetUserId);
     } catch (error) {
       console.error("Follow toggle failed:", error);
-      
+
       // 사용자에게 에러 메시지 표시
       if (error instanceof Error) {
         alert(error.message);
@@ -148,7 +148,7 @@ export default function Rank() {
 
   if (isLoading) {
     return (
-      <Box height="284px" icon={<Trophy />} title="지난 주 챌린지 순위">
+      <Box height="284px" icon={<Trophy />} title="이번 주 챌린지 순위">
         <p className="text-center text-sm text-gray-500 py-8">
           랭킹을 불러오는 중...
         </p>
@@ -158,7 +158,7 @@ export default function Rank() {
 
   if (topUsers.length === 0) {
     return (
-      <Box height="284px" icon={<Trophy />} title="지난 주 챌린지 순위">
+      <Box height="284px" icon={<Trophy />} title="이번 주 챌린지 순위">
         <p className="text-center text-sm text-gray-500 py-8">
           아직 랭킹이 없습니다.
         </p>
@@ -167,7 +167,7 @@ export default function Rank() {
   }
 
   return (
-    <Box height="284px" icon={<Trophy />} title="지난 주 챌린지 순위">
+    <Box height="284px" icon={<Trophy />} title="이번 주 챌린지 순위">
       <div className="flex flex-col gap-4">
         {topUsers.map((item, index) => {
           const rankNumber = index + 1;
@@ -176,7 +176,7 @@ export default function Rank() {
           const displayName = profile?.display_name ?? "익명";
           const email = profile?.email ?? "이메일 없음";
           const avatar = profile?.avatar_url;
-          
+
           // ✅ Context에서 팔로우 상태 가져오기
           const userIsFollowing = isFollowing(item.user_id);
           const isSelf = currentUserId === item.user_id;
