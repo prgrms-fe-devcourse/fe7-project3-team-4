@@ -2,14 +2,7 @@
 "use client";
 
 import { createClient } from "@/utils/supabase/client";
-import {
-  ArrowLeft,
-  Image as ImageIcon,
-  Search,
-  Send,
-  Trash,
-  X,
-} from "lucide-react";
+import { ArrowLeft, Image as ImageIcon, Search, Send, X } from "lucide-react";
 import Logo from "../../../assets/svg/Logo";
 import Image from "next/image";
 import Link from "next/link";
@@ -381,24 +374,34 @@ export default function Page() {
           table: "messages",
         },
         (payload) => {
-          const m = payload.new as {
-            room_id: string;
-            sender_id: string;
-            created_at: string;
-          };
+          const m = payload.new as ChatMessage;
           // 내가 보낸건 빼고
           if (m.sender_id === me) return;
-          // 현재 보고있는 방은 즉시 읽음 처리 (뱃지 x)
+          // 현재 보고있는 방이면: 메시지를 바로 우측 패널에 추가 + 읽음 처리 (뱃지 X)
           if (roomId === m.room_id) {
+            setMsgs((prev) => {
+              // 혹시 이미 존재하면 중복 추가 방지
+              if (prev.some((msg) => msg.id === m.id)) return prev;
+              return [...prev, m];
+            });
+
             (async () => {
               try {
                 await supabase
                   .rpc("mark_room_read", { room_id: m.room_id })
                   .throwOnError();
+                setMyLastReadAt(new Date().toISOString());
+                // 좌측 목록 뱃지도 즉시 0으로
+                setRooms((prev) =>
+                  prev.map((x) =>
+                    x.id === m.room_id ? { ...x, unread_count: 0 } : x
+                  )
+                );
               } catch (e) {
                 // 무시
               }
             })();
+
             return;
           }
           // 방 카드가 이미 있을떄 좌측 목록에 뱃지 +1
@@ -1125,7 +1128,7 @@ export default function Page() {
                     }
                     disabled={!roomId && !peerId}
                     aria-busy={sending || undefined}
-                    className="w-full focus:outline-none disabled:opacity-60 bg-transparent"
+                    className="w-full focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed bg-transparent"
                   />
                   <ImageIcon
                     className="text-[#717182] w-6 h-6"
