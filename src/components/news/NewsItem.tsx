@@ -4,6 +4,8 @@ import Link from "next/link";
 import { NewsItemWithState } from "@/types";
 import { Heart, Eye, Bookmark, BookmarkCheck } from "lucide-react";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
 
 type NewsItemProps = {
   item: NewsItemWithState;
@@ -16,6 +18,10 @@ export default function NewsItem({
   onLikeToggle,
   onBookmarkToggle,
 }: NewsItemProps) {
+  const [realtimeLiked, setRealtimeLiked] = useState(item.isLiked);
+  const [realtimeBookmarked, setRealtimeBookmarked] = useState(item.isBookmarked);
+  const supabase = createClient();
+
   const siteName = item.site_name || "익명";
   const displayDate = (item.published_at || item.created_at).slice(0, 10);
   const thumb = Array.isArray(item.images) ? item.images[0] : null;
@@ -30,6 +36,72 @@ export default function NewsItem({
   } else if (lowerCaseTags.includes("gemini")) {
     model = "Gemini";
   }
+
+  // props가 변경되면 realtime 상태도 업데이트
+  useEffect(() => {
+    setRealtimeLiked(item.isLiked);
+  }, [item.isLiked]);
+
+  useEffect(() => {
+    setRealtimeBookmarked(item.isBookmarked);
+  }, [item.isBookmarked]);
+
+  // Realtime 구독 설정
+  useEffect(() => {
+    const setupRealtimeSubscriptions = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // 좋아요 상태 구독
+      const likesChannel = supabase
+        .channel(`news-likes-${item.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "user_news_likes",
+            filter: `news_id=eq.${item.id},user_id=eq.${user.id}`,
+          },
+          (payload) => {
+            if (payload.eventType === "INSERT") {
+              setRealtimeLiked(true);
+            } else if (payload.eventType === "DELETE") {
+              setRealtimeLiked(false);
+            }
+          }
+        )
+        .subscribe();
+
+      // 북마크 상태 구독
+      const bookmarksChannel = supabase
+        .channel(`news-bookmarks-${item.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "user_news_bookmarks",
+            filter: `news_id=eq.${item.id},user_id=eq.${user.id}`,
+          },
+          (payload) => {
+            if (payload.eventType === "INSERT") {
+              setRealtimeBookmarked(true);
+            } else if (payload.eventType === "DELETE") {
+              setRealtimeBookmarked(false);
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(likesChannel);
+        supabase.removeChannel(bookmarksChannel);
+      };
+    };
+
+    setupRealtimeSubscriptions();
+  }, [item.id]);
 
   return (
     <article className="bg-white/40 border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl overflow-hidden">
@@ -94,15 +166,15 @@ export default function NewsItem({
         <button
           onClick={() => onLikeToggle(item.id)}
           className={`cursor-pointer py-1 px-2 rounded-md transition-colors ${
-            item.isLiked
+            realtimeLiked
               ? "text-[#FF569B] bg-[#F7E6ED]"
               : "hover:text-[#FF569B] hover:bg-[#F7E6ED]"
           }`}
-          aria-pressed={item.isLiked}
+          aria-pressed={realtimeLiked}
           aria-label="좋아요"
         >
           <div className="flex gap-2 text-sm items-center ">
-            <Heart size={18} />
+            <Heart size={18} fill={"none"} />
             <span className="font-semibold">{likeCount}</span>
           </div>
         </button>
@@ -120,17 +192,17 @@ export default function NewsItem({
         <button
           onClick={() => onBookmarkToggle(item.id)}
           className={`cursor-pointer py-1 px-2 rounded-md transition-colors ${
-            item.isBookmarked
+            realtimeBookmarked
               ? "text-[#6758FF] bg-[#D8D4FF]"
               : "hover:text-[#6758FF] hover:bg-[#D8D4FF]"
           }`}
-          aria-pressed={item.isBookmarked}
+          aria-pressed={realtimeBookmarked}
           aria-label="북마크"
         >
-          {item.isBookmarked ? (
-            <BookmarkCheck size={18} fill={"none"} />
+          {realtimeBookmarked ? (
+            <BookmarkCheck size={18} fill="none" />
           ) : (
-            <Bookmark size={18} fill={"none"} />
+            <Bookmark size={18} fill="none" />
           )}
         </button>
       </div>
