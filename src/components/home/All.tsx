@@ -7,6 +7,9 @@ import NewsItemSkeleton from "@/components/news/NewsItemSkeleton";
 import { FadeLoader } from "react-spinners"; // [추가]
 import { PostType } from "@/types/Post";
 
+// [✅ 수정] Tab 타입 정의 (page.tsx와 동일하게)
+type Tab = "전체" | "뉴스" | "프롬프트" | "자유" | "주간";
+
 // [수정] Props 타입 확장
 type AllProps = {
   posts: PostType[];
@@ -21,6 +24,7 @@ type AllProps = {
   newsLoadingMore: boolean;
   hasNextPage: boolean;
   loadMoreTriggerRef: (node: HTMLDivElement) => void;
+  activeTab: Tab; // [✅ 추가] activeTab prop 받기
 };
 
 type CombinedItem =
@@ -40,6 +44,7 @@ export default function All({
   newsLoadingMore,
   hasNextPage,
   loadMoreTriggerRef,
+  activeTab, // [✅ 추가] activeTab prop 사용
 }: AllProps) {
   const combinedData = useMemo(() => {
     const typedPosts: CombinedItem[] = posts.map((p) => ({
@@ -99,6 +104,7 @@ export default function All({
                 data={item}
                 onLikeToggle={onPostLikeToggle}
                 onBookmarkToggle={onPostBookmarkToggle}
+                activeTab={activeTab} // [✅ 수정] activeTab prop 전달
               />
             );
           } else {

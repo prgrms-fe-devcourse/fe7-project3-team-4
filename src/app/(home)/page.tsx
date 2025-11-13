@@ -72,6 +72,10 @@ export default function Page() {
     return typeToTab[type] ?? "전체";
   }, [searchParams]);
 
+  const activeSubType = useMemo(() => {
+    return searchParams.get("sub_type");
+  }, [searchParams]);
+
   const {
     isLoading: newsLoading,
     isLoadingMore: newsLoadingMore,
@@ -239,6 +243,7 @@ export default function Page() {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("id");
     params.delete("posttype");
+    params.delete("sub_type");
 
     if (type === "all") {
       params.delete("type");
@@ -369,6 +374,7 @@ export default function Page() {
         }
       } catch (err) {
         // 3. 롤백
+        console.log(err);
         setPosts((prev) =>
           prev.map((item) => {
             if (item.id === id) {
@@ -432,6 +438,7 @@ export default function Page() {
                   newsLoadingMore={newsLoadingMore}
                   hasNextPage={hasNextPage}
                   loadMoreTriggerRef={loadMoreTriggerRef}
+                  activeTab={activeTab} // [✅ 수정] activeTab prop 전달
                 />
               )}
 
@@ -479,6 +486,7 @@ export default function Page() {
                   data={postsByType.prompt}
                   onLikeToggle={handlePostLikeToggle}
                   onBookmarkToggle={handlePostBookmarkToggle}
+                  activeSubType={activeSubType}
                 />
               )}
               {activeTab === "자유" && (
@@ -486,6 +494,7 @@ export default function Page() {
                   data={postsByType.free}
                   onLikeToggle={handlePostLikeToggle}
                   onBookmarkToggle={handlePostBookmarkToggle}
+                  activeTab={activeTab} // [✅ 수정] activeTab prop 전달
                 />
               )}
               {activeTab === "주간" && (
@@ -493,6 +502,7 @@ export default function Page() {
                   data={postsByType.weekly}
                   onLikeToggle={handlePostLikeToggle}
                   onBookmarkToggle={handlePostBookmarkToggle}
+                  activeSubType={activeSubType}
                 />
               )}
             </div>

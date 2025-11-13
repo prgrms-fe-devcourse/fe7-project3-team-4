@@ -9,12 +9,14 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import ImageExt from "@tiptap/extension-image";
 import { Placeholder } from "@tiptap/extensions";
+import { getTranslatedTag } from "@/utils/tagTranslator";
 
 export function MainEditorSection({ hashtags }: { hashtags: Hashtag[] }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedHashtags, setSelectedHashtags] = useState<Hashtag["name"][]>(
     []
   );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [contentJson, setContentJson] = useState<any>({
     type: "doc",
     content: [],
@@ -148,12 +150,11 @@ export function MainEditorSection({ hashtags }: { hashtags: Hashtag[] }) {
               className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg 
                 ${active ? "bg-[#248AFF] text-white" : "hover:bg-[#daebff]"}`}
             >
-              #{hashtag.name}
+              #{getTranslatedTag(hashtag.name!)}
             </button>
           );
         })}
       </div>
-
       <input type="hidden" name="hashtags" value={selectedHashtags.join(",")} />
     </div>
   );

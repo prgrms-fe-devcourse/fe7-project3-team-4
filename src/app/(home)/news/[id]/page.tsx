@@ -9,6 +9,7 @@ import DetailActions from "./DetailActions"; // [수정] 기능이 확장된 Det
 import Link from "next/link";
 import Image from "next/image"; // [수정] Image 임포트
 import { NewsRow } from "@/types";
+import { getTranslatedTag } from "@/utils/tagTranslator"; // [✅ 추가] 임포트
 
 interface MetascraperData {
   author?: string;
@@ -210,7 +211,7 @@ export default async function NewsDetailPage({
       {tags.length > 0 && (
         <div className="space-x-2 text-sm text-[#248AFF]">
           {tags.map((tag, i) => (
-            <span key={i}>{tag.startsWith("#") ? tag : `#${tag}`}</span>
+            <span key={i}>#{getTranslatedTag(tag)}</span> // [✅ 수정]
           ))}
         </div>
       )}
