@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowUpDown } from "lucide-react";
+import { ArrowLeft, ArrowUpDown, Edit, Trash } from "lucide-react";
 import { useEffect, useState, useCallback, useRef } from "react"; // ⭐️ useRef 추가
 import Comments from "./Comments";
 import RichTextRenderer from "@/components/common/RichTextRenderer";
@@ -16,6 +16,7 @@ import {
   extractImageSrcArr,
   pickNthParagraphDoc,
 } from "@/utils/extractTextFromJson";
+import { useRouter } from "next/navigation";
 
 const FOLLOWS_CHANNEL = "follows-update-channel";
 
@@ -55,8 +56,10 @@ export default function PostDetail({
   const [isFollowing, setIsFollowing] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const supabase = createClient();
+  const router = useRouter();
 
   // ⭐️ broadcast 채널을 useRef로 관리
   const broadcastChannelRef = useRef<RealtimeChannel | null>(null);
@@ -329,15 +332,91 @@ export default function PostDetail({
     fetchComments();
   };
 
+  /* 게시글 삭제시 댓글까지 모두 삭제 */
+  const handleDeletePost = async () => {
+    if (!currentUserId) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    if (currentUserId !== post.user_id) {
+      alert("본인만 삭제할 수 있습니다.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "이 게시글과 이 게시글에 달린 모든 댓글이 삭제됩니다.\n정말 삭제하시겠어요?"
+    );
+    if (!confirmed) return;
+
+    try {
+      setIsDeleting(true);
+
+      // 이 게시글에 달린 모든 댓글 삭제 (대댓글 포함)
+      const { error: commentsError } = await supabase
+        .from("comments")
+        .delete()
+        .eq("target_id", post.id);
+
+      if (commentsError) {
+        console.error("Error deleting comments:", commentsError);
+        alert("댓글 삭제 중 오류가 발생했습니다.");
+        setIsDeleting(false);
+        return;
+      }
+
+      // 게시글 삭제
+      const { error: postError } = await supabase
+        .from("posts")
+        .delete()
+        .eq("id", post.id)
+        .eq("user_id", currentUserId);
+
+      if (postError) {
+        console.error("Error deleting post:", postError);
+        alert("게시글 삭제 중 오류가 발생했습니다.");
+        setIsDeleting(false);
+        return;
+      }
+
+      alert("게시글이 삭제되었습니다.");
+      router.push(`/?type=${post.post_type}`); // 삭제 후 해당 게시글의 post_type으로 이동
+      router.refresh();
+    } catch (error) {
+      console.error("Unexpected error while deleting post:", error);
+      alert("삭제 처리 중 알 수 없는 오류가 발생했습니다.");
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="space-y-6 pb-6">
-      <button
-        onClick={onBack}
-        className="leading-none group cursor-pointer flex items-center gap-2 text-[#6758FF] hover:underline"
-      >
-        <ArrowLeft className="arrow-wiggle" />
-        뒤로
-      </button>
+      <div className="flex justify-between">
+        <button
+          onClick={onBack}
+          className="leading-none group cursor-pointer flex items-center gap-2 text-[#6758FF] hover:underline"
+        >
+          <ArrowLeft className="arrow-wiggle" />
+          뒤로
+        </button>
+        {/* 내가 작성한 게시글에서만 보이도록 */}
+        {post.user_id === currentUserId && (
+          <div className="flex gap-4 px-2 items-center">
+            {/* 수정 */}
+            <button className="leading-none cursor-pointer flex items-center gap-2 text-[#555555]">
+              <Edit />
+            </button>
+            {/* 삭제 */}
+            <button
+              onClick={handleDeletePost}
+              disabled={isDeleting}
+              className="leading-none cursor-pointer flex items-center gap-2 text-[#ff4646]"
+            >
+              <Trash />
+            </button>
+          </div>
+        )}
+      </div>
 
       <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
         <div className="pb-7">
@@ -361,20 +440,17 @@ export default function PostDetail({
                   </span>
                 )}
               </Link>
-              <Link
-                href={`/profile?userId=${post.user_id}`}
-                className="flex-1 space-y-1 leading-none hover:underline"
-              >
+              <div className="flex-1 space-y-1 leading-none">
                 <p>
                   {authorName}
                   <span className="text-[#717182] text-sm ml-1">
                     {authorEmail || "@user"}
                   </span>
                 </p>
-                <p className="text-sm line-clamp-2">
+                <p className="text-sm line-clamp-1">
                   {post.profiles?.bio || "자기소개가 없습니다."}
                 </p>
-              </Link>
+              </div>
             </div>
             {post.model && (
               <div
@@ -464,7 +540,7 @@ export default function PostDetail({
                     {authorEmail || "@user"}
                   </span>
                 </p>
-                <p className="text-sm line-clamp-2">
+                <p className="text-sm line-clamp-3">
                   {post.profiles?.bio || "자기소개가 없습니다."}
                 </p>
               </div>
