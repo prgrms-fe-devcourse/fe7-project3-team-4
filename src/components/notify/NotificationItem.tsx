@@ -128,7 +128,7 @@ export function NotificationItem({
   return (
     <ContentBox>
       <div
-        className={`cursor-pointer transition-colors hover:${
+        className={`cursor-pointer rounded-xl transition-colors hover:${
           data.is_read ? "bg-[#DADADA]" : "bg-gray-50"
         } ${data.is_read ? "bg-gray-200" : "bg-white"}`}
         onClick={handleClick}
