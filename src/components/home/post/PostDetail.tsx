@@ -3,7 +3,6 @@
 import { ArrowLeft, ArrowUpDown, Edit, Trash } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import Comments from "./Comments";
-import RichTextRenderer from "@/components/common/RichTextRenderer";
 import { PostType } from "@/types/Post";
 import Image from "next/image";
 import CommentForm from "./CommentForm";
@@ -11,12 +10,10 @@ import PostActions from "./PostAction";
 import { createClient } from "@/utils/supabase/client";
 import PromptDetail from "./PromptDetail";
 import Link from "next/link";
-import {
-  extractImageSrcArr,
-  pickNthParagraphDoc,
-} from "@/utils/extractTextFromJson";
+import { extractImageSrcArr } from "@/utils/extractTextFromJson";
 import { useFollow } from "@/context/FollowContext";
 import { getTranslatedTag } from "@/utils/tagTranslator"; // [✅ 추가] 임포트
+import { useRouter } from "next/navigation";
 
 type RawComment = {
   id: string;
@@ -55,6 +52,7 @@ export default function PostDetail({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const supabase = createClient();
+  const router = useRouter();
 
   // ✅ Follow Context 사용
   const { isFollowing, toggleFollow, currentUserId } = useFollow();
@@ -299,6 +297,11 @@ export default function PostDetail({
             {/* 수정 */}
             <button
               type="button"
+              onClick={() =>
+                router.push(
+                  `/write?mode=edit&postId=${post.id}&type=${post.post_type}`
+                )
+              }
               className="w-6 h-6 leading-none cursor-pointer flex justify-center items-center gap-2 text-white bg-[#6758FF] rounded-md"
             >
               <Edit size={18} />
@@ -375,10 +378,7 @@ export default function PostDetail({
                   />
                 </div>
               )}
-              <RichTextRenderer
-                content={pickNthParagraphDoc(post.content, 0)}
-                showImage={false}
-              />
+              <p>{post.subtitle}</p>
             </div>
           </div>
 
