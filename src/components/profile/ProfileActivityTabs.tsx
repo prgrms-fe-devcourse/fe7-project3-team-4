@@ -107,7 +107,6 @@ ProfileActivityTabsProps) {
           <MyPosts
             posts={myPosts}
             onLikeToggle={onPostLikeToggle}
-            // onBookmarkToggle={onPostBookmarkToggle}
           />
         )}
         {activeTab === "comments" && (
