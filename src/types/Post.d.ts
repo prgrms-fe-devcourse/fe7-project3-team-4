@@ -41,3 +41,11 @@ export interface WeeklyPostType extends PostType {
 }
 
 type PromptModel = "GPT" | "Gemini";
+
+// 조회 내역 페이지를 위한 타입
+// (user_post_views 테이블과 posts 테이블을 JOIN한 결과)
+export type ViewHistoryType = {
+  id: string; // "조회 내역"의 고유 ID (view.id)
+  viewed_at: string; // "내가 마지막으로 본 시간"
+  posts: PostType | null; // JOIN된 "게시물" 정보
+};
