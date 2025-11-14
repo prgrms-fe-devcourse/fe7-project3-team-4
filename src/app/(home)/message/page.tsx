@@ -1,19 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { createClient } from "@/utils/supabase/client";
-import {
-  ArrowLeft,
-  Image as ImageIcon,
-  Search,
-  Send,
-  Trash,
-  X,
-} from "lucide-react";
+import { ArrowLeft, Image as ImageIcon, Search, Send, X } from "lucide-react";
+import Logo from "../../../assets/svg/Logo";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { JSX } from "react";
+import uploadImageMessage from "@/utils/supabase/storage/messages";
 
 /* =========================
  * 타입
@@ -30,6 +26,7 @@ type ChatMessage = {
   room_id: string;
   sender_id: string;
   content: string | null;
+  image_url: string | null;
 };
 type RoomListItem = {
   id: string;
@@ -103,6 +100,7 @@ export default function Page() {
 
   /* ===== 입력창 포커스 제어: 전송/전환 시 자동 포커스 복구 ===== */
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   /* ===== 전송 시/로드 시 대화창 맨 아래로 스크롤 ===== */
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -367,6 +365,68 @@ export default function Page() {
     };
   }, [me, roomId, supabase]);
 
+  // 새 메시지 리얼타임 , 내가 보고있지 않은 방에만 뱃지 적용
+  useEffect(() => {
+    if (!me) return;
+    const ch = supabase
+      .channel(`message-badge-${me}`)
+      .on(
+        `postgres_changes`,
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+        },
+        (payload) => {
+          const m = payload.new as ChatMessage;
+          // 내가 보낸건 빼고
+          if (m.sender_id === me) return;
+          // 현재 보고있는 방이면: 메시지를 바로 우측 패널에 추가 + 읽음 처리 (뱃지 X)
+          if (roomId === m.room_id) {
+            setMsgs((prev) => {
+              // 혹시 이미 존재하면 중복 추가 방지
+              if (prev.some((msg) => msg.id === m.id)) return prev;
+              return [...prev, m];
+            });
+
+            (async () => {
+              try {
+                await supabase
+                  .rpc("mark_room_read", { room_id: m.room_id })
+                  .throwOnError();
+                setMyLastReadAt(new Date().toISOString());
+                // 좌측 목록 뱃지도 즉시 0으로
+                setRooms((prev) =>
+                  prev.map((x) =>
+                    x.id === m.room_id ? { ...x, unread_count: 0 } : x
+                  )
+                );
+              } catch (e) {
+                // 무시
+              }
+            })();
+
+            return;
+          }
+          // 방 카드가 이미 있을떄 좌측 목록에 뱃지 +1
+          setRooms((prev) => {
+            const idx = prev.findIndex((x) => x.id === m.room_id);
+            if (idx < 0) return prev;
+            const next = [...prev];
+            next[idx] = {
+              ...next[idx],
+              unread_count: (next[idx].unread_count ?? 0) + 1,
+            };
+            return next;
+          });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [me, roomId, supabase]);
+
   /* ===== 검색 ===== */
   useEffect(() => {
     let cancelled = false;
@@ -434,7 +494,7 @@ export default function Page() {
 
       const { data: mlist } = await supabase
         .from("messages")
-        .select("id, created_at, room_id, sender_id, content")
+        .select("id, created_at, room_id, sender_id, content, image_url")
         .eq("room_id", roomId)
         .order("created_at", { ascending: true })
         .limit(50);
@@ -521,11 +581,18 @@ export default function Page() {
   /* =========================
    * 전송 (낙관적 UI + 포커스/스크롤)
    * ========================= */
-  const sendMessage = async () => {
-    if ((!roomId && !peerId) || !me || !draft.trim() || sending) return;
-    setSending(true);
+
+  const sendMessage = async (opts?: { imageFile?: File }) => {
+    const hasImage = !!opts?.imageFile;
     const content = draft.trim();
-    setDraft("");
+
+    if ((!roomId && !peerId) || !me || sending) return;
+    if (!hasImage && !content) return;
+    if (!hasImage && content) setDraft("");
+    setSending(true);
+
+    // 입력 포커스 유지
+    queueMicrotask(() => inputRef.current?.focus());
 
     // 입력 포커스 유지
     queueMicrotask(() => inputRef.current?.focus());
@@ -595,9 +662,17 @@ export default function Page() {
       queueMicrotask(() => inputRef.current?.focus());
       return;
     }
-
     if (activeRoomId === roomId) {
       setMyLastReadAt(new Date().toISOString());
+    }
+
+    let imageUrl: string | null = null;
+    if (opts?.imageFile) {
+      imageUrl = await uploadImageMessage(
+        supabase,
+        activeRoomId,
+        opts.imageFile
+      );
     }
 
     // 낙관적 메시지
@@ -606,7 +681,8 @@ export default function Page() {
       created_at: new Date().toISOString(),
       room_id: activeRoomId,
       sender_id: me,
-      content,
+      content: content || null,
+      image_url: imageUrl || null,
     };
     setMsgs((prev) => [...prev, temp]);
 
@@ -615,8 +691,15 @@ export default function Page() {
 
     const { data, error } = await supabase
       .from("messages")
-      .insert([{ room_id: activeRoomId, sender_id: me, content }])
-      .select("id, created_at, room_id, sender_id, content")
+      .insert([
+        {
+          room_id: activeRoomId,
+          sender_id: me,
+          content: content || null,
+          image_url: imageUrl,
+        },
+      ])
+      .select("id, created_at, room_id, sender_id, content, image_url")
       .single();
 
     if (error) {
@@ -640,6 +723,13 @@ export default function Page() {
 
     // 입력 포커스 복구
     queueMicrotask(() => inputRef.current?.focus());
+  };
+
+  const handleImageSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    sendMessage({ imageFile: file });
+    e.target.value = "";
   };
 
   /* =========================
@@ -870,7 +960,9 @@ export default function Page() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <span className="text-xs text-[#717182]">profile</span>
+                        <div className="w-[50px] h-[50px] flex  items-center bg-white/70">
+                          <Logo />
+                        </div>
                       )}
                     </Link>
                   </div>
@@ -888,12 +980,12 @@ export default function Page() {
                     </p>
                   </div>
                 </div>
-                <button
+                {/* <button
                   type="button"
                   className="cursor-pointer text-[#717182] pr-3"
                 >
                   <Trash />
-                </button>
+                </button> */}
               </div>
 
               {/* 대화 내용 (스크롤 영역) */}
@@ -989,7 +1081,18 @@ export default function Page() {
                                     : "bg-white/50 text-[#0A0A0A]"
                                 } border border-[#6758FF]/30 rounded-xl px-4 py-2 max-w-[70%]`}
                               >
-                                {m.content}
+                                {m.image_url && (
+                                  <div className="mb-1">
+                                    <Image
+                                      src={m.image_url}
+                                      alt="전송한 이미지"
+                                      width={240}
+                                      height={240}
+                                      className="rounded-lg max-w-full h-auto"
+                                    />
+                                  </div>
+                                )}
+                                {m.content && <p>{m.content}</p>}
                               </div>
 
                               {/* 상대 메시지: 시간/내 미읽음 점 */}
@@ -1070,17 +1173,25 @@ export default function Page() {
                     }
                     disabled={!roomId && !peerId}
                     aria-busy={sending || undefined}
-                    className="w-full focus:outline-none disabled:opacity-60 bg-transparent"
+                    className="w-full focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed bg-transparent"
+                  />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageSelected}
                   />
                   <ImageIcon
-                    className="text-[#717182] w-6 h-6"
+                    className="text-[#717182] w-6 h-6 cursor-pointer"
                     strokeWidth={1}
+                    onClick={() => fileInputRef.current?.click()}
                   />
 
                   {/* ✅ 보내기 버튼 (마우스다운으로 포커스 뺏기 방지) */}
                   <button
                     type="button"
-                    onClick={sendMessage}
+                    onClick={() => sendMessage}
                     disabled={(!roomId && !peerId) || sending || !draft.trim()}
                     className="bg-[#6758FF] p-1.5 rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
                     onMouseDown={(e) => e.preventDefault()}

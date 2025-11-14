@@ -13,7 +13,6 @@ export default function RootLayout({
 }) {
   return (
     <>
-      <div className="fixed inset-0 min-h-screen bg-[linear-gradient(130deg,#EFF5FE_18.41%,#FBF3FB_81.59%)]"></div>
       <div className="relative">
         <div className="z-5">
           <FollowProvider>
