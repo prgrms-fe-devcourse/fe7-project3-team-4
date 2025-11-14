@@ -44,11 +44,15 @@ export default function MenuBtn({
   const content = (
     <>
       {icon}
-      <span>{title === "알림" ? "" : title}</span>
+      <span>{size === "md" && title === "알림" ? "" : title}</span>
 
       {notificationCount > 0 && (
         <span
-          className={`absolute top-0 right-0 lg:top-2 lg:right-3 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white`}
+          className={`absolute  flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white ${
+            size === "md" && title === "알림"
+              ? "top-0 right-0"
+              : "top-2 right-3"
+          }`}
         >
           {notificationCount > 9 ? "9+" : notificationCount}
         </span>
@@ -79,7 +83,7 @@ export default function MenuBtn({
       <Link
         href={href}
         className={`flex items-center ${
-          title === "알림" ? "gap-0" : "gap-2.5"
+          size === "md" && title === "알림" ? "gap-0" : "gap-2.5"
         } flex-1`}
         onClick={onClick}
       >
