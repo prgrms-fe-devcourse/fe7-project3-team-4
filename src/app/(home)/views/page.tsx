@@ -1,6 +1,8 @@
 import HistoryPostForm from "@/components/home/history/HistoryPostForm";
 import { Suspense } from "react";
 
+export const dynamic = "force-dynamic";
+
 function HistoryLoadingSkeleton() {
   return (
     <div className="space-y-4">

@@ -1,7 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { FormState, NewsRow, Profile } from "@/types";
 import { Database } from "@/utils/supabase/supabase";
-import ProfilePageClient from "./ProfilePageClient";
+import ProfileClient from "./ProfileClient";
 import { redirect } from "next/navigation";
 import { PostType } from "@/types/Post";
 
@@ -230,7 +230,7 @@ export default async function ProfileDataLoader({
     userId !== targetUserId ? !!followStatusResult.data : false;
 
   return (
-    <ProfilePageClient
+    <ProfileClient
       profile={profile}
       currentUserId={userId}
       targetUserId={targetUserId}
