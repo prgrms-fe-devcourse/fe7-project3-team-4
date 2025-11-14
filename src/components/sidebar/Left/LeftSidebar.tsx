@@ -8,6 +8,7 @@ import {
   LogIn,
   LogOut,
   MessageCircle,
+  Moon,
   Search,
   User,
 } from "lucide-react";
@@ -24,6 +25,10 @@ const MENU_ITEMS = [
   { title: "홈", icon: <House />, url: "/" },
   { title: "검색", icon: <Search />, url: "search" },
   { title: "알림", icon: <Bell />, url: "notify" },
+  { title: "채팅", icon: <MessageCircle />, url: "message" },
+  { title: "프로필", icon: <User />, url: "profile" },
+  { title: "조회 내역", icon: <History />, url: "views" },
+  { title: "게시글 작성", icon: <Write />, url: "write" },
   {
     title: "GPT",
     icon: <GPT />,
@@ -34,10 +39,6 @@ const MENU_ITEMS = [
     icon: <Gemini />,
     url: "https://gemini.google.com/",
   },
-  { title: "게시글 작성", icon: <Write />, url: "write" },
-  { title: "채팅", icon: <MessageCircle />, url: "message" },
-  { title: "프로필", icon: <User />, url: "profile" },
-  { title: "조회 내역", icon: <History />, url: "views" },
 ];
 
 function isActivePath(
@@ -250,48 +251,56 @@ export default function LeftSidebar() {
         <Link href={"/"}>
           <Logo />
         </Link>
-        <ul className="space-y-2 mt-6">
-          {MENU_ITEMS.map((menu) => (
-            <MenuBtn
-              key={menu.title}
-              icon={menu.icon}
-              title={menu.title}
-              url={menu.url}
-              active={isActivePath(
-                pathname,
-                menu.url,
-                currentUserId,
-                profileUserId
+        <ul className="min-h-[790px] mt-6 flex flex-col justify-between gap-2">
+          <div>
+            {MENU_ITEMS.map((menu) => (
+              <MenuBtn
+                key={menu.title}
+                icon={menu.icon}
+                title={menu.title}
+                url={menu.url}
+                active={isActivePath(
+                  pathname,
+                  menu.url,
+                  currentUserId,
+                  profileUserId
+                )}
+                notificationCount={
+                  menu.title === "알림"
+                    ? unreadCount
+                    : menu.title === "채팅"
+                    ? unreadMessageCount
+                    : 0
+                }
+              />
+            ))}
+          </div>
+          <div className="flex flex-row justify-center gap-6">
+            <li className="rounded-full cursor-pointer shadow-xl p-3 hover:bg-white hover:shadow-xl">
+              <Moon />
+            </li>
+            {/* <li className="flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer hover:bg-white hover:shadow-xl"> */}
+            <li className="rounded-full cursor-pointer shadow-xl p-3 hover:bg-gray-200 hover:shadow-xl">
+              {!isLogin ? (
+                <Link
+                  href={"auth/login"}
+                  className="flex items-center gap-4 flex-1 "
+                >
+                  <LogIn />
+                  {/* <span>로그인</span> */}
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="cursor-pointer flex items-center gap-4 flex-1 "
+                >
+                  <LogOut />
+                  {/* <span>로그아웃</span> */}
+                </button>
               )}
-              notificationCount={
-                menu.title === "알림"
-                  ? unreadCount
-                  : menu.title === "채팅"
-                  ? unreadMessageCount
-                  : 0
-              }
-            />
-          ))}
-          <li className="flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer hover:bg-white hover:shadow-xl">
-            {!isLogin ? (
-              <Link
-                href={"auth/login"}
-                className="flex items-center gap-4 flex-1 "
-              >
-                <LogIn />
-                <span>로그인</span>
-              </Link>
-            ) : (
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="cursor-pointer flex items-center gap-4 flex-1 "
-              >
-                <LogOut />
-                <span>로그아웃</span>
-              </button>
-            )}
-          </li>
+            </li>
+          </div>
         </ul>
       </aside>
     </>
