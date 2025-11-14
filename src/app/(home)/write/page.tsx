@@ -4,6 +4,9 @@ import { WritePostForm } from "@/components/write/WritePostForm";
 import { Hashtag, Post } from "@/types";
 import { ParsedPostContent, parsePostContent } from "@/utils/parsePostContent";
 
+export const dynamic = 'force-dynamic';
+
+
 type PageProps = {
   searchParams?: Promise<{
     mode?: string; // "edit" | undefined

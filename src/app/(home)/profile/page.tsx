@@ -8,6 +8,7 @@ import ProfileDataLoader from "@/components/profile/ProfileDataLoader";
 import ProfilePageSkeleton from "@/components/profile/loading/ProfilePageSkeleton";
 
 // ✅ 서버 액션을 컴포넌트 외부로 이동하고 독립적으로 만듦
+export const dynamic = 'force-dynamic';
 
 async function updateProfile(
   prevState: FormState,
@@ -131,7 +132,8 @@ async function toggleFollow(targetId: string): Promise<{ success: boolean }> {
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; userId?: string }>;
+  // 1. Promise가 아니라 일반 객체 타입입니다.
+  searchParams: { tab?: string; userId?: string };
 }) {
   const supabase = await createClient();
 
@@ -144,9 +146,9 @@ export default async function Page({
     redirect("/auth/login");
   }
 
-  const search = await searchParams;
-  const targetUserId = search.userId || user.id;
-  const initialTab = search.tab || "posts";
+  // 2. await 키워드가 필요 없습니다.
+  const targetUserId = searchParams.userId || user.id;
+  const initialTab = searchParams.tab || "posts";
 
   return (
     <section className="relative max-w-2xl mx-auto">

@@ -1,6 +1,14 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+// 1. react에서 Suspense를 import 합니다.
+import {
+  useState,
+  useMemo,
+  useCallback,
+  useEffect,
+  useRef,
+  Suspense, // 👈 추가
+} from "react";
 import {
   ProfileActivityTabs,
   TabKey,
@@ -54,6 +62,19 @@ type ProfilePageClientProps = {
   initialMyComments: DbCommentRow[];
 };
 
+// 2. ProfileActivityTabs를 위한 간단한 로딩 스켈레톤 UI입니다.
+function ProfileTabsSkeleton() {
+  return (
+    <div className="bg-white/40 border border-white/20 rounded-xl shadow-xl animate-pulse">
+      <div className="mt-6 p-1 w-full flex gap-1 leading-none">
+        <div className="flex-1 h-10 rounded-xl bg-gray-200/50"></div>
+        <div className="flex-1 h-10 rounded-xl bg-gray-200/50"></div>
+        <div className="flex-1 h-10 rounded-xl bg-gray-200/50"></div>
+      </div>
+    </div>
+  );
+}
+
 export default function ProfilePageClient({
   profile,
   currentUserId,
@@ -77,7 +98,6 @@ export default function ProfilePageClient({
     handleBookmarkToggle: handleNewsBookmarkToggle,
   } = useNewsFeedContext();
 
-  // ✅ Follow Context 사용
   const { isFollowing: isFollowingFromContext, toggleFollow } = useFollow();
 
   const isOwnProfile = currentUserId === targetUserId;
@@ -112,10 +132,8 @@ export default function ProfilePageClient({
   const [myBookmarks, setMyBookmarks] =
     useState<BookmarkedItem[]>(initialBookmarks);
 
-  // ✅ Context에서 팔로우 상태 가져오기
   const isFollowing = isFollowingFromContext(targetUserId);
 
-  // targetUserId 변경 시 모든 state 강제 리셋
   useEffect(() => {
     setLocalProfile(profile);
     setMyPosts(initialMyPosts);
@@ -140,7 +158,6 @@ export default function ProfilePageClient({
     supabase,
   ]);
 
-  // ✅ Follow Context의 toggleFollow 사용
   const handleFollowToggle = useCallback(async () => {
     if (currentUserId === targetUserId) return;
 
@@ -149,7 +166,6 @@ export default function ProfilePageClient({
     } catch (error) {
       console.error("Follow toggle failed:", error);
 
-      // 사용자에게 에러 메시지 표시
       if (error instanceof Error) {
         alert(error.message);
       } else {
@@ -166,7 +182,6 @@ export default function ProfilePageClient({
     [myBookmarks]
   );
 
-  // 메인 Realtime 구독 (팔로우 제외)
   useEffect(() => {
     if (!targetUserId || !currentUserId) return;
 
@@ -212,13 +227,12 @@ export default function ProfilePageClient({
       channel.on(
         "postgres_changes",
         {
-          event: "*", // 1. "*"로 변경 (혹은 이미 하셨다면 유지)
+          event: "*", 
           schema: "public",
           table: "posts",
           filter: `user_id=eq.${targetUserId}`,
         },
         (payload) => {
-          // 2. eventType에 따라 분기
           if (payload.eventType === "INSERT") {
             const newPost = payload.new as PostType;
             setMyPosts((prev) => [newPost, ...prev]);
@@ -245,7 +259,6 @@ export default function ProfilePageClient({
           } else if (payload.eventType === "DELETE") {
             const oldPost = payload.old as { id: string };
             setMyPosts((prev) => prev.filter((post) => post.id !== oldPost.id));
-            // 북마크된 항목에서도 제거
             setMyBookmarks((prev) =>
               prev.filter(
                 (item) => !(item.type === "post" && item.id === oldPost.id)
@@ -259,7 +272,7 @@ export default function ProfilePageClient({
       channel.on(
         "postgres_changes",
         {
-          event: "*", // 1. "*"로 변경
+          event: "*", 
           schema: "public",
           table: "comments",
           filter: `user_id=eq.${targetUserId}`,
@@ -285,7 +298,7 @@ export default function ProfilePageClient({
                   ? {
                       ...comment,
                       like_count: updatedComment.like_count,
-                      reply_count: updatedComment.reply_count, // 2. reply_count 갱신 추가
+                      reply_count: updatedComment.reply_count, 
                     }
                   : comment
               )
@@ -417,11 +430,9 @@ export default function ProfilePageClient({
         },
         async (payload) => {
           const newBookmark = payload.new as { news_id: string };
-
-          // 1. news_id로 뉴스 데이터 다시 조회
           const { data: newsData, error } = await supabase
             .from("news")
-            .select("*, user_news_likes ( user_id )") // 필요한 데이터를 모두 선택
+            .select("*, user_news_likes ( user_id )") 
             .eq("id", newBookmark.news_id)
             .single();
 
@@ -432,8 +443,6 @@ export default function ProfilePageClient({
             );
             return;
           }
-
-          // 2. BookmarkedItem 타입으로 변환
           const newsItem: NewsItemWithState & { type: "news" } = {
             ...newsData,
             type: "news" as const,
@@ -442,8 +451,6 @@ export default function ProfilePageClient({
             ),
             isBookmarked: true,
           };
-
-          // 3. 상태에 추가
           setMyBookmarks((prev) => [newsItem, ...prev]);
         }
       );
@@ -477,8 +484,6 @@ export default function ProfilePageClient({
             );
             return;
           }
-
-          // myPosts 상태의 isBookmarked 업데이트
           setMyPosts((prev) =>
             prev.map((post) => {
               if (post.id === newBookmark.post_id) {
@@ -487,8 +492,6 @@ export default function ProfilePageClient({
               return post;
             })
           );
-
-          // BookmarkedItem 타입으로 변환
           const postToAdd: PostType & { type: "post" } = {
             ...(postData as PostType),
             isLiked: !!(
@@ -497,8 +500,6 @@ export default function ProfilePageClient({
             isBookmarked: true,
             type: "post" as const,
           };
-
-          // myBookmarks 상태에 추가
           setMyBookmarks((prev) => [postToAdd, ...prev]);
         }
       );
@@ -861,6 +862,7 @@ export default function ProfilePageClient({
     [handleNewsLikeToggle, currentUserId]
   );
 
+
   return (
     <>
       <div className="relative">
@@ -872,17 +874,21 @@ export default function ProfilePageClient({
           onAvatarClick={() => isOwnProfile && setIsEditImgOpen(true)}
           onEditClick={() => isOwnProfile && setIsEditProfileOpen(true)}
         />
-        <ProfileActivityTabs
-          initialTab={initialTab as TabKey}
-          myPosts={myPosts}
-          myComments={myComments}
-          myBookmarks={myBookmarks}
-          onLikeToggle={handleProfileNewsLikeToggle}
-          onBookmarkToggle={handleProfileBookmarkToggle}
-          onPostLikeToggle={handlePostLikeToggle}
-          onCommentLikeToggle={handleCommentLikeToggle}
-          onPostBookmarkToggle={handlePostBookmarkToggle}
-        />
+        
+        {/* 3. useSearchParams()를 쓰는 컴포넌트를 Suspense로 감쌉니다. */}
+        <Suspense fallback={<ProfileTabsSkeleton />}>
+          <ProfileActivityTabs
+            initialTab={initialTab as TabKey}
+            myPosts={myPosts}
+            myComments={myComments}
+            myBookmarks={myBookmarks}
+            onLikeToggle={handleProfileNewsLikeToggle}
+            onBookmarkToggle={handleProfileBookmarkToggle}
+            onPostLikeToggle={handlePostLikeToggle}
+            onCommentLikeToggle={handleCommentLikeToggle}
+            onPostBookmarkToggle={handlePostBookmarkToggle}
+          />
+        </Suspense>
       </div>
 
       <ProfileEditModal

@@ -1,5 +1,6 @@
 import ContentBox from "@/components/ContentBox";
 import { Heart, User, X } from "lucide-react";
+export const dynamic = 'force-dynamic';
 
 export default function Page() {
   return (
