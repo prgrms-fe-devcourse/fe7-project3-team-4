@@ -1,45 +1,13 @@
 "use client";
 
-import MenuBtn from "./MenuBtn";
-import {
-  Bell,
-  History,
-  House,
-  LogIn,
-  LogOut,
-  MessageCircle,
-  Moon,
-  Search,
-  User,
-} from "lucide-react";
-import Gemini from "../../../assets/svg/Gemini";
-import GPT from "../../../assets/svg/GPT";
-import Write from "../../../assets/svg/Write";
-import Logo from "../../../assets/svg/Logo";
-import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-
-const MENU_ITEMS = [
-  { title: "홈", icon: <House />, url: "/" },
-  { title: "검색", icon: <Search />, url: "search" },
-  { title: "알림", icon: <Bell />, url: "notify" },
-  { title: "채팅", icon: <MessageCircle />, url: "message" },
-  { title: "프로필", icon: <User />, url: "profile" },
-  { title: "조회 내역", icon: <History />, url: "views" },
-  { title: "게시글 작성", icon: <Write />, url: "write" },
-  {
-    title: "GPT",
-    icon: <GPT />,
-    url: "https://chatgpt.com/",
-  },
-  {
-    title: "Gemini",
-    icon: <Gemini />,
-    url: "https://gemini.google.com/",
-  },
-];
+import { DesktopSidebar } from "./DesktopSidebar";
+import { useAuthUser } from "@/hooks/sidebar/useAuthUser";
+import { useUnreadCounts } from "@/hooks/sidebar/useUnreadCounts";
+import { MENU_ITEMS } from "./menuConfig";
+import { MobileHeader } from "./MobileHeader";
+import { useState } from "react";
 
 function isActivePath(
   pathname: string,
@@ -55,10 +23,8 @@ function isActivePath(
     return pathname === "/";
   }
 
-  // 프로필 페이지인 경우, 로그인한 사용자 본인의 프로필일 때만 active
   if (target === "/profile") {
     if (pathname === target || pathname.startsWith(`${target}/`)) {
-      // userId 파라미터가 없거나, 현재 사용자 ID와 같을 때만 active
       return !profileUserId || profileUserId === currentUserId;
     }
     return false;
@@ -71,238 +37,44 @@ export default function LeftSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [isLogin, setIsLogin] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  // 안 읽은 알림 개수
-  const [unreadCount, setUnreadCount] = useState(0);
-  // 안 읽은 채팅 개수
-  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
-
   const profileUserId = searchParams.get("userId");
 
-  useEffect(() => {
-    const supabase = createClient();
+  const [clickMenu, setClickMenu] = useState(false);
 
-    const fetchUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setIsLogin(!!user);
-      setCurrentUserId(user?.id || null);
-    };
-    fetchUser(); // 인증 상태 변경 리스너 (로그인, 로그아웃 감지)
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        const user = session?.user;
-        setIsLogin(!!user);
-        setCurrentUserId(user?.id || null);
-
-        if (event === "SIGNED_OUT") {
-          setUnreadCount(0);
-          setUnreadMessageCount(0);
-        }
-      }
-    );
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!currentUserId) {
-      return;
-    }
-
-    const supabase = createClient();
-
-    const fetchUnreadCount = async () => {
-      const { count, error } = await supabase
-        .from("notifications")
-        .select("*", { count: "exact", head: true })
-        .eq("recipient_id", currentUserId)
-        .eq("is_read", false);
-
-      if (error) {
-        console.error("알림 개수 조회 오류:", error.message);
-      } else {
-        setUnreadCount(count ?? 0);
-      }
-    };
-
-    fetchUnreadCount();
-
-    const channel = supabase
-      .channel(`notifications-${currentUserId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT", // 1. 새 알림이 '삽입'될 때
-          schema: "public",
-          table: "notifications",
-          filter: `recipient_id=eq.${currentUserId}`,
-        },
-        (payload) => {
-          console.log("알림 'INSERT' 감지!", payload);
-          fetchUnreadCount(); // 개수 다시 계산
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE", // 2. 알림이 '수정'될 때 (예: is_read 변경)
-          schema: "public",
-          table: "notifications",
-          filter: `recipient_id=eq.${currentUserId}`,
-        },
-        (payload) => {
-          console.log("알림 'UPDATE' 감지!", payload);
-          fetchUnreadCount(); // 개수 다시 계산
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "DELETE", // 3. [★핵심★] 알림이 '삭제'될 때
-          schema: "public",
-          table: "notifications", // DELETE는 payload.old 기준으로 필터링됩니다.
-          filter: `recipient_id=eq.${currentUserId}`,
-        },
-        (payload) => {
-          console.log("알림 'DELETE' 감지!", payload);
-          fetchUnreadCount(); // 개수 다시 계산
-        }
-      )
-      .subscribe();
-
-    const fetchUnreadMessageCount = async () => {
-      const { data, error } = await supabase.rpc("get_unread_message_count");
-
-      if (error) {
-        console.error("안 읽은 메시지 개수 RPC 조회 오류:", error);
-      } else {
-        setUnreadMessageCount(data ?? 0);
-      }
-    };
-
-    fetchUnreadMessageCount();
-
-    const chatChannel = supabase
-      .channel(`message_rooms-${currentUserId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "message_rooms",
-          filter: `pair_max=eq.${currentUserId}`,
-        },
-        () => {
-          fetchUnreadMessageCount(); // 개수 다시 계산
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "message_rooms",
-          filter: `pair_min=eq.${currentUserId}`, // 2. 내가 pair_min인 방의 업데이트 감지
-        },
-        () => {
-          fetchUnreadMessageCount(); // 개수 다시 계산
-        }
-      )
-      .subscribe();
-
-    const newMessagesChannel = supabase
-      .channel(`new-messages-for-${currentUserId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT", // 'messages' 테이블에 새 행이 삽입될 때
-          schema: "public",
-          table: "messages",
-        },
-        (payload) => {
-          console.log("새 메시지 'INSERT' 감지:", payload);
-          fetchUnreadMessageCount(); // 개수 다시 계산
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel); // 알림 채널
-      supabase.removeChannel(chatChannel); // 채팅방 읽음 채널
-      supabase.removeChannel(newMessagesChannel); // 새 메시지 채널
-    };
-  }, [currentUserId]);
+  const { isLogin, currentUserId } = useAuthUser();
+  const { unreadCount, unreadMessageCount } = useUnreadCounts(currentUserId);
 
   const handleLogout = async () => {
-    const supabase = await createClient();
+    const supabase = createClient();
     await supabase.auth.signOut();
     router.refresh();
     router.push("/auth/login");
   };
 
+  const handleMenu = () => setClickMenu((prev) => !prev);
+
   return (
     <>
-      <aside className="hidden lg:block h-full p-6 box-border bg-white/40 border border-white/20 rounded-xl shadow-xl">
-        <Link href={"/"}>
-          <Logo />
-        </Link>
-        <ul className="min-h-[790px] mt-6 flex flex-col justify-between gap-2">
-          <div>
-            {MENU_ITEMS.map((menu) => (
-              <MenuBtn
-                key={menu.title}
-                icon={menu.icon}
-                title={menu.title}
-                url={menu.url}
-                active={isActivePath(
-                  pathname,
-                  menu.url,
-                  currentUserId,
-                  profileUserId
-                )}
-                notificationCount={
-                  menu.title === "알림"
-                    ? unreadCount
-                    : menu.title === "채팅"
-                    ? unreadMessageCount
-                    : 0
-                }
-              />
-            ))}
-          </div>
-          <div className="flex flex-row justify-center gap-6">
-            <li className="rounded-full cursor-pointer shadow-xl p-3 hover:bg-white hover:shadow-xl">
-              <Moon />
-            </li>
-            {/* <li className="flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer hover:bg-white hover:shadow-xl"> */}
-            <li className="rounded-full cursor-pointer shadow-xl p-3 hover:bg-gray-200 hover:shadow-xl">
-              {!isLogin ? (
-                <Link
-                  href={"auth/login"}
-                  className="flex items-center gap-4 flex-1 "
-                >
-                  <LogIn />
-                  {/* <span>로그인</span> */}
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="cursor-pointer flex items-center gap-4 flex-1 "
-                >
-                  <LogOut />
-                  {/* <span>로그아웃</span> */}
-                </button>
-              )}
-            </li>
-          </div>
-        </ul>
-      </aside>
+      <DesktopSidebar
+        menuItems={MENU_ITEMS}
+        pathname={pathname}
+        currentUserId={currentUserId}
+        profileUserId={profileUserId}
+        unreadCount={unreadCount}
+        unreadMessageCount={unreadMessageCount}
+        isLogin={isLogin}
+        onLogout={handleLogout}
+        isActivePath={isActivePath}
+      />
+      {/* 나중에 MobileHeader 추가할 거면 이 아래에 붙이면 됨 */}
+      <MobileHeader
+        isLogin={isLogin}
+        clickMenu={clickMenu}
+        unreadCount={unreadCount}
+        unreadMessageCount={unreadMessageCount}
+        onToggleMenu={handleMenu}
+        onLogout={handleLogout}
+      />
     </>
   );
 }

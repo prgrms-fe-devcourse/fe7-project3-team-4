@@ -1,21 +1,26 @@
 import Link from "next/link";
 import {
+  Bell,
   History,
   LogIn,
   LogOut,
   MessageCircle,
+  Moon,
   Search,
   TextAlignJustify,
   User,
+  X,
 } from "lucide-react";
-import Write from "@/assets/svg/Write";
-import GPT from "@/assets/svg/GPT";
-import Gemini from "@/assets/svg/Gemini";
 import MenuBtn from "./MenuBtn";
+import Svg from "@/assets/svg/Svg";
+import { Dispatch, SetStateAction } from "react";
 
 type MobileHeaderProps = {
   isLogin: boolean;
   clickMenu: boolean;
+  setClickMenu: Dispatch<SetStateAction<boolean>>;
+  unreadCount: number;
+  unreadMessageCount: number;
   onToggleMenu: () => void;
   onLogout: () => void;
 };
@@ -23,83 +28,98 @@ type MobileHeaderProps = {
 export function MobileHeader({
   isLogin,
   clickMenu,
+  setClickMenu,
+  unreadCount,
+  unreadMessageCount,
   onToggleMenu,
   onLogout,
 }: MobileHeaderProps) {
+  const closeMenu = () => setClickMenu(false);
   return (
     <header className="lg:hidden z-99 fixed min-w-full bg-white">
       <div className="relative w-full">
         <div className="p-4 flex justify-between border-b border-[#EAEAEC]">
           <div>
-            <Link href={"/"}>
+            <Link href={"/"} onClick={closeMenu}>
               <div className="w-9 h-9 bg-gray-500">{/* <Logo /> */}</div>
             </Link>
           </div>
-          <button onClick={onToggleMenu}>
-            <TextAlignJustify />
-          </button>
+          <div className="flex gap-2">
+            <MenuBtn
+              icon={<Bell />}
+              title="알림"
+              url="notify"
+              size="md"
+              onClick={closeMenu}
+              notificationCount={unreadCount}
+            />
+            <button onClick={onToggleMenu}>
+              {clickMenu ? <X /> : <TextAlignJustify />}
+            </button>
+          </div>
         </div>
         {clickMenu ? (
           <nav className="absolute top-[68px] w-full ">
-            <ul className="text-sm m-1 p-1 rounded-2xl bg-white shadow-xl">
-              <div className="py-0.5">
+            <ul className="text-sm rounded-b-2xl bg-white shadow-xl">
+              <div className="py-0.5 px-4 space-y-1.5">
                 <MenuBtn
                   icon={<Search size={20} />}
                   title="검색"
                   url="search"
-                  size="sm"
-                  onClick={() => setClickMenu(false)} // 메뉴 닫기
+                  size="md"
+                  onClick={closeMenu}
                 />
                 <MenuBtn
                   icon={<MessageCircle size={20} />}
                   title="채팅"
                   url="message"
-                  size="sm"
-                  onClick={() => setClickMenu(false)}
+                  size="md"
+                  onClick={closeMenu}
+                  notificationCount={unreadMessageCount}
                 />
               </div>
 
-              <div className="py-0.5 border-y border-[#EAEAEC]">
+              <div className="py-0.5 px-4 space-y-1.5 border-y border-[#EAEAEC]">
                 <MenuBtn
                   icon={<User size={20} />}
                   title="프로필"
                   url="profile"
-                  size="sm"
-                  onClick={onToggleMenu}
+                  size="md"
+                  onClick={closeMenu}
                 />
                 <MenuBtn
                   icon={<History size={20} />}
                   title="조회 내역"
                   url="views"
-                  size="sm"
-                  onClick={onToggleMenu}
+                  size="md"
+                  onClick={closeMenu}
                 />
               </div>
 
-              <div className="py-0.5">
+              <div className="py-0.5 px-4 space-y-1.5">
                 <MenuBtn
-                  icon={<Write display="Mobile" />}
+                  icon={<Svg icon="write" display="md" />}
                   title="새 게시글 작성"
                   url="write"
-                  size="sm"
-                  onClick={onToggleMenu}
+                  size="md"
+                  onClick={closeMenu}
                 />
                 <MenuBtn
-                  icon={<GPT display="Mobile" />}
+                  icon={<Svg icon="GPT" display="md" />}
                   title="GPT 사이트로 이동"
                   url="https://chatgpt.com/"
-                  size="sm"
-                  onClick={onToggleMenu}
+                  size="md"
+                  onClick={closeMenu}
                 />
                 <MenuBtn
-                  icon={<Gemini display="Mobile" />}
+                  icon={<Svg icon="Gemini" display="md" />}
                   title="Gemini 사이트로 이동"
                   url="https://gemini.google.com/"
-                  size="sm"
-                  onClick={onToggleMenu}
+                  size="md"
+                  onClick={closeMenu}
                 />
               </div>
-              <div className="py-0.5 border-y border-[#EAEAEC]">
+              <div className="py-0.5 px-4 space-y-1.5 border-y border-[#EAEAEC]">
                 <li className="rounded-lg py-2 px-2.5 flex flex-row items-center active:bg-[#ececec]">
                   {!isLogin ? (
                     <Link
@@ -122,7 +142,7 @@ export function MobileHeader({
                 </li>
                 <li className="rounded-lg py-2 px-2.5 flex flex-row gap-2.5 items-center active:bg-[#ececec]">
                   {/* TODO: 여기 다크모드 토글 아이콘/텍스트로 바꾸기 */}
-                  <Gemini display="Mobile" />
+                  <Moon display="Mobile" />
                   <span>다크모드</span>
                 </li>
               </div>

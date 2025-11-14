@@ -8,7 +8,12 @@ export function useUnreadCounts(currentUserId: string | null) {
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
 
   useEffect(() => {
-    if (!currentUserId) return;
+    if (!currentUserId) {
+      // 로그아웃 등으로 유저가 없어진 경우 바로 0으로 초기화
+      setUnreadCount(0);
+      setUnreadMessageCount(0);
+      return;
+    }
 
     const supabase = createClient();
 
@@ -36,15 +41,41 @@ export function useUnreadCounts(currentUserId: string | null) {
       }
     };
 
+    // 최초 1회 조회
     fetchUnreadCount();
     fetchUnreadMessageCount();
 
+    // 알림 채널
     const notiChannel = supabase
       .channel(`notifications-${currentUserId}`)
       .on(
         "postgres_changes",
         {
-          event: "*",
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `recipient_id=eq.${currentUserId}`,
+        },
+        () => {
+          fetchUnreadCount();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "notifications",
+          filter: `recipient_id=eq.${currentUserId}`,
+        },
+        () => {
+          fetchUnreadCount();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
           schema: "public",
           table: "notifications",
           filter: `recipient_id=eq.${currentUserId}`,
@@ -55,6 +86,7 @@ export function useUnreadCounts(currentUserId: string | null) {
       )
       .subscribe();
 
+    // 채팅방 읽음 상태 채널
     const chatChannel = supabase
       .channel(`message_rooms-${currentUserId}`)
       .on(
@@ -65,7 +97,9 @@ export function useUnreadCounts(currentUserId: string | null) {
           table: "message_rooms",
           filter: `pair_max=eq.${currentUserId}`,
         },
-        () => fetchUnreadMessageCount()
+        () => {
+          fetchUnreadMessageCount();
+        }
       )
       .on(
         "postgres_changes",
@@ -75,10 +109,13 @@ export function useUnreadCounts(currentUserId: string | null) {
           table: "message_rooms",
           filter: `pair_min=eq.${currentUserId}`,
         },
-        () => fetchUnreadMessageCount()
+        () => {
+          fetchUnreadMessageCount();
+        }
       )
       .subscribe();
 
+    // 새 메시지 채널
     const newMessagesChannel = supabase
       .channel(`new-messages-for-${currentUserId}`)
       .on(
@@ -88,7 +125,9 @@ export function useUnreadCounts(currentUserId: string | null) {
           schema: "public",
           table: "messages",
         },
-        () => fetchUnreadMessageCount()
+        () => {
+          fetchUnreadMessageCount();
+        }
       )
       .subscribe();
 

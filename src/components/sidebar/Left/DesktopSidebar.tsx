@@ -1,9 +1,16 @@
-// components/layout/sidebar/DesktopSidebar.tsx
+"use client";
+
 import Link from "next/link";
 import { LogIn, LogOut, Moon } from "lucide-react";
-import Logo from "@/assets/svg/Logo";
 import MenuBtn from "./MenuBtn";
-import { MenuItem } from "./menuConfig";
+import Logo from "../../../assets/svg/Logo";
+import type { ReactNode } from "react";
+
+type MenuItem = {
+  title: string;
+  icon: ReactNode;
+  url: string;
+};
 
 type DesktopSidebarProps = {
   menuItems: MenuItem[];
@@ -66,11 +73,12 @@ export function DesktopSidebar({
           <li className="rounded-full cursor-pointer shadow-xl p-3 hover:bg-white hover:shadow-xl">
             <Moon />
           </li>
+
           <li className="rounded-full cursor-pointer shadow-xl p-3 hover:bg-gray-200 hover:shadow-xl">
             {!isLogin ? (
               <Link
                 href={"auth/login"}
-                className="flex items-center gap-4 flex-1"
+                className="flex items-center gap-4 flex-1 "
               >
                 <LogIn />
               </Link>
@@ -78,7 +86,7 @@ export function DesktopSidebar({
               <button
                 type="button"
                 onClick={onLogout}
-                className="cursor-pointer flex items-center gap-4 flex-1"
+                className="cursor-pointer flex items-center gap-4 flex-1 "
               >
                 <LogOut />
               </button>

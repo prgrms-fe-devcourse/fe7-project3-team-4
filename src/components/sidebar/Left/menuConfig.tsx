@@ -6,9 +6,7 @@ import {
   Search,
   User,
 } from "lucide-react";
-import Gemini from "@/assets/svg/Gemini";
-import GPT from "@/assets/svg/GPT";
-import Write from "@/assets/svg/Write";
+import Svg from "@/assets/svg/Svg";
 
 export type MenuItem = {
   title: string;
@@ -23,15 +21,19 @@ export const MENU_ITEMS: MenuItem[] = [
   { title: "채팅", icon: <MessageCircle />, url: "message" },
   { title: "프로필", icon: <User />, url: "profile" },
   { title: "조회 내역", icon: <History />, url: "views" },
-  { title: "게시글 작성", icon: <Write display="PC" />, url: "write" },
+  {
+    title: "게시글 작성",
+    icon: <Svg icon="write" display="lg" />,
+    url: "write",
+  },
   {
     title: "GPT",
-    icon: <GPT display="PC" />,
+    icon: <Svg icon="GPT" display="lg" />,
     url: "https://chatgpt.com/",
   },
   {
     title: "Gemini",
-    icon: <Gemini display="PC" />,
+    icon: <Svg icon="Gemini" display="lg" />,
     url: "https://gemini.google.com/",
   },
 ];
