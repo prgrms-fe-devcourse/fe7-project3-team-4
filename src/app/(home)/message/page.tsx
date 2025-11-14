@@ -278,6 +278,7 @@ export default function Page() {
   useEffect(() => {
     if (!me) return;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const patchRoomUpdate = (r: any) => {
       if (roomId === r.id) {
         const peerLR =
