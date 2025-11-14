@@ -11,17 +11,63 @@ import ImageExt from "@tiptap/extension-image";
 import { Placeholder } from "@tiptap/extensions";
 import { getTranslatedTag } from "@/utils/tagTranslator";
 
-export function MainEditorSection({ hashtags }: { hashtags: Hashtag[] }) {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [selectedHashtags, setSelectedHashtags] = useState<Hashtag["name"][]>(
-    []
+type MainEditorSectionProps = {
+  hashtags: Hashtag[];
+
+  // 초기값들
+  initialTitle?: string;
+  initialSubtitle?: string;
+  initialContentJson?: any;
+  initialSelectedHashtags?: Hashtag["name"][];
+  initialThumbnail?: string;
+};
+
+export function MainEditorSection({
+  hashtags,
+  initialTitle = "",
+  initialSubtitle = "",
+  initialContentJson,
+  initialSelectedHashtags = [],
+  initialThumbnail,
+}: MainEditorSectionProps) {
+  // 1. initialContentJson에 유효한 content가 있는지 체크
+  const hasValidInitialContent =
+    initialContentJson &&
+    Array.isArray(initialContentJson.content) &&
+    initialContentJson.content.length > 0;
+
+  // 2. 에디터 초기 doc를 하나로 정의
+  const initialDoc = hasValidInitialContent
+    ? initialContentJson
+    : initialSubtitle
+    ? {
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [{ type: "text", text: initialSubtitle }],
+          },
+        ],
+      }
+    : {
+        type: "doc",
+        content: [],
+      };
+
+  // 썸네일이 "" 이면 프리뷰 없이
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    initialThumbnail && initialThumbnail.trim() !== "" ? initialThumbnail : null
   );
+
+  // HashTag
+  const [selectedHashtags, setSelectedHashtags] = useState<Hashtag["name"][]>(
+    initialSelectedHashtags
+  );
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [contentJson, setContentJson] = useState<any>({
-    type: "doc",
-    content: [],
-  });
-  const [contentText, setContentText] = useState<string>("");
+  const [contentJson, setContentJson] = useState<any>(initialDoc);
+
+  const [contentText, setContentText] = useState<string>(initialSubtitle || "");
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -31,7 +77,7 @@ export function MainEditorSection({ hashtags }: { hashtags: Hashtag[] }) {
       ImageExt,
       Placeholder.configure({ placeholder: "무엇에 대해 이야기해 볼까요?" }),
     ],
-    content: "",
+    content: initialDoc || "",
     editorProps: {
       attributes: {
         class:
@@ -42,7 +88,6 @@ export function MainEditorSection({ hashtags }: { hashtags: Hashtag[] }) {
       setContentJson(editor.getJSON());
       setContentText(editor.getText());
     },
-    // SSR 하이드레이션 대응
     immediatelyRender: false,
   });
 
@@ -73,6 +118,7 @@ export function MainEditorSection({ hashtags }: { hashtags: Hashtag[] }) {
         type="text"
         name="title"
         placeholder="제목"
+        defaultValue={initialTitle}
         className="placeholder-[#A8A8A8] border border-[#D9D9D9] rounded-lg pl-4 py-1.5 outline-none"
       />
 
@@ -133,7 +179,7 @@ export function MainEditorSection({ hashtags }: { hashtags: Hashtag[] }) {
           }
         />
 
-        {/* (선택) 프리뷰용 텍스트 */}
+        {/* 서브타이틀 텍스트 */}
         <input type="hidden" name="content_text" value={contentText} />
       </div>
 

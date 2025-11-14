@@ -3,6 +3,7 @@
 import MenuBtn from "./MenuBtn";
 import {
   Bell,
+  History,
   House,
   LogIn,
   LogOut,
@@ -36,6 +37,7 @@ const MENU_ITEMS = [
   { title: "게시글 작성", icon: <Write />, url: "write" },
   { title: "채팅", icon: <MessageCircle />, url: "message" },
   { title: "프로필", icon: <User />, url: "profile" },
+  { title: "조회 내역", icon: <History />, url: "views" },
 ];
 
 function isActivePath(
