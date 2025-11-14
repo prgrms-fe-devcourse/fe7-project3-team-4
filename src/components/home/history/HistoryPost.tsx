@@ -1,8 +1,13 @@
+"use client"; // [★] 1. 클라이언트 컴포넌트로 선언
+
 import Link from "next/link";
 import Image from "next/image";
 import { ViewHistoryType } from "@/types/Post";
-import { useMemo } from "react";
+// import { getTranslatedTag } from "@/utils/tagTranslator"; // (현재 코드에서 사용되지 않음)
+import { useMemo, useState } from "react"; // [★] 2. useState 추가
 import { X } from "lucide-react";
+import { useRouter } from "next/navigation"; // [★] 3. useRouter 추가
+import { createClient } from "@/utils/supabase/client"; // [★] 4. supabase/client 추가
 
 const getBoardTitle = (postType: string | undefined, subType?: string) => {
   let boardName = "";
@@ -52,6 +57,9 @@ const timeAgo = (dateString: string): string => {
 export default function HistoryPost({ data }: { data: ViewHistoryType }) {
   const post = data.posts;
 
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const postUrl = useMemo(() => {
     if (!post) {
       return "/";
@@ -62,6 +70,24 @@ export default function HistoryPost({ data }: { data: ViewHistoryType }) {
     }
     return `/?type=${post.post_type}&id=${post.id}`;
   }, [post]);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    const supabase = createClient();
+
+    const { error } = await supabase
+      .from("user_post_views")
+      .delete()
+      .eq("id", data.id);
+
+    if (error) {
+      console.error("조회 내역 삭제 오류:", error);
+      alert("기록 삭제 중 오류가 발생했습니다.");
+      setIsDeleting(false);
+    } else {
+      router.refresh();
+    }
+  };
 
   if (!post) {
     return (
@@ -74,7 +100,6 @@ export default function HistoryPost({ data }: { data: ViewHistoryType }) {
   }
 
   const authorName = post.profiles?.display_name || "익명";
-  const authorEmail = post.profiles?.email || "";
   const authorAvatar = post.profiles?.avatar_url;
 
   const displayTime = timeAgo(data.viewed_at);
@@ -85,18 +110,17 @@ export default function HistoryPost({ data }: { data: ViewHistoryType }) {
     <article className="bg-white/40 border border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl overflow-hidden">
       <div className="relative py-3 px-4 border-b border-gray-200">
         <button
-          className="absolute top-5 right-4 p-1 rounded-full text-gray-400 hover:bg-gray-200 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 z-10"
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className="absolute top-5 right-4 p-1 rounded-full text-gray-400 hover:bg-gray-200 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 z-10 disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label="기록 삭제"
         >
           <X size={18} />
         </button>
 
-        {/* 1. 게시판 제목 */}
         <div className="text-sm font-bold mb-3">{boardTitle}</div>
 
-        {/* 2. 메인 컨텐츠 (아바타 + 내용) */}
         <div className="flex gap-3 items-start">
-          {/* 아바타 (왼쪽) */}
           <div className="relative w-10 h-10 bg-gray-300 rounded-full shrink-0 overflow-hidden">
             {authorAvatar ? (
               <Image
@@ -114,16 +138,9 @@ export default function HistoryPost({ data }: { data: ViewHistoryType }) {
           </div>
 
           <div className="flex-1 min-w-0">
-            {/* 작성자 정보 */}
             <div className="flex items-center flex-wrap text-sm">
               <span className="font-medium mr-1.5">{authorName}</span>
-              <span className="text-gray-500 text-xs mr-1.5">
-                {authorEmail}
-              </span>
-              {authorEmail && (
-                <span className="text-gray-500 text-xs mr-1.5">·</span>
-              )}
-              <span className="text-gray-500 text-xs">
+              <span className="text-gray-500 text-xs ml-2">
                 {timeAgo(post.created_at)}
               </span>
             </div>

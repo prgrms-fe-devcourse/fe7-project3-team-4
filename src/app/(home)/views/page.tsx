@@ -16,13 +16,6 @@ export default function Page() {
     <>
       <section className="relative max-w-2xl mx-auto">
         <div className="mt-6 space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="ml-2 text-xl font-semibold">게시글 조회 목록</h3>
-
-            <button className="cursor-pointer leading-none border-b text-[#717182] disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline">
-              내역 삭제
-            </button>
-          </div>
           <Suspense fallback={<HistoryLoadingSkeleton />}>
             <HistoryPostForm />
           </Suspense>

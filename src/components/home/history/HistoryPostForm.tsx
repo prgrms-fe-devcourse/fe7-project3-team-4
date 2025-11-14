@@ -1,8 +1,6 @@
-// /history/page.tsx 또는 HistoryPostForm.tsx
-
 import { createClient } from "@/utils/supabase/server";
-import HistoryPost from "./HistoryPost";
-import { ViewHistoryType } from "@/types/Post"; // [★] 새 타입 import
+import { ViewHistoryType } from "@/types/Post";
+import HistoryClientView from "./HistoryPostHeader";
 
 export default async function HistoryPostForm() {
   const supabase = await createClient();
@@ -31,22 +29,32 @@ export default async function HistoryPostForm() {
     `
     )
     .eq("user_id", user.id)
-    .order("viewed_at", { ascending: false }) // ★최신순 정렬
+    .order("viewed_at", { ascending: false })
     .limit(20);
 
   if (error) {
-    // [★수정★] error 객체 전체를 서버 콘솔(VSC 터미널)에 출력합니다.
     console.error("HistoryPostForm 쿼리 오류:", error);
     return <div>오류가 발생했습니다. (원인: {error.message})</div>;
   }
-  if (!views || views.length === 0) return <div>조회 내역이 없습니다.</div>;
 
-  return (
-    <div className="space-y-4">
-      {/* [★] Supabase가 타입을 추론하지만, 우리가 만든 타입으로 강제(casting)합니다. */}
-      {(views as ViewHistoryType[]).map((view) => (
-        <HistoryPost key={view.id} data={view} />
-      ))}
-    </div>
-  );
+  if (!views || views.length === 0) {
+    return (
+      <div>
+        <div className="flex justify-between items-center">
+          <h3 className="ml-2 text-xl font-semibold">게시글 조회 목록</h3>
+          <button
+            disabled
+            className="cursor-pointer leading-none border-b text-[#717182] disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline"
+          >
+            내역 삭제
+          </button>
+        </div>
+        <div className="mt-7 text-center text-gray-500">
+          조회 내역이 없습니다.
+        </div>
+      </div>
+    );
+  }
+
+  return <HistoryClientView views={views as ViewHistoryType[]} />;
 }
