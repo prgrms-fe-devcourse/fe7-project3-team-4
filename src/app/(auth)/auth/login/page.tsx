@@ -3,13 +3,7 @@ import { Github } from "lucide-react";
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[linear-gradient(126.44deg,#EFF5FE_18.41%,#FBF3FB_81.59%)]">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-purple-300/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-teal-300/20 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-purple-300/10 rounded-full blur-3xl"></div>
-      </div>
-
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="relative w-full max-w-md">
         <div className="backdrop-blur-xl bg-white/50 rounded-2xl p-8 shadow-2xl border border-gray-200">
           <div className="text-center mb-8">
