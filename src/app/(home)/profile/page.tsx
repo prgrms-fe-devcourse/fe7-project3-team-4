@@ -9,8 +9,7 @@ export const dynamic = "force-dynamic";
 export default function Page({
   searchParams,
 }: {
-  // 1. Promise가 아니라 일반 객체 타입입니다.
-  searchParams: { tab?: string; userId?: string };
+  searchParams: Promise<{ tab?: string; userId?: string }>;
 }) {
   return (
     // ✅ ProfilePageClient 전체를 Suspense로 감싸 로딩 처리

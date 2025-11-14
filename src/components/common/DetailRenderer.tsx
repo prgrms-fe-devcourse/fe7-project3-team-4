@@ -1,9 +1,12 @@
+// ============================================
+// 2. DetailRenderer.tsx (상세 페이지용 - TipTap 에디터)
+// ============================================
 "use client";
 
 import { useEditor, EditorContent, type Content } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { Json } from "@/utils/supabase/supabase";
 
 const editorExtensions = [
@@ -19,14 +22,6 @@ const editorExtensions = [
   }),
 ];
 
-// Json → Content 타입으로 변환
-function toTiptapContent(value: Json | null): Content | undefined {
-  if (!value) return undefined;
-  if (typeof value === "string") return value;
-  if (typeof value === "object") return value as Content;
-  return undefined;
-}
-
 export function DetailRenderer({ content }: { content: Json | null }) {
   const editor = useEditor({
     editable: false,
@@ -36,15 +31,15 @@ export function DetailRenderer({ content }: { content: Json | null }) {
     editorProps: {
       attributes: { class: "prose prose-lg max-w-none" },
     },
-    [],
-  );
+  }, []);
 
   useEffect(() => {
     if (editor && content) {
       editor.commands.setContent(content as Content, { emitUpdate: false });
     }
-  }, [editor, tiptapContent]);
+  }, [editor, content]);
 
   if (!editor) return null;
+
   return <EditorContent editor={editor} />;
 }

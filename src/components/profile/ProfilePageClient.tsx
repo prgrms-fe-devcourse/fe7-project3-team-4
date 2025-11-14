@@ -130,9 +130,7 @@ async function toggleFollow(targetId: string): Promise<{ success: boolean }> {
 export default async function ProfilePageClient({
   searchParams,
 }: {
-  // ⛔️ [수정 1] Promise<...> 타입을 일반 객체 타입으로 변경
-  // searchParams: Promise<{ tab?: string; userId?: string }>;
-  searchParams: { tab?: string; userId?: string }; // 👈 이렇게 변경
+  searchParams: Promise<{ tab?: string; userId?: string }>;
 }) {
   const supabase = await createClient();
 
@@ -145,9 +143,7 @@ export default async function ProfilePageClient({
     redirect("/auth/login");
   }
 
-  // ⛔️ [수정 2] searchParams는 더 이상 Promise가 아니므로 await 제거
-  // const search = await searchParams;
-  const search = searchParams; // 👈 이렇게 변경
+  const search = await searchParams;
   const targetUserId = search.userId || user.id;
   const initialTab = search.tab || "posts";
 

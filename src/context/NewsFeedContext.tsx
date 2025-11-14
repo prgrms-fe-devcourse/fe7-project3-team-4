@@ -30,10 +30,10 @@ type NewsFeedContextType = Omit<ReturnType<typeof useNewsFeed>, "latestNews"> & 
   latestNews: LatestNews[];
 };
 
-// Context 생성
+// 2. Context 생성
 const NewsFeedContext = createContext<NewsFeedContextType | undefined>(undefined);
 
-// Provider 컴포넌트 생성
+// 3. Provider 컴포넌트 생성
 export function NewsFeedProvider({ children }: { children: ReactNode }) {
   // 메인 피드 로직 (정렬, 무한 스크롤 등)
   const newsFeed = useNewsFeed("published_at");
@@ -61,7 +61,7 @@ export function NewsFeedProvider({ children }: { children: ReactNode }) {
       .from("news")
       .select("id, title, images")
       .order("published_at", { ascending: false, nullsFirst: false })
-      .limit(10);
+      .limit(10); // 캐러셀은 10개만
 
     if (error) {
       console.error("Error fetching latest news for carousel:", error.message);
@@ -91,7 +91,7 @@ export function NewsFeedProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// Consumer 커스텀 훅 생성
+// 4. Consumer 커스텀 훅 생성 (변경 없음)
 export function useNewsFeedContext() {
   const context = useContext(NewsFeedContext);
   if (context === undefined) {
