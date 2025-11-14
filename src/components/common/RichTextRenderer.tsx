@@ -1,12 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEditor, EditorContent } from "@tiptap/react";
+// [수정] 'type Content'를 @tiptap/react 임포트에 추가합니다.
+import { useEditor, EditorContent, type Content } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import { Json } from "@/utils/supabase/supabase";
 import { useEffect, useMemo, memo } from "react";
 import NextImage from "next/image";
-import Link from "next/link";
+// import Link from "next/link";
 import { useInView } from "react-intersection-observer";
 
 // 에디터 extensions를 컴포넌트 외부로 이동 (재생성 방지)
@@ -90,8 +92,8 @@ function filterOutImages(content: any): any {
 const ImageOnlyView = memo(
   ({
     content,
-    postId,
-    postType,
+    // postId,
+    // postType,
     title,
   }: {
     content: Json | null;
@@ -133,7 +135,8 @@ const RichTextEditor = memo(
       {
         editable: false,
         immediatelyRender: false,
-        content: filteredContent,
+        // 👇 [수정 1/2] 'filteredContent'를 'Content' 타입으로 단언합니다. (오류 발생 지점)
+        content: filteredContent as Content,
         extensions: editorExtensions,
         editorProps: {
           attributes: {
@@ -146,7 +149,8 @@ const RichTextEditor = memo(
 
     useEffect(() => {
       if (editor && filteredContent) {
-        editor.commands.setContent(filteredContent, { emitUpdate: false });
+        // 👇 [수정 2/2] 'setContent' 호출 시에도 동일하게 타입 단언을 추가합니다.
+        editor.commands.setContent(filteredContent as Content, { emitUpdate: false });
       }
     }, [editor, filteredContent]);
 
@@ -177,6 +181,13 @@ const LazyRichTextRendererInternal = memo(
     postType?: string;
     title?: string;
   }) => {
+    // 👇 [수정] 'Rules of Hooks' 오류를 해결하기 위해 useMemo를 최상단으로 이동
+    // 필터링된 콘텐츠를 메모이제이션
+    const filteredContent = useMemo(
+      () => (showImage ? content : filterOutImages(content)),
+      [content, showImage]
+    );
+
     // 이미지만 표시하는 경우
     if (imageOnly) {
       return (
@@ -188,12 +199,6 @@ const LazyRichTextRendererInternal = memo(
         />
       );
     }
-
-    // 필터링된 콘텐츠를 메모이제이션
-    const filteredContent = useMemo(
-      () => (showImage ? content : filterOutImages(content)),
-      [content, showImage]
-    );
 
     return <RichTextEditor filteredContent={filteredContent} />;
   }

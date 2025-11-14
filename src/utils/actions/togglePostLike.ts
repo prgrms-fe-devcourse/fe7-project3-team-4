@@ -17,14 +17,14 @@ export async function togglePostLike(postId: string) {
     .single();
 
   if (likeData) {
-    await supabase.rpc("decrement_like_count", { post_id: postId });
+    await supabase.rpc("decrement_post_like_count", { p_post_id: postId });
     await supabase
       .from("user_post_likes")
       .delete()
       .eq("user_id", user.id)
       .eq("post_id", postId);
   } else {
-    await supabase.rpc("increment_like_count", { p_comment_id: postId });
+    await supabase.rpc("increment_post_like_count", { p_post_id: postId });
     await supabase
       .from("user_post_likes")
       .insert({ user_id: user.id, post_id: postId });

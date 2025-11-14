@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Tiptap/ProseMirror JSON 객체를 순회하며 텍스트와 이미지 정보를 추출합니다.
  * @param content Tiptap/ProseMirror의 content (Json | null)
@@ -71,6 +72,7 @@ export function extractImagesFromJson(content: JSON | null): string[] {
 /* PromptDetail에 사용하려고... */
 type PMMark = { type?: string; attrs?: any };
 type PMNode = {
+  attrs: any;
   type?: string;
   content?: any[];
   text?: string;
