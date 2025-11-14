@@ -1,4 +1,4 @@
-import { Heart, MessageCircle, MessageSquareReply } from "lucide-react";
+import { ThumbsUp, MessageCircle, MessageSquareReply } from "lucide-react";
 import Link from "next/link";
 import ContentBox from "../ContentBox";
 import EmptyActivity from "./EmptyActivity";
@@ -33,8 +33,7 @@ export default function MyComments({
   const getPostUrl = (comment: DbCommentRow) => {
     const postType = comment.posts?.post_type;
     const subType = comment.posts?.sub_type;
-    
-    // post_type에 따라 URL 생성
+
     if (subType) {
       return `/?type=${postType}&id=${comment.target_id}&sub_type=${subType}`;
     }
@@ -45,9 +44,7 @@ export default function MyComments({
   return (
     <div className="space-y-4">
       {comments.map((comment) => {
-        const isLiked =
-          comment.isLiked ??
-          !!(comment.comment_likes && comment.comment_likes.length > 0);
+        const isLiked = comment.isLiked;
 
         return (
           <ContentBox key={comment.id}>
@@ -69,11 +66,10 @@ export default function MyComments({
                           e.preventDefault();
                           onLikeToggle(comment.id);
                         }}
-                        className="flex items-center gap-2 hover:text-red-500 transition-colors"
+                        className="flex items-center gap-2 transition-colors"
                       >
-                        <Heart
+                        <ThumbsUp
                           size={18}
-                          className={isLiked ? "fill-red-500 text-red-500" : ""}
                         />
                         <span>{comment.like_count ?? 0}</span>
                       </button>
