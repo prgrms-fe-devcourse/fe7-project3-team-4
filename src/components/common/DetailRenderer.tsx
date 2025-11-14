@@ -1,12 +1,9 @@
-// ============================================
-// 2. DetailRenderer.tsx (상세 페이지용 - TipTap 에디터)
-// ============================================
 "use client";
 
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, Content } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Json } from "@/utils/supabase/supabase";
 
 const editorExtensions = [
@@ -22,24 +19,36 @@ const editorExtensions = [
   }),
 ];
 
+// Json → Content 타입으로 변환
+function toTiptapContent(value: Json | null): Content | undefined {
+  if (!value) return undefined;
+  if (typeof value === "string") return value;
+  if (typeof value === "object") return value as Content;
+  return undefined;
+}
+
 export function DetailRenderer({ content }: { content: Json | null }) {
-  const editor = useEditor({
-    editable: false,
-    immediatelyRender: false,
-    content: content,
-    extensions: editorExtensions,
-    editorProps: {
-      attributes: { class: "prose prose-lg max-w-none" },
+  const tiptapContent = useMemo(() => toTiptapContent(content), [content]);
+
+  const editor = useEditor(
+    {
+      editable: false,
+      immediatelyRender: false,
+      content: tiptapContent,
+      extensions: editorExtensions,
+      editorProps: {
+        attributes: { class: "prose prose-lg max-w-none" },
+      },
     },
-  }, []);
+    [],
+  );
 
   useEffect(() => {
-    if (editor && content) {
-      editor.commands.setContent(content, { emitUpdate: false });
+    if (editor && tiptapContent !== undefined) {
+      editor.commands.setContent(tiptapContent, { emitUpdate: false });
     }
-  }, [editor, content]);
+  }, [editor, tiptapContent]);
 
   if (!editor) return null;
-
   return <EditorContent editor={editor} />;
 }
