@@ -7,8 +7,9 @@ import Logo from "../../../assets/svg/Logo";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { JSX } from "react";
+import uploadImageMessage from "@/utils/supabase/storage/messages";
 
 /* =========================
  * 타입
@@ -25,6 +26,7 @@ type ChatMessage = {
   room_id: string;
   sender_id: string;
   content: string | null;
+  image_url: string | null;
 };
 type RoomListItem = {
   id: string;
@@ -98,6 +100,7 @@ export default function Page() {
 
   /* ===== 입력창 포커스 제어: 전송/전환 시 자동 포커스 복구 ===== */
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   /* ===== 전송 시/로드 시 대화창 맨 아래로 스크롤 ===== */
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -490,7 +493,7 @@ export default function Page() {
 
       const { data: mlist } = await supabase
         .from("messages")
-        .select("id, created_at, room_id, sender_id, content")
+        .select("id, created_at, room_id, sender_id, content, image_url")
         .eq("room_id", roomId)
         .order("created_at", { ascending: true })
         .limit(50);
@@ -577,11 +580,15 @@ export default function Page() {
   /* =========================
    * 전송 (낙관적 UI + 포커스/스크롤)
    * ========================= */
-  const sendMessage = async () => {
-    if ((!roomId && !peerId) || !me || !draft.trim() || sending) return;
-    setSending(true);
+
+  const sendMessage = async (opts?: { imageFile?: File }) => {
+    const hasImage = !!opts?.imageFile;
     const content = draft.trim();
-    setDraft("");
+
+    if ((!roomId && !peerId) || !me || sending) return;
+    if (!hasImage && !content) return;
+    if (!hasImage && content) setDraft("");
+    setSending(true);
 
     // 입력 포커스 유지
     queueMicrotask(() => inputRef.current?.focus());
@@ -651,9 +658,17 @@ export default function Page() {
       queueMicrotask(() => inputRef.current?.focus());
       return;
     }
-
     if (activeRoomId === roomId) {
       setMyLastReadAt(new Date().toISOString());
+    }
+
+    let imageUrl: string | null = null;
+    if (opts?.imageFile) {
+      imageUrl = await uploadImageMessage(
+        supabase,
+        activeRoomId,
+        opts.imageFile
+      );
     }
 
     // 낙관적 메시지
@@ -662,7 +677,8 @@ export default function Page() {
       created_at: new Date().toISOString(),
       room_id: activeRoomId,
       sender_id: me,
-      content,
+      content: content || null,
+      image_url: imageUrl || null,
     };
     setMsgs((prev) => [...prev, temp]);
 
@@ -671,8 +687,15 @@ export default function Page() {
 
     const { data, error } = await supabase
       .from("messages")
-      .insert([{ room_id: activeRoomId, sender_id: me, content }])
-      .select("id, created_at, room_id, sender_id, content")
+      .insert([
+        {
+          room_id: activeRoomId,
+          sender_id: me,
+          content: content || null,
+          image_url: imageUrl,
+        },
+      ])
+      .select("id, created_at, room_id, sender_id, content, image_url")
       .single();
 
     if (error) {
@@ -696,6 +719,13 @@ export default function Page() {
 
     // 입력 포커스 복구
     queueMicrotask(() => inputRef.current?.focus());
+  };
+
+  const handleImageSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    sendMessage({ imageFile: file });
+    e.target.value = "";
   };
 
   /* =========================
@@ -1047,7 +1077,18 @@ export default function Page() {
                                     : "bg-white/50 text-[#0A0A0A]"
                                 } border border-[#6758FF]/30 rounded-xl px-4 py-2 max-w-[70%]`}
                               >
-                                {m.content}
+                                {m.image_url && (
+                                  <div className="mb-1">
+                                    <Image
+                                      src={m.image_url}
+                                      alt="전송한 이미지"
+                                      width={240}
+                                      height={240}
+                                      className="rounded-lg max-w-full h-auto"
+                                    />
+                                  </div>
+                                )}
+                                {m.content && <p>{m.content}</p>}
                               </div>
 
                               {/* 상대 메시지: 시간/내 미읽음 점 */}
@@ -1130,15 +1171,23 @@ export default function Page() {
                     aria-busy={sending || undefined}
                     className="w-full focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed bg-transparent"
                   />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageSelected}
+                  />
                   <ImageIcon
-                    className="text-[#717182] w-6 h-6"
+                    className="text-[#717182] w-6 h-6 cursor-pointer"
                     strokeWidth={1}
+                    onClick={() => fileInputRef.current?.click()}
                   />
 
                   {/* ✅ 보내기 버튼 (마우스다운으로 포커스 뺏기 방지) */}
                   <button
                     type="button"
-                    onClick={sendMessage}
+                    onClick={() => sendMessage}
                     disabled={(!roomId && !peerId) || sending || !draft.trim()}
                     className="bg-[#6758FF] p-1.5 rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
                     onMouseDown={(e) => e.preventDefault()}
