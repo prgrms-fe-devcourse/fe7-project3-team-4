@@ -68,7 +68,7 @@ export default function Page() {
 
   const [posts, setPosts] = useState<PostType[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
-  const [detailLoading, setDetailLoading] = useState(false); // 상세페이지 로딩 상태 추가
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const activeTab: Tab = useMemo(() => {
     const type = searchParams.get("type") || "all";
@@ -212,22 +212,19 @@ export default function Page() {
     };
   }, [supabase, sortBy]);
 
-  // URL 변경 감지하여 상세페이지 로딩 상태 관리
   useEffect(() => {
     const postId = searchParams.get("id");
 
     if (postId && activeTab !== "뉴스") {
-      // posts가 로딩 중이면 스켈레톤 표시
       if (postsLoading) {
         setDetailLoading(true);
       } else {
-        // posts 로딩이 끝나면 스켈레톤 해제
         setDetailLoading(false);
       }
     } else {
       setDetailLoading(false);
     }
-  }, [searchParams, activeTab, postsLoading]); // posts 제거
+  }, [searchParams, activeTab, postsLoading]);
 
   const postsByType = useMemo(
     () => ({
@@ -263,7 +260,7 @@ export default function Page() {
     params.delete("sub_type");
 
     if (tab !== activeTab) {
-      setDetailLoading(false); // 탭 변경 시 로딩 상태 초기화
+      setDetailLoading(false);
     }
 
     const type = tabToType[tab];
@@ -280,7 +277,7 @@ export default function Page() {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("id");
     params.delete("posttype");
-    setDetailLoading(false); // 뒤로가기 시 로딩 상태 초기화
+    setDetailLoading(false);
     router.push(`/?${params.toString()}`, { scroll: false });
   };
 
@@ -406,6 +403,17 @@ export default function Page() {
     [supabase, posts, handleNewsBookmarkToggle]
   );
 
+  // 게시글 작성 버튼 클릭 핸들러 - 탭에 따라 다른 동작
+  const handleAddPostClick = useCallback(() => {
+    if (activeTab === "뉴스") {
+      // 뉴스 탭에서는 파일 업로드
+      triggerFileInput();
+    } else {
+      // 다른 탭에서는 게시글 작성 페이지로 이동
+      router.push("/write");
+    }
+  }, [activeTab, triggerFileInput, router]);
+
   return (
     <>
       <section className="relative max-w-2xl mx-auto">
@@ -426,12 +434,11 @@ export default function Page() {
             sortBy={sortBy}
             onSortChange={handleSortChange}
             loadingUpload={loadingUpload}
-            onAddPostClick={triggerFileInput}
+            onAddPostClick={handleAddPostClick}  // 수정된 핸들러 전달
           />
         </div>
 
         {searchParams.get("id") && activeTab !== "뉴스" ? (
-          // URL에 id가 있으면 상세페이지 영역
           detailLoading || postsLoading ? (
             <NewsItemSkeleton />
           ) : selectedPost ? (
@@ -442,7 +449,6 @@ export default function Page() {
               onBookmarkToggle={handlePostBookmarkToggle}
             />
           ) : (
-            // 게시글을 찾지 못한 경우
             <div className="flex flex-col items-center justify-center py-20 px-4">
               <p className="text-gray-500 text-center">
                 게시글을 찾을 수 없습니다.
