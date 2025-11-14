@@ -23,14 +23,13 @@ type LatestNews = {
 // 1. useNewsFeed와 useNewsUpload 훅의 반환 타입을 합칩니다.
 // [수정] useNewsFeed의 반환 타입에서 latestNews를 제거하고,
 //       독립적인 latestNews 타입을 수동으로 추가합니다.
-type NewsFeedContextType = Omit<ReturnType<typeof useNewsFeed>, "latestNews"> & {
-  fileInputRef: React.RefObject<HTMLInputElement>;
+type NewsFeedContextType = {
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
   loadingUpload: boolean;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   triggerFileInput: () => void;
-  latestNews: LatestNews[]; // [수정]
+  latestNews: LatestNews[];
 };
-
 // 2. Context 생성
 const NewsFeedContext = createContext<NewsFeedContextType | undefined>(undefined);
 
