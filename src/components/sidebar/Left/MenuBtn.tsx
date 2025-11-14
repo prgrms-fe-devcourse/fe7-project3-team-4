@@ -36,7 +36,7 @@ export default function MenuBtn({
       <span>{title}</span>
 
       {notificationCount > 0 && (
-        <span className="absolute top-2 right-3 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+        <span className="absolute top-3.1 right-3 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
           {notificationCount > 9 ? "9+" : notificationCount}
         </span>
       )}
