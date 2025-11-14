@@ -1,7 +1,9 @@
 import { Suspense } from "react";
 import MessagePageClient from "@/components/home/message/MessagePageClient";
+import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 // Suspense의 fallback으로 사용할 간단한 로딩 컴포넌트
 function MessagePageLoading() {
@@ -17,7 +19,17 @@ function MessagePageLoading() {
 }
 
 // 이 페이지는 이제 Suspense 래퍼(Wrapper) 역할을 합니다.
-export default function MessagePage() {
+export default async function MessagePage() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (!user || userError) {
+    redirect("/auth/login");
+  }
   return (
     <Suspense fallback={<MessagePageLoading />}>
       {/* useSearchParams를 사용하는 실제 컴포넌트 */}
@@ -25,4 +37,3 @@ export default function MessagePage() {
     </Suspense>
   );
 }
-

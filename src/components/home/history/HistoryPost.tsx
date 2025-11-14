@@ -108,7 +108,7 @@ export default function HistoryPost({ data }: { data: ViewHistoryType }) {
 
   return (
     <article className="bg-white/40 border border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl overflow-hidden">
-      <div className="relative py-3 px-4 border-b border-gray-200">
+      <div className="relative py-3 px-4 ">
         <button
           onClick={handleDelete}
           disabled={isDeleting}
