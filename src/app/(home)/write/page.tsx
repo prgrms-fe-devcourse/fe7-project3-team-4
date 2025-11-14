@@ -7,8 +7,6 @@ import WritePageClient from "@/components/write/WritePageClient"; // 1번 파일
 // 이미 동적이지만, 명시적으로 dynamic을 추가하여 빌드 오류 방지)
 export const dynamic = "force-dynamic";
 
-export const dynamic = 'force-dynamic';
-
 
 type PageProps = {
   searchParams?: Promise<{
