@@ -16,9 +16,6 @@ function SearchLoadingFallback() {
   );
 }
 
-// 2. export const dynamic = "force-dynamic" 추가
-export const dynamic = "force-dynamic";
-
 export default async function Page({
   searchParams,
 }: {
