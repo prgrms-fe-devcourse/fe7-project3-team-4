@@ -1,15 +1,6 @@
-import HistoryPostForm from "@/components/home/history/HistoryPostForm";
-import { Suspense } from "react";
-
-function HistoryLoadingSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="bg-white/30 rounded-xl shadow-lg h-48 animate-pulse" />
-      <div className="bg-white/30 rounded-xl shadow-lg h-48 animate-pulse" />
-      <div className="bg-white/30 rounded-xl shadow-lg h-48 animate-pulse" />
-    </div>
-  );
-}
+import ContentBox from "@/components/ContentBox";
+import { Heart, User, X } from "lucide-react";
+export const dynamic = 'force-dynamic';
 
 export default function Page() {
   return (
