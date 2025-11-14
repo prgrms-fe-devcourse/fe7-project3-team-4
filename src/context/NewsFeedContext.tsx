@@ -29,7 +29,13 @@ type NewsFeedContextType = {
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   triggerFileInput: () => void;
   latestNews: LatestNews[];
+  
+  // 새로 추가
+  newsList: LatestNews[];
+  handleLikeToggle: (id: string) => void;
+  handleBookmarkToggle: (id: string) => void;
 };
+
 // 2. Context 생성
 const NewsFeedContext = createContext<NewsFeedContextType | undefined>(undefined);
 
