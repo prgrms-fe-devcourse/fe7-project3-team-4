@@ -58,7 +58,6 @@ export default function ProfilePageClient({
   profile,
   currentUserId,
   targetUserId,
-  isFollowing: initialIsFollowing,
   initialTab,
   updateProfile,
   updateAvatarUrl,
@@ -149,7 +148,7 @@ export default function ProfilePageClient({
       await toggleFollow(targetUserId);
     } catch (error) {
       console.error("Follow toggle failed:", error);
-      
+
       // 사용자에게 에러 메시지 표시
       if (error instanceof Error) {
         alert(error.message);
@@ -213,31 +212,46 @@ export default function ProfilePageClient({
       channel.on(
         "postgres_changes",
         {
-          event: "UPDATE",
+          event: "*", // 1. "*"로 변경 (혹은 이미 하셨다면 유지)
           schema: "public",
           table: "posts",
           filter: `user_id=eq.${targetUserId}`,
         },
         (payload) => {
-          const updatedPost = payload.new as PostType;
-          setMyPosts((prev) =>
-            prev.map((post) =>
-              post.id === updatedPost.id
-                ? {
-                    ...post,
-                    like_count: updatedPost.like_count,
-                    view_count: updatedPost.view_count,
-                  }
-                : post
-            )
-          );
-          setMyBookmarks((prev) =>
-            prev.map((item) =>
-              item.type === "post" && item.id === updatedPost.id
-                ? { ...item, like_count: updatedPost.like_count }
-                : item
-            )
-          );
+          // 2. eventType에 따라 분기
+          if (payload.eventType === "INSERT") {
+            const newPost = payload.new as PostType;
+            setMyPosts((prev) => [newPost, ...prev]);
+          } else if (payload.eventType === "UPDATE") {
+            const updatedPost = payload.new as PostType;
+            setMyPosts((prev) =>
+              prev.map((post) =>
+                post.id === updatedPost.id
+                  ? {
+                      ...post,
+                      like_count: updatedPost.like_count,
+                      view_count: updatedPost.view_count,
+                    }
+                  : post
+              )
+            );
+            setMyBookmarks((prev) =>
+              prev.map((item) =>
+                item.type === "post" && item.id === updatedPost.id
+                  ? { ...item, like_count: updatedPost.like_count }
+                  : item
+              )
+            );
+          } else if (payload.eventType === "DELETE") {
+            const oldPost = payload.old as { id: string };
+            setMyPosts((prev) => prev.filter((post) => post.id !== oldPost.id));
+            // 북마크된 항목에서도 제거
+            setMyBookmarks((prev) =>
+              prev.filter(
+                (item) => !(item.type === "post" && item.id === oldPost.id)
+              )
+            );
+          }
         }
       );
 
@@ -245,20 +259,43 @@ export default function ProfilePageClient({
       channel.on(
         "postgres_changes",
         {
-          event: "UPDATE",
+          event: "*", // 1. "*"로 변경
           schema: "public",
           table: "comments",
           filter: `user_id=eq.${targetUserId}`,
         },
         (payload) => {
-          const updatedComment = payload.new as DbCommentRow;
-          setMyComments((prev) =>
-            prev.map((comment) =>
-              comment.id === updatedComment.id
-                ? { ...comment, like_count: updatedComment.like_count }
-                : comment
-            )
-          );
+          if (payload.eventType === "INSERT") {
+            const newComment = payload.new as DbCommentRow;
+            setMyComments((prev) => [
+              {
+                ...newComment,
+                isLiked: !!(
+                  newComment.comment_likes &&
+                  newComment.comment_likes.length > 0
+                ),
+              },
+              ...prev,
+            ]);
+          } else if (payload.eventType === "UPDATE") {
+            const updatedComment = payload.new as DbCommentRow;
+            setMyComments((prev) =>
+              prev.map((comment) =>
+                comment.id === updatedComment.id
+                  ? {
+                      ...comment,
+                      like_count: updatedComment.like_count,
+                      reply_count: updatedComment.reply_count, // 2. reply_count 갱신 추가
+                    }
+                  : comment
+              )
+            );
+          } else if (payload.eventType === "DELETE") {
+            const oldComment = payload.old as { id: string };
+            setMyComments((prev) =>
+              prev.filter((comment) => comment.id !== oldComment.id)
+            );
+          }
         }
       );
 
@@ -350,7 +387,7 @@ export default function ProfilePageClient({
         }
       );
 
-      // 8. user_news_bookmarks DELETE
+      // 8. user_news_bookmarks INSERT/DELETE
       channel.on(
         "postgres_changes",
         {
@@ -370,7 +407,101 @@ export default function ProfilePageClient({
         }
       );
 
-      // 9. user_post_bookmarks DELETE
+      channel.on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "user_news_bookmarks",
+          filter: `user_id=eq.${targetUserId}`,
+        },
+        async (payload) => {
+          const newBookmark = payload.new as { news_id: string };
+
+          // 1. news_id로 뉴스 데이터 다시 조회
+          const { data: newsData, error } = await supabase
+            .from("news")
+            .select("*, user_news_likes ( user_id )") // 필요한 데이터를 모두 선택
+            .eq("id", newBookmark.news_id)
+            .single();
+
+          if (error || !newsData) {
+            console.error(
+              "Failed to fetch news data on bookmark insert",
+              error
+            );
+            return;
+          }
+
+          // 2. BookmarkedItem 타입으로 변환
+          const newsItem: NewsItemWithState & { type: "news" } = {
+            ...newsData,
+            type: "news" as const,
+            isLiked: !!(
+              newsData.user_news_likes && newsData.user_news_likes.length > 0
+            ),
+            isBookmarked: true,
+          };
+
+          // 3. 상태에 추가
+          setMyBookmarks((prev) => [newsItem, ...prev]);
+        }
+      );
+
+      // 9. user_post_bookmarks INSERT/DELETE
+      channel.on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "user_post_bookmarks",
+          filter: `user_id=eq.${targetUserId}`,
+        },
+        async (payload) => {
+          const newBookmark = payload.new as { post_id: string };
+          const { data: postData, error } = await supabase
+            .from("posts")
+            .select(
+              "*, user_post_likes ( user_id ), profiles:user_id ( avatar_url, display_name, email )"
+            )
+            .eq("id", newBookmark.post_id)
+            .single();
+
+          if (error || !postData) {
+            console.error(
+              `[ProfilePageClient] Failed to fetch post data (id: ${newBookmark.post_id}) on bookmark insert. RLS or Select query issue?`,
+              "Supabase error:",
+              error,
+              "PostData:",
+              postData
+            );
+            return;
+          }
+
+          // myPosts 상태의 isBookmarked 업데이트
+          setMyPosts((prev) =>
+            prev.map((post) => {
+              if (post.id === newBookmark.post_id) {
+                return { ...post, isBookmarked: true };
+              }
+              return post;
+            })
+          );
+
+          // BookmarkedItem 타입으로 변환
+          const postToAdd: PostType & { type: "post" } = {
+            ...(postData as PostType),
+            isLiked: !!(
+              postData.user_post_likes && postData.user_post_likes.length > 0
+            ),
+            isBookmarked: true,
+            type: "post" as const,
+          };
+
+          // myBookmarks 상태에 추가
+          setMyBookmarks((prev) => [postToAdd, ...prev]);
+        }
+      );
       channel.on(
         "postgres_changes",
         {
@@ -394,38 +525,6 @@ export default function ProfilePageClient({
                 : post
             )
           );
-        }
-      );
-
-      // 10. user_post_bookmarks INSERT
-      channel.on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "user_post_bookmarks",
-          filter: `user_id=eq.${targetUserId}`,
-        },
-        (payload) => {
-          const newBookmark = payload.new as { post_id: string };
-          let postToAdd: PostType | undefined;
-
-          setMyPosts((prev) =>
-            prev.map((post) => {
-              if (post.id === newBookmark.post_id) {
-                postToAdd = post;
-                return { ...post, isBookmarked: true };
-              }
-              return post;
-            })
-          );
-
-          if (postToAdd) {
-            setMyBookmarks((prev) => [
-              { ...postToAdd!, isBookmarked: true, type: "post" as const },
-              ...prev,
-            ]);
-          }
         }
       );
 
