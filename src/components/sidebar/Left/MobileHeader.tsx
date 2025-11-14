@@ -53,15 +53,15 @@ export function MobileHeader({
               onClick={closeMenu}
               notificationCount={unreadCount}
             />
-            <button onClick={onToggleMenu}>
+            <button className="cursor-pointer" onClick={onToggleMenu}>
               {clickMenu ? <X /> : <TextAlignJustify />}
             </button>
           </div>
         </div>
         {clickMenu ? (
           <nav className="absolute top-[68px] w-full ">
-            <ul className="text-sm rounded-b-2xl bg-white shadow-xl">
-              <div className="py-0.5 px-4 space-y-1.5">
+            <ul className="text-sm rounded-b-2xl bg-white shadow-xl pb-0.5">
+              <div className="p-1 space-y-1.5">
                 <MenuBtn
                   icon={<Search size={20} />}
                   title="검색"
@@ -79,7 +79,7 @@ export function MobileHeader({
                 />
               </div>
 
-              <div className="py-0.5 px-4 space-y-1.5 border-y border-[#EAEAEC]">
+              <div className="p-1 space-y-1.5 border-y border-[#EAEAEC]">
                 <MenuBtn
                   icon={<User size={20} />}
                   title="프로필"
@@ -96,7 +96,7 @@ export function MobileHeader({
                 />
               </div>
 
-              <div className="py-0.5 px-4 space-y-1.5">
+              <div className="p-1 space-y-1.5">
                 <MenuBtn
                   icon={<Svg icon="write" display="md" />}
                   title="새 게시글 작성"
@@ -111,16 +111,18 @@ export function MobileHeader({
                   size="md"
                   onClick={closeMenu}
                 />
-                <MenuBtn
-                  icon={<Svg icon="Gemini" display="md" />}
-                  title="Gemini 사이트로 이동"
-                  url="https://gemini.google.com/"
-                  size="md"
-                  onClick={closeMenu}
-                />
+                <div className="cursor-pointer hover:bg-[#ececec] active:bg-[#ececec]">
+                  <MenuBtn
+                    icon={<Svg icon="Gemini" display="md" />}
+                    title="Gemini 사이트로 이동"
+                    url="https://gemini.google.com/"
+                    size="md"
+                    onClick={closeMenu}
+                  />
+                </div>
               </div>
-              <div className="py-0.5 px-4 space-y-1.5 border-y border-[#EAEAEC]">
-                <li className="rounded-lg py-2 px-2.5 flex flex-row items-center active:bg-[#ececec]">
+              <div className="p-1 space-y-1.5 border-t border-[#EAEAEC]">
+                <li className="rounded-lg py-2 px-2.5 flex flex-row items-center hover:bg-[#ececec] active:bg-[#ececec]">
                   {!isLogin ? (
                     <Link
                       href={"auth/login"}
@@ -140,9 +142,9 @@ export function MobileHeader({
                     </button>
                   )}
                 </li>
-                <li className="rounded-lg py-2 px-2.5 flex flex-row gap-2.5 items-center active:bg-[#ececec]">
+                <li className="cursor-pointer rounded-lg py-2 px-2.5 flex flex-row gap-2.5 items-center hover:bg-[#ececec] active:bg-[#ececec]">
                   {/* TODO: 여기 다크모드 토글 아이콘/텍스트로 바꾸기 */}
-                  <Moon display="Mobile" />
+                  <Moon display="Mobile" size={20} />
                   <span>다크모드</span>
                 </li>
               </div>

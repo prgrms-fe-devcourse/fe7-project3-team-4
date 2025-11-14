@@ -149,7 +149,7 @@ export default function ProfilePageClient({
       await toggleFollow(targetUserId);
     } catch (error) {
       console.error("Follow toggle failed:", error);
-      
+
       // 사용자에게 에러 메시지 표시
       if (error instanceof Error) {
         alert(error.message);
