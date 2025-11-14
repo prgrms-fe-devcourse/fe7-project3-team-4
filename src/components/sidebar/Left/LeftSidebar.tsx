@@ -70,6 +70,7 @@ export default function LeftSidebar() {
       <MobileHeader
         isLogin={isLogin}
         clickMenu={clickMenu}
+        setClickMenu={setClickMenu}
         unreadCount={unreadCount}
         unreadMessageCount={unreadMessageCount}
         onToggleMenu={handleMenu}
