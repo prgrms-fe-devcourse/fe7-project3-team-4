@@ -46,7 +46,7 @@ export function DesktopSidebar({
         <Logo />
       </Link>
       <ul className="min-h-[790px] mt-6 flex flex-col justify-between gap-2">
-        <div>
+        <div className="space-y-2">
           {menuItems.map((menu) => (
             <MenuBtn
               key={menu.title}
