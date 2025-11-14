@@ -30,3 +30,4 @@ export async function togglePostLike(postId: string) {
       .insert({ user_id: user.id, post_id: postId });
   }
 }
+}

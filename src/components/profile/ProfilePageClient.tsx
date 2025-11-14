@@ -147,6 +147,7 @@ export default async function ProfilePageClient({
   const targetUserId = search.userId || user.id;
   const initialTab = search.tab || "posts";
 
+
   return (
     <section className="relative max-w-2xl mx-auto">
       <Suspense fallback={<ProfilePageSkeleton />}>
