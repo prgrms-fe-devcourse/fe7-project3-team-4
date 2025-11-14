@@ -1,6 +1,5 @@
 import { Suspense } from "react"; // 1. Suspense import
 import SearchPostForm from "@/components/home/search/SearchPostForm";
-import { Suspense } from "react"; // 1. Suspense를 임포트합니다.
 
 // 2. 이 페이지는 URL 파라미터(검색어)에 의존하므로
 //    동적 렌더링을 명시합니다.
