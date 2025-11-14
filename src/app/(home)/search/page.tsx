@@ -1,3 +1,4 @@
+import { Suspense } from "react"; // 1. Suspense import
 import SearchPostForm from "@/components/home/search/SearchPostForm";
 import { Suspense } from "react"; // 1. Suspense를 임포트합니다.
 
@@ -16,6 +17,9 @@ function SearchLoadingFallback() {
   );
 }
 
+// 2. export const dynamic = "force-dynamic" 추가
+export const dynamic = "force-dynamic";
+
 export default async function Page({
   searchParams,
 }: {
@@ -31,11 +35,16 @@ export default async function Page({
   const searchTerm = q?.toLowerCase() ?? "";
   const tagTerm = tag?.toLowerCase() ?? "";
 
+  // 3. Suspense의 fallback으로 사용할 간단한 스켈레톤
+  const SearchFormSkeleton = (
+    <div className="w-full h-12 bg-gray-200 rounded-lg animate-pulse dark:bg-gray-700" />
+  );
+
   return (
     <>
       <section className="relative max-w-2xl mx-auto">
-        {/* 5. useSearchParams()를 사용하는 컴포넌트를 Suspense로 감싸줍니다. */}
-        <Suspense fallback={<SearchLoadingFallback />}>
+        {/* 4. SearchPostForm을 Suspense로 감싸기 */}
+        <Suspense fallback={SearchFormSkeleton}>
           <SearchPostForm searchTerm={searchTerm} tagTerm={tagTerm} />
         </Suspense>
       </section>

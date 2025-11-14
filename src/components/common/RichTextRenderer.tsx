@@ -1,13 +1,14 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEditor, EditorContent, Content } from "@tiptap/react";
+// [수정] 'type Content'를 @tiptap/react 임포트에 추가합니다.
+import { useEditor, EditorContent, type Content } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import { Json } from "@/utils/supabase/supabase";
 import { useEffect, useMemo, memo } from "react";
 import NextImage from "next/image";
+// import Link from "next/link";
 import { useInView } from "react-intersection-observer";
 
 // ===============================
@@ -97,7 +98,17 @@ function filterOutImages(content: any): any {
 // 이미지만 프리뷰하는 컴포넌트
 // ==================================================
 const ImageOnlyView = memo(
-  ({ content, title }: { content: Json | null; title?: string }) => {
+  ({
+    content,
+    // postId,
+    // postType,
+    title,
+  }: {
+    content: Json | null;
+    postId?: string;
+    postType?: string;
+    title?: string;
+  }) => {
     const images = useMemo(() => extractImages(content), [content]);
     if (images.length === 0) return null;
 
@@ -133,7 +144,8 @@ const RichTextEditor = memo(
       {
         editable: false,
         immediatelyRender: false,
-        content: tiptapContent,
+        // 👇 [수정 1/2] 'filteredContent'를 'Content' 타입으로 단언합니다. (오류 발생 지점)
+        content: filteredContent as Content,
         extensions: editorExtensions,
         editorProps: {
           attributes: {
@@ -145,8 +157,9 @@ const RichTextEditor = memo(
     );
 
     useEffect(() => {
-      if (editor && tiptapContent !== undefined) {
-        editor.commands.setContent(tiptapContent, { emitUpdate: false });
+      if (editor && filteredContent) {
+        // 👇 [수정 2/2] 'setContent' 호출 시에도 동일하게 타입 단언을 추가합니다.
+        editor.commands.setContent(filteredContent as Content, { emitUpdate: false });
       }
     }, [editor, tiptapContent]);
 
@@ -172,14 +185,17 @@ const LazyRichTextRendererInternal = memo(
     showImage?: boolean;
     title?: string;
   }) => {
-    if (imageOnly) {
-      return <ImageOnlyView content={content} title={title} />;
-    }
-
+    // 👇 [수정] 'Rules of Hooks' 오류를 해결하기 위해 useMemo를 최상단으로 이동
+    // 필터링된 콘텐츠를 메모이제이션
     const filteredContent = useMemo(
       () => (showImage ? content : filterOutImages(content)),
       [content, showImage]
     );
+
+    // 이미지만 표시하는 경우
+    if (imageOnly) {
+      return <ImageOnlyView content={content} title={title} />;
+    }
 
     return <RichTextEditor filteredContent={filteredContent} />;
   }

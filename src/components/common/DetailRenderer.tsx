@@ -1,6 +1,6 @@
 "use client";
 
-import { useEditor, EditorContent, Content } from "@tiptap/react";
+import { useEditor, EditorContent, type Content } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import { useEffect, useMemo } from "react";
@@ -28,24 +28,20 @@ function toTiptapContent(value: Json | null): Content | undefined {
 }
 
 export function DetailRenderer({ content }: { content: Json | null }) {
-  const tiptapContent = useMemo(() => toTiptapContent(content), [content]);
-
-  const editor = useEditor(
-    {
-      editable: false,
-      immediatelyRender: false,
-      content: tiptapContent,
-      extensions: editorExtensions,
-      editorProps: {
-        attributes: { class: "prose prose-lg max-w-none" },
-      },
+  const editor = useEditor({
+    editable: false,
+    immediatelyRender: false,
+    content: content as Content,
+    extensions: editorExtensions,
+    editorProps: {
+      attributes: { class: "prose prose-lg max-w-none" },
     },
     [],
   );
 
   useEffect(() => {
-    if (editor && tiptapContent !== undefined) {
-      editor.commands.setContent(tiptapContent, { emitUpdate: false });
+    if (editor && content) {
+      editor.commands.setContent(content as Content, { emitUpdate: false });
     }
   }, [editor, tiptapContent]);
 

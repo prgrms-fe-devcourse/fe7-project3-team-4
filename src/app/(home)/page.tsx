@@ -1,35 +1,36 @@
-// app/(home)/page.tsx
-
 import { Suspense } from "react";
-import HomeClient from "@/components/home/homeClient"; // 2번에서 만들 HomeClient 컴포넌트
+import HomePageClient from "@/components/home/HomePageClient";
 
-// ✅ 이 페이지가 URL 파라미터(searchParams)에 의존하므로
-//    정적이 아닌 동적 렌더링을 하도록 명시합니다.
-export const dynamic = "force-dynamic";
+// ✅ [필수] useSearchParams를 사용하므로 정적 렌더링을 비활성화하고
+// 동적 렌더링(SSR)을 강제하여 빌드 오류를 해결합니다.
+export const dynamic = 'force-dynamic';
 
-/**
- * Suspense가 로드되는 동안 보여줄 로딩 UI (폴백)
- * (기존 코드의 NewsItemSkeleton을 재사용하거나 간단한 텍스트를 넣습니다)
- */
-function HomeLoadingFallback() {
+// Suspense의 fallback으로 사용할 로딩 스켈레톤 컴포넌트
+function HomePageLoading() {
+  // HomePageClient.tsx 내부의 스켈레톤과 유사하게 간단히 구성
   return (
     <section className="relative max-w-2xl mx-auto">
-      <div className="flex items-center justify-center py-20">
-        <p className="text-gray-500">페이지를 불러오는 중...</p>
-        {/*
-          <NewsItemSkeleton />
-        */}
+      {/* TopBar 영역 스켈레톤 */}
+      <div className="mb-5 sticky top-0 z-20 p-4 bg-white/80 backdrop-blur-sm">
+        <div className="h-10 bg-gray-200 rounded-md animate-pulse"></div>
+      </div>
+      
+      {/* Post 리스트 영역 스켈레톤 */}
+      <div className="space-y-8 pb-6 px-4">
+        <div className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>
+        <div className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>
+        <div className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>
       </div>
     </section>
   );
 }
 
-export default function Page() {
+// 이 페이지는 Suspense 래퍼(Wrapper) 역할을 합니다.
+export default function HomePage() {
   return (
-    // ✅ useSearchParams()를 사용하는 클라이언트 컴포넌트를
-    //    Suspense로 감싸 오류를 해결합니다.
-    <Suspense fallback={<HomeLoadingFallback />}>
-      <HomeClient />
+    <Suspense fallback={<HomePageLoading />}>
+      {/* useSearchParams를 사용하는 실제 클라이언트 컴포넌트 */}
+      <HomePageClient />
     </Suspense>
   );
 }

@@ -64,6 +64,7 @@ export function extractImagesFromJson(content: JSON | null): string[] {
 /* PMNode 타입 정의 */
 type PMMark = { type?: string; attrs?: any };
 type PMNode = {
+  attrs: any;
   type?: string;
   content?: PMNode[];
   text?: string;

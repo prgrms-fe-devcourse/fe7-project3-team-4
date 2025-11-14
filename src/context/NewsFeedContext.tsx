@@ -4,13 +4,14 @@ import {
   createContext,
   useContext,
   ReactNode,
-  useRef,
+  // useRef,
   useState,
   useEffect,
+  useCallback, // [추가]
 } from "react";
 import { useNewsFeed } from "@/hooks/news/useNewsFeed";
 import { useNewsUpload } from "@/hooks/news/useNewsUpload";
-import { SortKey, NewsItemWithState } from "@/types";
+// import { SortKey, NewsItemWithState } from "@/types";
 import { createClient } from "@/utils/supabase/client";
 
 // LatestNewsCarousel이 요구하는 최소한의 타입
@@ -20,11 +21,14 @@ type LatestNews = {
   images?: string[] | null;
 };
 
-// useNewsFeed와 useNewsUpload 훅의 반환 타입을 합칩니다.
-type NewsFeedContextType = Omit<ReturnType<typeof useNewsFeed>, "latestNews"> & 
-  ReturnType<typeof useNewsUpload> & {
-    latestNews: LatestNews[];
-  };
+// 1. useNewsFeed와 useNewsUpload 훅의 반환 타입을 합칩니다.
+type NewsFeedContextType = Omit<ReturnType<typeof useNewsFeed>, "latestNews"> & {
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  loadingUpload: boolean;
+  handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
+  triggerFileInput: () => void;
+  latestNews: LatestNews[];
+};
 
 // Context 생성
 const NewsFeedContext = createContext<NewsFeedContextType | undefined>(undefined);
@@ -40,7 +44,8 @@ export function NewsFeedProvider({ children }: { children: ReactNode }) {
     onUploadSuccess: () => {
       newsFeed.setMessage("✅ 기사 저장 완료! 목록을 새로고침합니다.");
       newsFeed.refreshFeed();
-      fetchLatestNews(); // 업로드 성공 시 캐러셀도 갱신
+      // [수정] useCallback으로 생성된 함수 호출
+      fetchLatestNews();
     },
     onUploadError: (errorMessage) => newsFeed.setMessage(errorMessage),
   });
@@ -49,7 +54,9 @@ export function NewsFeedProvider({ children }: { children: ReactNode }) {
   const [latestNews, setLatestNews] = useState<LatestNews[]>([]);
   const supabase = createClient();
 
-  const fetchLatestNews = async () => {
+  // [수정] 함수를 useCallback으로 감싸서 메모이제이션합니다.
+  const fetchLatestNews = useCallback(async () => {
+    // 캐러셀은 id, title, images 필드만 필요합니다.
     const { data, error } = await supabase
       .from("news")
       .select("id, title, images")
@@ -61,13 +68,14 @@ export function NewsFeedProvider({ children }: { children: ReactNode }) {
     } else if (data) {
       setLatestNews(data);
     }
-  };
+    // [수정] useCallback의 의존성 배열에 supabase 클라이언트 추가
+  }, [supabase]); 
 
   // 컴포넌트 마운트 시 캐러셀 데이터 1회 로드
   useEffect(() => {
     fetchLatestNews();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // [수정] 의존성 배열에 fetchLatestNews 추가
+  }, [fetchLatestNews]);
 
   // 두 훅의 반환값을 하나로 합쳐서 value로 제공
   const value = {
