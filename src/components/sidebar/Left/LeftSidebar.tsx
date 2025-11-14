@@ -137,14 +137,40 @@ export default function LeftSidebar() {
       .on(
         "postgres_changes",
         {
-          event: "*",
+          event: "INSERT", // 1. 새 알림이 '삽입'될 때
           schema: "public",
           table: "notifications",
           filter: `recipient_id=eq.${currentUserId}`,
         },
         (payload) => {
-          console.log("새 알림 감지!", payload);
-          fetchUnreadCount();
+          console.log("알림 'INSERT' 감지!", payload);
+          fetchUnreadCount(); // 개수 다시 계산
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE", // 2. 알림이 '수정'될 때 (예: is_read 변경)
+          schema: "public",
+          table: "notifications",
+          filter: `recipient_id=eq.${currentUserId}`,
+        },
+        (payload) => {
+          console.log("알림 'UPDATE' 감지!", payload);
+          fetchUnreadCount(); // 개수 다시 계산
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE", // 3. [★핵심★] 알림이 '삭제'될 때
+          schema: "public",
+          table: "notifications", // DELETE는 payload.old 기준으로 필터링됩니다.
+          filter: `recipient_id=eq.${currentUserId}`,
+        },
+        (payload) => {
+          console.log("알림 'DELETE' 감지!", payload);
+          fetchUnreadCount(); // 개수 다시 계산
         }
       )
       .subscribe();
@@ -161,7 +187,6 @@ export default function LeftSidebar() {
 
     fetchUnreadMessageCount();
 
-    // [신규] 채팅방 테이블 실시간 구독
     const chatChannel = supabase
       .channel(`message_rooms-${currentUserId}`)
       .on(
@@ -170,10 +195,9 @@ export default function LeftSidebar() {
           event: "UPDATE",
           schema: "public",
           table: "message_rooms",
-          filter: `pair_max=eq.${currentUserId}`, // 1. 내가 pair_max인 방의 업데이트 감지
+          filter: `pair_max=eq.${currentUserId}`,
         },
-        (payload) => {
-          console.log("채팅방 '읽음' 상태 변경 감지 (max):", payload);
+        () => {
           fetchUnreadMessageCount(); // 개수 다시 계산
         }
       )
@@ -185,8 +209,7 @@ export default function LeftSidebar() {
           table: "message_rooms",
           filter: `pair_min=eq.${currentUserId}`, // 2. 내가 pair_min인 방의 업데이트 감지
         },
-        (payload) => {
-          console.log("채팅방 '읽음' 상태 변경 감지 (min):", payload);
+        () => {
           fetchUnreadMessageCount(); // 개수 다시 계산
         }
       )
@@ -200,9 +223,6 @@ export default function LeftSidebar() {
           event: "INSERT", // 'messages' 테이블에 새 행이 삽입될 때
           schema: "public",
           table: "messages",
-          // ★참고: RLS 정책(1단계 SQL)이 `sender_id != auth.uid()`로
-          // 필터링하므로, 내가 보낸 메시지 INSERT도 여기서 감지되지만
-          // 최종 카운트에는 포함되지 않아 안전합니다.
         },
         (payload) => {
           console.log("새 메시지 'INSERT' 감지:", payload);
