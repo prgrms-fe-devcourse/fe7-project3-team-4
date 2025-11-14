@@ -9,6 +9,7 @@ import DetailActions from "./DetailActions"; // [수정] 기능이 확장된 Det
 import Link from "next/link";
 import Image from "next/image"; // [수정] Image 임포트
 import { NewsRow } from "@/types";
+import { getTranslatedTag } from "@/utils/tagTranslator"; // [✅ 추가] 임포트
 
 interface MetascraperData {
   author?: string;
@@ -140,7 +141,7 @@ export default async function NewsDetailPage({
 
   return (
     // [수정] PostDetail과 동일한 컨테이너 스타일 적용 (이전 단계에서 적용됨)
-    <main className="max-w-3xl mx-auto p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
+    <main className="max-w-2xl mx-auto p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
       {/* 수정하기 버튼 (기존 위치 유지) */}
       <div className="mb-4 text-right">
         <Link
@@ -210,7 +211,7 @@ export default async function NewsDetailPage({
       {tags.length > 0 && (
         <div className="space-x-2 text-sm text-[#248AFF]">
           {tags.map((tag, i) => (
-            <span key={i}>{tag.startsWith("#") ? tag : `#${tag}`}</span>
+            <span key={i}>#{getTranslatedTag(tag)}</span> // [✅ 수정]
           ))}
         </div>
       )}

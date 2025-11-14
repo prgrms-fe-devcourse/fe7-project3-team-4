@@ -3,6 +3,7 @@ import Link from "next/link";
 import PostActions from "./PostAction";
 import { PostType } from "@/types/Post";
 import Image from "next/image";
+import { getTranslatedTag } from "@/utils/tagTranslator";
 
 export default function MyPost({
   data,
@@ -48,16 +49,11 @@ export default function MyPost({
           </div>
         </div>
 
-        {/* 중간: 제목 */}
-        <Link href={postUrl} className="block my-5">
-          <h3 className="text-[18px] font-semibold hover:underline">
-            {data.title}
-          </h3>
-        </Link>
-
-        {/* 썸네일 이미지 (thumbnail) - 존재할 경우에만 렌더링 */}
-        {data.thumbnail && (
-          <Link href={postUrl} className="block my-5">
+        <Link href={postUrl} className="block my-5 space-y-4">
+          {/* 중간: 제목 */}
+          <h3 className="text-[18px] font-semibold">{data.title}</h3>
+          {/* 썸네일 이미지 (thumbnail) - 존재할 경우에만 렌더링 */}
+          {data.thumbnail && (
             <div className="relative w-full aspect-video overflow-hidden rounded-lg">
               <Image
                 src={data.thumbnail}
@@ -67,23 +63,18 @@ export default function MyPost({
                 loading="lazy"
               />
             </div>
-          </Link>
-        )}
-
-        {/* 부제목 (subtitle) - 존재할 경우에만 렌더링 */}
-        {data.subtitle && (
-          <Link href={postUrl} className="block my-5">
-            <div className="line-clamp-3 text-gray-700">
-              {data.subtitle}
-            </div>
-          </Link>
-        )}
+          )}
+          {/* 부제목 (subtitle) - 존재할 경우에만 렌더링 */}
+          {data.subtitle && (
+            <div className="line-clamp-3 text-gray-700">{data.subtitle}</div>
+          )}
+        </Link>
 
         {/* 해시태그 */}
         {data.hashtags && data.hashtags.length > 0 && (
-          <div className="space-x-2 text-sm text-[#248AFF] mt-4">
+          <div className="flex flex-wrap gap-2 text-sm text-[#248AFF] mt-4">
             {data.hashtags.map((tag, i) => (
-              <span key={i}>{tag.startsWith("#") ? tag : `#${tag}`}</span>
+              <span key={i}>#{getTranslatedTag(tag)}</span>
             ))}
           </div>
         )}

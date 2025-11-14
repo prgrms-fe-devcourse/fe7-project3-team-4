@@ -276,6 +276,7 @@ export default function Page() {
   useEffect(() => {
     if (!me) return;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const patchRoomUpdate = (r: any) => {
       if (roomId === r.id) {
         const peerLR =
@@ -589,6 +590,9 @@ export default function Page() {
     if (!hasImage && !content) return;
     if (!hasImage && content) setDraft("");
     setSending(true);
+
+    // 입력 포커스 유지
+    queueMicrotask(() => inputRef.current?.focus());
 
     // 입력 포커스 유지
     queueMicrotask(() => inputRef.current?.focus());

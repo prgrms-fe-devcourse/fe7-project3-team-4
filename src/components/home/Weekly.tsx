@@ -1,32 +1,45 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import ModelToggle from "./post/ModelToggle";
 import TextWeekly from "./weekly/TextWeekly";
 import ImgWeekly from "./weekly/ImgWeekly";
 import WeeklyNotice from "./weekly/WeeklyNotice";
-import { PostType } from "@/types/Post";
-
-type WeeklyModel = "텍스트" | "이미지";
+import { PostType, WeeklyModel } from "@/types/Post";
 
 // [수정] Props 타입 정의 및 핸들러 추가
 type WeeklyProps = {
   data: PostType[];
   onLikeToggle?: (id: string) => void;
   onBookmarkToggle?: (id: string, type: "post" | "news") => void;
+  activeSubType: string | null;
 };
 
 export default function Weekly({
   data,
   onLikeToggle,
   onBookmarkToggle,
+  activeSubType,
 }: WeeklyProps) {
-  const [activeModel, setActiveModel] = useState<WeeklyModel>("텍스트");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [activeModel, setActiveModel] = useState<WeeklyModel>(() => {
+    if (activeSubType === "Image") return "Image";
+    return "Text";
+  });
+
+  const handleModelChange = (model: WeeklyModel) => {
+    setActiveModel(model);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("sub_type", model);
+    router.push(`/?${params.toString()}`, { scroll: false });
+  };
 
   const filtered = useMemo(
     () =>
       data.filter(
-        (post) => post.model?.toLowerCase() === activeModel.toLowerCase()
+        (post) => post.result_mode?.toLowerCase() === activeModel.toLowerCase()
       ),
     [data, activeModel]
   );
@@ -36,7 +49,7 @@ export default function Weekly({
       <ModelToggle
         mode="weekly"
         active={activeModel}
-        onChange={setActiveModel}
+        onChange={handleModelChange}
       />
       {/* 주간 챌린지 공지? */}
       <WeeklyNotice active={activeModel} />
@@ -79,18 +92,20 @@ export default function Weekly({
       </div>
 
       {/* [수정] 핸들러 props 전달 */}
-      {activeModel === "텍스트" && (
+      {activeModel === "Text" && (
         <TextWeekly
           data={filtered}
           onLikeToggle={onLikeToggle}
           onBookmarkToggle={onBookmarkToggle}
+          subType={activeModel}
         />
       )}
-      {activeModel === "이미지" && (
+      {activeModel === "Image" && (
         <ImgWeekly
           data={filtered}
           onLikeToggle={onLikeToggle}
           onBookmarkToggle={onBookmarkToggle}
+          subType={activeModel}
         />
       )}
     </>

@@ -1,3 +1,5 @@
+import { getTranslatedTag } from "@/utils/tagTranslator"; // [✅ 추가] 임포트
+
 export default function Tag({
   index,
   hashtag,
@@ -12,7 +14,8 @@ export default function Tag({
       <div className="flex gap-2">
         <span className="text-[#6758FF]">{index}.</span>
         <div>
-          <p className="text-sm mb-1.5">#{hashtag}</p>
+          {/* [✅ 수정] 함수 직접 호출 */}
+          <p className="text-sm mb-1.5">#{getTranslatedTag(hashtag)}</p>
           <p className="text-xs text-[#717182]">{views} 조회</p>
         </div>
       </div>

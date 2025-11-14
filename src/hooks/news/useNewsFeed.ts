@@ -136,7 +136,9 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
   const setupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const initialLoadDoneRef = useRef(false);
   const retryCountRef = useRef(0);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const maxRetries = 5;
+  const isUnmountedRef = useRef(false);
 
   const fetchNews = useCallback(
     async (
@@ -255,12 +257,35 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
     fetchNews(sortBy, 0, true);
   }, [fetchNews, sortBy]);
 
-  // ✅ Realtime 구독 설정 (exponential backoff 추가)
+  // ✅ Realtime 구독 설정 (개선된 에러 처리)
   useEffect(() => {
     let isSubscribed = true;
+    isUnmountedRef.current = false;
+
+    const cleanupChannel = async () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
+      }
+
+      if (channelRef.current) {
+        console.log(`[useNewsFeed] 🧹 Removing old channel`);
+        try {
+          await supabase.removeChannel(channelRef.current);
+        } catch (err) {
+          console.warn(`[useNewsFeed] ⚠️ Error removing channel:`, err);
+        }
+        channelRef.current = null;
+      }
+    };
 
     const setupRealtime = async (userId: string | null) => {
-      if (lastSubscribedUserIdRef.current === userId) {
+      if (isUnmountedRef.current || !isSubscribed) {
+        console.log(`[useNewsFeed] ⏸️ Component unmounted, skipping setup`);
+        return;
+      }
+
+      if (lastSubscribedUserIdRef.current === userId && channelRef.current) {
         console.log(
           `[useNewsFeed] ⏸️ Already subscribed for user: ${
             userId || "anon"
@@ -269,139 +294,201 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
         return;
       }
 
-      if (channelRef.current) {
-        console.log(`[useNewsFeed] 🧹 Removing old channel`);
-        await supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
+      await cleanupChannel();
 
-      if (!isSubscribed) return;
+      if (!isSubscribed || isUnmountedRef.current) return;
 
       lastSubscribedUserIdRef.current = userId;
       userIdRef.current = userId;
 
-      const channelName = `news-feed:${userId || "anon"}`;
-      const channel = supabase.channel(channelName);
-      console.log(`[useNewsFeed] 🚀 Subscribing to: ${channelName}`);
+      const channelName = `news-feed-${Date.now()}-${userId || "anon"}`;
+      console.log(`[useNewsFeed] 🚀 Creating channel: ${channelName}`);
 
-      channel.on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "news" },
-        (payload) =>
-          handleNewsUpdate(
-            payload as RealtimePostgresChangesPayload<NewsRow>,
-            setNewsList
-          )
-      );
+      try {
+        const channel = supabase.channel(channelName, {
+          config: {
+            broadcast: { self: true },
+            presence: { key: userId || "anon" },
+          },
+        });
 
-      if (userId) {
-        channel
-          .on(
-            "postgres_changes",
-            {
-              event: "*",
-              schema: "public",
-              table: "user_news_likes",
-              filter: `user_id=eq.${userId}`,
-            },
-            (payload) =>
-              handleLikeUpdate(
-                payload as RealtimePostgresChangesPayload<LikePayload>,
-                setNewsList,
-                userId
-              )
-          )
-          .on(
-            "postgres_changes",
-            {
-              event: "*",
-              schema: "public",
-              table: "user_news_bookmarks",
-              filter: `user_id=eq.${userId}`,
-            },
-            (payload) =>
-              handleBookmarkUpdate(
-                payload as RealtimePostgresChangesPayload<BookmarkPayload>,
-                setNewsList,
-                userId
-              )
-          );
-      }
+        // News 테이블 변경 감지
+        channel.on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "news" },
+          (payload) =>
+            handleNewsUpdate(
+              payload as RealtimePostgresChangesPayload<NewsRow>,
+              setNewsList
+            )
+        );
 
-      channel.subscribe((status, err) => {
-        console.log(`[useNewsFeed] Subscription status: ${status}`);
-        
-        if (status === "SUBSCRIBED") {
-          console.log(
-            `[useNewsFeed] ✅ SUBSCRIBED successfully for user: ${
-              userId || "anon"
-            }`
-          );
-          retryCountRef.current = 0; // 성공 시 재시도 카운트 리셋
-        } else if (status === "CHANNEL_ERROR") {
-          console.error(`[useNewsFeed] ❌ CHANNEL_ERROR:`, err || "Unknown error");
-          
-          // Exponential backoff으로 재연결
-          if (retryCountRef.current < maxRetries) {
-            const delay = Math.min(1000 * Math.pow(2, retryCountRef.current), 30000);
-            retryCountRef.current++;
-            console.log(
-              `[useNewsFeed] 🔄 Retrying connection in ${delay}ms (attempt ${retryCountRef.current}/${maxRetries})...`
+        // 로그인한 사용자만 likes/bookmarks 구독
+        if (userId) {
+          channel
+            .on(
+              "postgres_changes",
+              {
+                event: "*",
+                schema: "public",
+                table: "user_news_likes",
+                filter: `user_id=eq.${userId}`,
+              },
+              (payload) =>
+                handleLikeUpdate(
+                  payload as RealtimePostgresChangesPayload<LikePayload>,
+                  setNewsList,
+                  userId
+                )
+            )
+            .on(
+              "postgres_changes",
+              {
+                event: "*",
+                schema: "public",
+                table: "user_news_bookmarks",
+                filter: `user_id=eq.${userId}`,
+              },
+              (payload) =>
+                handleBookmarkUpdate(
+                  payload as RealtimePostgresChangesPayload<BookmarkPayload>,
+                  setNewsList,
+                  userId
+                )
             );
-            
-            setTimeout(() => {
-              if (isSubscribed) {
-                setupRealtime(userId);
-              }
-            }, delay);
-          } else {
-            console.error(
-              `[useNewsFeed] ❌ Max retries (${maxRetries}) reached. Giving up.`
-            );
-          }
-        } else if (status === "TIMED_OUT") {
-          console.error(`[useNewsFeed] ⏱️ TIMED_OUT:`, err || "Connection timeout");
-          
-          // Timeout 시에도 재시도
-          if (retryCountRef.current < maxRetries) {
-            const delay = Math.min(1000 * Math.pow(2, retryCountRef.current), 30000);
-            retryCountRef.current++;
-            console.log(
-              `[useNewsFeed] 🔄 Retrying after timeout in ${delay}ms (attempt ${retryCountRef.current}/${maxRetries})...`
-            );
-            
-            setTimeout(() => {
-              if (isSubscribed) {
-                setupRealtime(userId);
-              }
-            }, delay);
-          } else {
-            console.error(
-              `[useNewsFeed] ❌ Max retries (${maxRetries}) reached after timeout. Giving up.`
-            );
-          }
-        } else if (status === "CLOSED") {
-          console.log(`[useNewsFeed] 🔒 Channel closed`);
         }
-      });
 
-      channelRef.current = channel;
+        channel.subscribe((status, err) => {
+          if (isUnmountedRef.current) {
+            console.log(
+              `[useNewsFeed] ⏸️ Component unmounted during subscription`
+            );
+            return;
+          }
+
+          console.log(
+            `[useNewsFeed] 📡 Subscription status: ${status}`,
+            err ? `Error: ${JSON.stringify(err)}` : ""
+          );
+
+          if (status === "SUBSCRIBED") {
+            console.log(
+              `[useNewsFeed] ✅ SUBSCRIBED successfully for user: ${
+                userId || "anon"
+              }`
+            );
+            retryCountRef.current = 0;
+          } else if (status === "CHANNEL_ERROR") {
+            console.error(
+              `[useNewsFeed] ❌ CHANNEL_ERROR:`,
+              err || "Unknown error"
+            );
+
+            // Exponential backoff으로 재연결
+            if (
+              retryCountRef.current < maxRetries &&
+              isSubscribed &&
+              !isUnmountedRef.current
+            ) {
+              const delay = Math.min(
+                1000 * Math.pow(2, retryCountRef.current),
+                30000
+              );
+              retryCountRef.current++;
+              console.log(
+                `[useNewsFeed] 🔄 Retrying connection in ${delay}ms (attempt ${retryCountRef.current}/${maxRetries})...`
+              );
+
+              retryTimeoutRef.current = setTimeout(() => {
+                if (isSubscribed && !isUnmountedRef.current) {
+                  setupRealtime(userId);
+                }
+              }, delay);
+            } else {
+              console.error(
+                `[useNewsFeed] ❌ Max retries (${maxRetries}) reached or component unmounted. Giving up.`
+              );
+            }
+          } else if (status === "TIMED_OUT") {
+            console.error(
+              `[useNewsFeed] ⏱️ TIMED_OUT:`,
+              err || "Connection timeout"
+            );
+
+            if (
+              retryCountRef.current < maxRetries &&
+              isSubscribed &&
+              !isUnmountedRef.current
+            ) {
+              const delay = Math.min(
+                1000 * Math.pow(2, retryCountRef.current),
+                30000
+              );
+              retryCountRef.current++;
+              console.log(
+                `[useNewsFeed] 🔄 Retrying after timeout in ${delay}ms (attempt ${retryCountRef.current}/${maxRetries})...`
+              );
+
+              retryTimeoutRef.current = setTimeout(() => {
+                if (isSubscribed && !isUnmountedRef.current) {
+                  setupRealtime(userId);
+                }
+              }, delay);
+            } else {
+              console.error(
+                `[useNewsFeed] ❌ Max retries (${maxRetries}) reached after timeout. Giving up.`
+              );
+            }
+          } else if (status === "CLOSED") {
+            console.log(`[useNewsFeed] 🔒 Channel closed`);
+          }
+        });
+
+        channelRef.current = channel;
+      } catch (err) {
+        console.error(`[useNewsFeed] ❌ Error creating channel:`, err);
+        if (
+          retryCountRef.current < maxRetries &&
+          isSubscribed &&
+          !isUnmountedRef.current
+        ) {
+          const delay = Math.min(
+            1000 * Math.pow(2, retryCountRef.current),
+            30000
+          );
+          retryCountRef.current++;
+          retryTimeoutRef.current = setTimeout(() => {
+            if (isSubscribed && !isUnmountedRef.current) {
+              setupRealtime(userId);
+            }
+          }, delay);
+        }
+      }
     };
 
     (async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      const userId = user?.id || null;
-      await setupRealtime(userId);
-      if (isSubscribed) {
-        setIsAuthReady(true);
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        const userId = user?.id || null;
+        await setupRealtime(userId);
+        if (isSubscribed && !isUnmountedRef.current) {
+          setIsAuthReady(true);
+        }
+      } catch (err) {
+        console.error(`[useNewsFeed] ❌ Error getting user:`, err);
+        if (isSubscribed && !isUnmountedRef.current) {
+          setIsAuthReady(true); // 에러가 있어도 계속 진행
+        }
       }
     })();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (isUnmountedRef.current) return;
+
       console.log(
         `[useNewsFeed] 👤 Auth changed: ${event}`,
         session?.user?.id || "anon"
@@ -420,24 +507,34 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
       }
 
       setupTimeoutRef.current = setTimeout(() => {
-        if (!isSubscribed) return;
+        if (!isSubscribed || isUnmountedRef.current) return;
         console.log(`[useNewsFeed] 🔄 User changed, re-subscribing...`);
-        retryCountRef.current = 0; // 사용자 변경 시 재시도 카운트 리셋
+        retryCountRef.current = 0;
         setupRealtime(newUserId);
       }, 300);
     });
 
     return () => {
+      console.log(`[useNewsFeed] 🧹 Cleanup started`);
       isSubscribed = false;
+      isUnmountedRef.current = true;
       subscription?.unsubscribe();
 
       if (setupTimeoutRef.current) {
         clearTimeout(setupTimeoutRef.current);
+        setupTimeoutRef.current = null;
+      }
+
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
       }
 
       if (channelRef.current) {
         console.log(`[useNewsFeed] 🧹 Cleanup: removing channel`);
-        supabase.removeChannel(channelRef.current);
+        supabase.removeChannel(channelRef.current).catch((err) => {
+          console.warn(`[useNewsFeed] ⚠️ Error during cleanup:`, err);
+        });
         channelRef.current = null;
       }
 

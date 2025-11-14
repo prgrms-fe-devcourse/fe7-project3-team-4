@@ -1,4 +1,3 @@
-// src/components/profile/ProfilePageSkeleton.tsx
 "use client";
 
 import { ProfileHeaderSkeleton } from "./ProfileHeaderSkeleton";

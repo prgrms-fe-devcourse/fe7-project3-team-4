@@ -87,128 +87,131 @@ function filterOutImages(content: any): any {
 }
 
 // 이미지만 표시하는 컴포넌트
-const ImageOnlyView = memo(({ 
-  content, 
-  postId, 
-  postType, 
-  title 
-}: { 
-  content: Json | null;
-  postId?: string;
-  postType?: string;
-  title?: string;
-}) => {
-  const images = useMemo(() => extractImages(content), [content]);
-  
-  if (images.length === 0) {
-    return null;
-  }
+const ImageOnlyView = memo(
+  ({
+    content,
+    postId,
+    postType,
+    title,
+  }: {
+    content: Json | null;
+    postId?: string;
+    postType?: string;
+    title?: string;
+  }) => {
+    const images = useMemo(() => extractImages(content), [content]);
 
-  return (
-    <Link
-      href={`/?type=${postType}&id=${postId}`}
-      scroll={false}
-      aria-label={title}
-      className="block relative w-full aspect-video rounded-lg overflow-hidden bg-gray-200 mt-4"
-    >
-      <NextImage
-        src={images[0]}
-        alt={title || ""}
-        fill
-        className="object-cover"
-        loading="lazy"
-        sizes="(max-width: 768px) 100vw, 50vw"
-        priority={false}
-      />
-    </Link>
-  );
-});
+    if (images.length === 0) {
+      return null;
+    }
+
+    return (
+      <div
+        aria-label={title}
+        className="block relative w-full aspect-video rounded-lg overflow-hidden bg-gray-200 mt-4"
+      >
+        <NextImage
+          src={images[0]}
+          alt={title || ""}
+          fill
+          className="object-cover"
+          loading="lazy"
+          sizes="(max-width: 768px) 100vw, 50vw"
+          priority={false}
+        />
+      </div>
+    );
+  }
+);
 
 ImageOnlyView.displayName = "ImageOnlyView";
 
 // 메인 에디터 컴포넌트
-const RichTextEditor = memo(({ 
-  filteredContent 
-}: { 
-  filteredContent: Json | null;
-}) => {
-  const editor = useEditor({
-    editable: false,
-    immediatelyRender: false,
-    content: filteredContent,
-    extensions: editorExtensions,
-    editorProps: {
-      attributes: {
-        class: "prose prose-lg max-w-none",
+const RichTextEditor = memo(
+  ({ filteredContent }: { filteredContent: Json | null }) => {
+    const editor = useEditor(
+      {
+        editable: false,
+        immediatelyRender: false,
+        content: filteredContent,
+        extensions: editorExtensions,
+        editorProps: {
+          attributes: {
+            class: "prose prose-lg max-w-none",
+          },
+        },
       },
-    },
-  }, []);
+      []
+    );
 
-  useEffect(() => {
-    if (editor && filteredContent) {
-      editor.commands.setContent(filteredContent, { emitUpdate: false });
+    useEffect(() => {
+      if (editor && filteredContent) {
+        editor.commands.setContent(filteredContent, { emitUpdate: false });
+      }
+    }, [editor, filteredContent]);
+
+    if (!editor) {
+      return null;
     }
-  }, [editor, filteredContent]);
 
-  if (!editor) {
-    return null;
+    return <EditorContent editor={editor} />;
   }
-
-  return <EditorContent editor={editor} />;
-});
+);
 
 RichTextEditor.displayName = "RichTextEditor";
 
 // 가상 스크롤링이 적용된 렌더러 (내부 구현)
-const LazyRichTextRendererInternal = memo(({ 
-  content, 
-  imageOnly = false,
-  showImage = true,
-  postId,
-  postType,
-  title
-}: { 
-  content: Json | null;
-  imageOnly?: boolean;
-  showImage?: boolean;
-  postId?: string;
-  postType?: string;
-  title?: string;
-}) => {
-  // 이미지만 표시하는 경우
-  if (imageOnly) {
-    return (
-      <ImageOnlyView 
-        content={content}
-        postId={postId}
-        postType={postType}
-        title={title}
-      />
+const LazyRichTextRendererInternal = memo(
+  ({
+    content,
+    imageOnly = false,
+    showImage = true,
+    postId,
+    postType,
+    title,
+  }: {
+    content: Json | null;
+    imageOnly?: boolean;
+    showImage?: boolean;
+    postId?: string;
+    postType?: string;
+    title?: string;
+  }) => {
+    // 이미지만 표시하는 경우
+    if (imageOnly) {
+      return (
+        <ImageOnlyView
+          content={content}
+          postId={postId}
+          postType={postType}
+          title={title}
+        />
+      );
+    }
+
+    // 필터링된 콘텐츠를 메모이제이션
+    const filteredContent = useMemo(
+      () => (showImage ? content : filterOutImages(content)),
+      [content, showImage]
     );
+
+    return <RichTextEditor filteredContent={filteredContent} />;
   }
-
-  // 필터링된 콘텐츠를 메모이제이션
-  const filteredContent = useMemo(
-    () => showImage ? content : filterOutImages(content),
-    [content, showImage]
-  );
-
-  return <RichTextEditor filteredContent={filteredContent} />;
-});
+);
 
 LazyRichTextRendererInternal.displayName = "LazyRichTextRendererInternal";
 
 // 메인 컴포넌트 (가상 스크롤링 적용)
-export default function RichTextRenderer({ 
-  content, 
+export default function RichTextRenderer({
+  content,
   imageOnly = false,
   showImage = true,
   postId,
   postType,
   title,
   lazy = true, // 가상 스크롤링 활성화 옵션
-  rootMargin = "200px" // 뷰포트로부터 얼마나 미리 로드할지
-}: { 
+  rootMargin = "200px", // 뷰포트로부터 얼마나 미리 로드할지
+}: {
   content: Json | null;
   imageOnly?: boolean;
   showImage?: boolean;
@@ -240,7 +243,7 @@ export default function RichTextRenderer({
 
   // lazy 모드: placeholder 먼저 표시, 뷰포트 진입 시 실제 콘텐츠 로드
   return (
-    <div ref={ref} className="min-h-[100px]">
+    <div ref={ref}>
       {inView ? (
         <LazyRichTextRendererInternal
           content={content}
