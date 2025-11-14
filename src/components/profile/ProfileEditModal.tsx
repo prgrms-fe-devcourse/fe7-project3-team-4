@@ -44,7 +44,7 @@ export function ProfileEditModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg relative p-6 bg-[#f6f6f6]/60 border-white/40 rounded-2xl backdrop-blur-md"
+        className="w-full max-w-md lg:max-w-lg relative p-6 bg-[#f6f6f6]/60 border-white/40 rounded-2xl backdrop-blur-md" // [5.1] 스타일 수정
       >
         <h3 className="text-xl font-medium mb-7">프로필 편집</h3>
 
