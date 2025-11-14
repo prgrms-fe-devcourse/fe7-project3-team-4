@@ -24,8 +24,8 @@ export default function MenuBtn({
 }: MenuBtnProps) {
   const base =
     size === "md"
-      ? "relative flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer text-sm"
-      : "relative flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer";
+      ? "relative flex items-center gap-2.5 rounded-lg cursor-pointer text-sm"
+      : "relative flex items-center gap-4 rounded-xl cursor-pointer";
 
   const activeStyle =
     size === "md"
@@ -67,7 +67,9 @@ export default function MenuBtn({
           href={url}
           target="_blank"
           rel="noreferrer"
-          className="flex items-center gap-2.5 flex-1"
+          className={`flex items-center gap-2.5 flex-1 ${
+            size === "md" ? "px-2.5 py-2" : "px-4 py-3"
+          }`}
           onClick={onClick}
         >
           {content}
@@ -84,7 +86,7 @@ export default function MenuBtn({
         href={href}
         className={`flex items-center ${
           size === "md" && title === "알림" ? "gap-0" : "gap-2.5"
-        } flex-1`}
+        } flex-1 ${size === "md" ? "px-2.5 py-2" : "px-4 py-3"}`}
         onClick={onClick}
       >
         {content}
