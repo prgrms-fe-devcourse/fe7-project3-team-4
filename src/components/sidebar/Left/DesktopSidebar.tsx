@@ -70,15 +70,17 @@ export function DesktopSidebar({
           ))}
         </div>
         <div className="flex flex-row justify-center gap-6">
-          <li className="rounded-full cursor-pointer shadow-xl p-3 hover:bg-white hover:shadow-xl">
-            <Moon />
+          <li className="rounded-full shadow-xl hover:bg-white hover:shadow-xl">
+            <button className="p-3 cursor-pointer">
+              <Moon />
+            </button>
           </li>
 
-          <li className="rounded-full cursor-pointer shadow-xl p-3 hover:bg-gray-200 hover:shadow-xl">
+          <li className="rounded-full cursor-pointer shadow-xl hover:bg-gray-200 hover:shadow-xl">
             {!isLogin ? (
               <Link
                 href={"auth/login"}
-                className="flex items-center gap-4 flex-1 "
+                className="flex items-center gap-4 flex-1 p-3"
               >
                 <LogIn />
               </Link>
@@ -86,7 +88,7 @@ export function DesktopSidebar({
               <button
                 type="button"
                 onClick={onLogout}
-                className="cursor-pointer flex items-center gap-4 flex-1 "
+                className="cursor-pointer flex items-center gap-4 flex-1 p-3"
               >
                 <LogOut />
               </button>

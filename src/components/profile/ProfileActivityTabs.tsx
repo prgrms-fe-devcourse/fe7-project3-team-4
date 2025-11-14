@@ -70,8 +70,8 @@ ProfileActivityTabsProps) {
 
   return (
     <>
-      <div className="bg-white/40 border border-white/20 rounded-xl shadow-xl">
-        <div className="mt-6 p-1 w-full flex gap-1 leading-none">
+      <div className="bg-white/40 border border-white/20 rounded-xl shadow-xl mt-6">
+        <div className="p-1 w-full flex gap-1 leading-none">
           <Link
             href={createTabHref("posts")}
             scroll={false}
@@ -104,10 +104,7 @@ ProfileActivityTabsProps) {
 
       <div className="mt-4 lg:mt-6">
         {activeTab === "posts" && (
-          <MyPosts
-            posts={myPosts}
-            onLikeToggle={onPostLikeToggle}
-          />
+          <MyPosts posts={myPosts} onLikeToggle={onPostLikeToggle} />
         )}
         {activeTab === "comments" && (
           <MyComments

@@ -66,7 +66,7 @@ export default function TopBar({
           {/* [수정] 정렬 버튼 로직 (NewsHeader 참고) */}
           <button
             onClick={() => handleSortClick("published_at")}
-            className={`py-1 px-3 rounded-lg cursor-pointer text-[10px] ${
+            className={`py-1 px-3 rounded-lg cursor-pointer text-1rem ${
               isSortByDate
                 ? "text-[#0A0A0A] bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.10)]"
                 : "text-[#9CA3AF] hover:text-[#0A0A0A]"
@@ -76,7 +76,7 @@ export default function TopBar({
           </button>
           <button
             onClick={() => handleSortClick("like_count")}
-            className={`py-1 px-3 rounded-lg cursor-pointer text-[10px] ${
+            className={`py-1 px-3 rounded-lg cursor-pointer text-1rem ${
               isSortByLikes
                 ? "text-[#0A0A0A] bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.10)]"
                 : "text-[#9CA3AF] hover:text-[#0A0A0A]"
@@ -102,7 +102,7 @@ export default function TopBar({
           <Link className="hidden lg:block" href="/write">
             <div className="flex items-center gap-0.5 px-2 py-1.5 rounded-lg bg-linear-to-b from-[#8B8B8B] to-[#2C2C2E] shadow hover:shadow-lg hover:translate-y-[-1.5px] ">
               <Plus size={14} color="#AEAEAE" />
-              <span className="text-white text-[10px] leading-none">
+              <span className="text-white text-1rem leading-none">
                 새 게시글
               </span>
             </div>

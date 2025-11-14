@@ -77,7 +77,7 @@ export default function CommentForm({
     };
 
     // ✅ INSERT (불필요한 supabase 재생성 제거)
-    const { data, error } = await supabase
+    const { error } = await supabase // data 제거
       .from("comments")
       .insert([newComment])
       .select();
@@ -88,10 +88,10 @@ export default function CommentForm({
     } else {
       setCommentText("");
 
-      // ✅ 댓글 수 증가 RPC 호출
-      await supabase.rpc("increment_post_comment_count", {
-        post_id: postId,
-      });
+      // // ✅ 댓글 수 증가 RPC 호출
+      // await supabase.rpc("increment_post_comment_count", {
+      //   post_id: postId,
+      // });
 
       // ✅ 대댓글 로직
       if (parentId) {
