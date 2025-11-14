@@ -1,6 +1,6 @@
 "use client";
 
-import { CornerDownRight, ThumbsUp, Trash2 } from "lucide-react";
+import { CornerDownRight, ThumbsUp, Trash2, Edit } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import type { User } from "@supabase/supabase-js";
@@ -35,6 +35,10 @@ export default function Comments({
   const [showReplies, setShowReplies] = useState(false);
   const [replies, setReplies] = useState<Reply[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(comment.content);
+  const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
+  const [editReplyContent, setEditReplyContent] = useState("");
   const supabase = createClient();
 
   useEffect(() => {
@@ -96,6 +100,57 @@ export default function Comments({
     setShowReplies(!showReplies);
   };
 
+  // 댓글 수정
+  const handleEdit = async () => {
+    if (!editContent.trim()) {
+      alert("내용을 입력해주세요.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("comments")
+      .update({
+        content: editContent,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", comment.id);
+
+    if (error) {
+      console.error("Error updating comment:", error);
+      alert("댓글 수정에 실패했습니다.");
+    } else {
+      setIsEditing(false);
+      if (onCommentDeleted) {
+        onCommentDeleted();
+      }
+    }
+  };
+
+  // 대댓글 수정
+  const handleReplyEdit = async (replyId: string) => {
+    if (!editReplyContent.trim()) {
+      alert("내용을 입력해주세요.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("comments")
+      .update({
+        content: editReplyContent,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", replyId);
+
+    if (error) {
+      console.error("Error updating reply:", error);
+      alert("답글 수정에 실패했습니다.");
+    } else {
+      setEditingReplyId(null);
+      setEditReplyContent("");
+      fetchReplies();
+    }
+  };
+
   // 댓글 삭제
   const handleDelete = async (commentId: string, isReply: boolean = false) => {
     if (!confirm("정말 삭제하시겠습니까?")) return;
@@ -140,54 +195,53 @@ export default function Comments({
     setIsDeleting(false);
   };
 
-const handleLikeToggle = async (commentId: string) => {
-  if (!user) {
-    alert("로그인이 필요합니다.");
-    return;
-  }
+  const handleLikeToggle = async (commentId: string) => {
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
 
-  try {
-    // 1️⃣ 사용자가 이미 좋아요했는지 확인
-    const { data: existingLike, error: fetchError } = await supabase
-      .from("comment_likes")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("comment_id", commentId)
-      .maybeSingle(); // .single() 대신 .maybeSingle()로 안전하게
-
-    if (fetchError) throw fetchError;
-
-    // 2️⃣ 좋아요 취소
-    if (existingLike) {
-      const { error: deleteError } = await supabase
+    try {
+      // 1️⃣ 사용자가 이미 좋아요했는지 확인
+      const { data: existingLike, error: fetchError } = await supabase
         .from("comment_likes")
-        .delete()
-        .eq("id", existingLike.id);
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("comment_id", commentId)
+        .maybeSingle(); // .single() 대신 .maybeSingle()로 안전하게
 
-      if (deleteError) throw deleteError;
+      if (fetchError) throw fetchError;
+
+      // 2️⃣ 좋아요 취소
+      if (existingLike) {
+        const { error: deleteError } = await supabase
+          .from("comment_likes")
+          .delete()
+          .eq("id", existingLike.id);
+
+        if (deleteError) throw deleteError;
+      }
+      // 3️⃣ 좋아요 추가
+      else {
+        const { error: insertError } = await supabase.from("comment_likes").insert({
+          user_id: user.id,
+          comment_id: commentId,
+        });
+
+        if (insertError) throw insertError;
+      }
+
+      // 4️⃣ 댓글 목록 새로고침 (대댓글이면 fetchReplies 호출)
+      if (showReplies) {
+        fetchReplies();
+      } else {
+        // 필요 시 상위 comments 리스트 새로고침 함수 호출
+        // fetchComments();
+      }
+    } catch (err) {
+      console.error("Error toggling like:", err);
     }
-    // 3️⃣ 좋아요 추가
-    else {
-      const { error: insertError } = await supabase.from("comment_likes").insert({
-        user_id: user.id,
-        comment_id: commentId,
-      });
-
-      if (insertError) throw insertError;
-    }
-
-    // 4️⃣ 댓글 목록 새로고침 (대댓글이면 fetchReplies 호출)
-    if (showReplies) {
-      fetchReplies();
-    } else {
-      // 필요 시 상위 comments 리스트 새로고침 함수 호출
-      // fetchComments();
-    }
-  } catch (err) {
-    console.error("Error toggling like:", err);
-  }
-};
-
+  };
 
   // Realtime 구독 (대댓글)
   useEffect(() => {
@@ -244,41 +298,79 @@ const handleLikeToggle = async (commentId: string) => {
               <div className="text-xs text-[#717182]">@{comment.profiles?.email}</div>
             </div>
           </div>
-          {/* 삭제 버튼 */}
+          {/* 수정/삭제 버튼 */}
           {isOwner && (
-            <button
-              onClick={() => handleDelete(comment.id)}
-              disabled={isDeleting}
-              className="text-red-500 hover:text-red-700 disabled:text-gray-400"
-            >
-              <Trash2 size={16} />
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                className="text-blue-500 hover:text-blue-700"
+              >
+                <Edit size={16} />
+              </button>
+              <button
+                onClick={() => handleDelete(comment.id)}
+                disabled={isDeleting}
+                className="text-red-500 hover:text-red-700 disabled:text-gray-400"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
           )}
         </div>
         {/* 댓글 내용 */}
         <div className="ml-11">
-          <span className="inline-block px-3 py-2 bg-[#EBF2FF] text-sm rounded-[10px]">
-            {comment.content}
-          </span>
-          {/* 댓글 메뉴 버튼 */}
-          <div className="ml-1 text-[#717182] flex items-center gap-1 mt-2">
-            <button
-              onClick={() => handleLikeToggle(comment.id)}
-              className="cursor-pointer flex items-center justify-center w-5 h-5 rounded-full bg-white border border-[#F0F0F0] hover:bg-gray-100"
-            >
-              <ThumbsUp size={10} />
-            </button>
-            <span className="text-xs">{comment.like_count || 0}</span>
-            <button
-              onClick={() => setShowReplyForm(!showReplyForm)}
-              className="cursor-pointer flex items-center justify-center w-5 h-5 rounded-full bg-white border border-[#F0F0F0] hover:bg-gray-100 ml-1"
-            >
-              <CornerDownRight size={10} />
-            </button>
-            <span className="ml-1 text-xs">
-              {comment.created_at.slice(0, 10)}
-            </span>
-          </div>
+          {isEditing ? (
+            <div className="space-y-2">
+              <textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="w-full px-3 py-2 bg-[#EBF2FF] text-sm rounded-[10px] border border-blue-300 focus:outline-none focus:border-blue-500"
+                rows={3}
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleEdit}
+                  className="px-3 py-1 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600"
+                >
+                  저장
+                </button>
+                <button
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditContent(comment.content);
+                  }}
+                  className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-400"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <span className="inline-block px-3 py-2 bg-[#EBF2FF] text-sm rounded-[10px]">
+                {comment.content}
+              </span>
+              {/* 댓글 메뉴 버튼 */}
+              <div className="ml-1 text-[#717182] flex items-center gap-1 mt-2">
+                <button
+                  onClick={() => handleLikeToggle(comment.id)}
+                  className="cursor-pointer flex items-center justify-center w-5 h-5 rounded-full bg-white border border-[#F0F0F0] hover:bg-gray-100"
+                >
+                  <ThumbsUp size={10} />
+                </button>
+                <span className="text-xs">{comment.like_count || 0}</span>
+                <button
+                  onClick={() => setShowReplyForm(!showReplyForm)}
+                  className="cursor-pointer flex items-center justify-center w-5 h-5 rounded-full bg-white border border-[#F0F0F0] hover:bg-gray-100 ml-1"
+                >
+                  <CornerDownRight size={10} />
+                </button>
+                <span className="ml-1 text-xs">
+                  {comment.created_at.slice(0, 10)}
+                </span>
+              </div>
+            </>
+          )}
           
           {/* 대댓글 입력 폼 */}
           {showReplyForm && (
@@ -332,32 +424,73 @@ const handleLikeToggle = async (commentId: string) => {
                               @{reply.email}
                             </span>
                           </div>
-                          <span className="inline-block px-2 py-1 bg-[#F5F5F5] text-xs rounded-lg mt-1">
-                            {reply.content}
-                          </span>
-                          <div className="flex items-center gap-1 mt-1 text-[#717182]">
-                            <button
-                              onClick={() => handleLikeToggle(reply.id)}
-                              className="cursor-pointer flex items-center justify-center w-4 h-4 rounded-full bg-white border border-[#F0F0F0] hover:bg-gray-100"
-                            >
-                              <ThumbsUp size={8} />
-                            </button>
-                            <span className="text-xs">{reply.like_count || 0}</span>
-                            <span className="ml-1 text-xs">
-                              {reply.created_at.slice(0, 10)}
-                            </span>
-                          </div>
+                          {editingReplyId === reply.id ? (
+                            <div className="space-y-2 mt-1">
+                              <textarea
+                                value={editReplyContent}
+                                onChange={(e) => setEditReplyContent(e.target.value)}
+                                className="w-full px-2 py-1 bg-[#F5F5F5] text-xs rounded-lg border border-gray-300 focus:outline-none focus:border-blue-500"
+                                rows={2}
+                              />
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleReplyEdit(reply.id)}
+                                  className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+                                >
+                                  저장
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setEditingReplyId(null);
+                                    setEditReplyContent("");
+                                  }}
+                                  className="px-2 py-1 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400"
+                                >
+                                  취소
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <span className="inline-block px-2 py-1 bg-[#F5F5F5] text-xs rounded-lg mt-1">
+                                {reply.content}
+                              </span>
+                              <div className="flex items-center gap-1 mt-1 text-[#717182]">
+                                <button
+                                  onClick={() => handleLikeToggle(reply.id)}
+                                  className="cursor-pointer flex items-center justify-center w-4 h-4 rounded-full bg-white border border-[#F0F0F0] hover:bg-gray-100"
+                                >
+                                  <ThumbsUp size={8} />
+                                </button>
+                                <span className="text-xs">{reply.like_count || 0}</span>
+                                <span className="ml-1 text-xs">
+                                  {reply.created_at.slice(0, 10)}
+                                </span>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
-                      {/* 대댓글 삭제 버튼 */}
+                      {/* 대댓글 수정/삭제 버튼 */}
                       {user?.id === reply.user_id && (
-                        <button
-                          onClick={() => handleDelete(reply.id, true)}
-                          disabled={isDeleting}
-                          className="text-red-500 hover:text-red-700 disabled:text-gray-400"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              setEditingReplyId(reply.id);
+                              setEditReplyContent(reply.content);
+                            }}
+                            className="text-blue-500 hover:text-blue-700"
+                          >
+                            <Edit size={14} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(reply.id, true)}
+                            disabled={isDeleting}
+                            className="text-red-500 hover:text-red-700 disabled:text-gray-400"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       )}
                     </div>
                   ))}
