@@ -1,3 +1,5 @@
+"use clinet";
+
 import NoPosts from "@/components/home/post/NoPosts";
 import FormClient from "@/components/home/search/FormClient";
 import { createClient } from "@/utils/supabase/server";
