@@ -163,7 +163,7 @@ export default async function ProfilePageClient({
           togglePostBookmark={togglePostBookmark}
           toggleFollow={toggleFollow}
         />
-      </Suspesse>
+      </Suspense>
     </section>
   );
 }
