@@ -21,7 +21,6 @@ export default function UserSettingForm({
 
   useEffect(() => {
     if (state.success && !state.error) {
-      alert("프로필이 성공적으로 업데이트 되었습니다.");
       router.push(url ? url : "/");
     }
   }, [state.success, state.error, url, router]);
