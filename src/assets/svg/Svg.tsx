@@ -216,7 +216,7 @@ export default function Svg({
               gradientUnits="userSpaceOnUse"
             >
               <stop stopColor="#08B962" />
-              <stop offset="1" stopColor="#08B962" stop-opacity="0" />
+              <stop offset="1" stopColor="#08B962" stopOpacity="0" />
             </linearGradient>
             <linearGradient
               id="paint1_linear_117_2165"
@@ -227,7 +227,7 @@ export default function Svg({
               gradientUnits="userSpaceOnUse"
             >
               <stop stopColor="#F94543" />
-              <stop offset="1" stopColor="#F94543" stop-opacity="0" />
+              <stop offset="1" stopColor="#F94543" stopOpacity="0" />
             </linearGradient>
             <linearGradient
               id="paint2_linear_117_2165"
@@ -238,7 +238,7 @@ export default function Svg({
               gradientUnits="userSpaceOnUse"
             >
               <stop stopColor="#FABC12" />
-              <stop offset="0.46" stopColor="#FABC12" stop-opacity="0" />
+              <stop offset="0.46" stopColor="#FABC12" stopOpacity="0" />
             </linearGradient>
             <clipPath id="clip0_117_2165">
               <rect width="20" height="20" fill="white" />

@@ -771,7 +771,7 @@ export default function Page() {
    * ========================= */
   return (
     <>
-      <div className="w-full h-full pt-10 lg:p-18">
+      <div className="w-full h-full pt-0 lg:pt-10 lg:p-18">
         <div className="lg:max-w-250 mx-auto">
           <div className="bg-white/40 rounded-xl shadow-md lg:shadow-xl h-200 lg:min-w-50 flex flex-row">
             {/* ============ 왼쪽 패널 ============ */}
@@ -980,12 +980,7 @@ export default function Page() {
                     </p>
                   </div>
                 </div>
-                {/* <button
-                  type="button"
-                  className="cursor-pointer text-[#717182] pr-3"
-                >
-                  <Trash />
-                </button> */}
+                <div className="w-6 h-6"></div>
               </div>
 
               {/* 대화 내용 (스크롤 영역) */}
