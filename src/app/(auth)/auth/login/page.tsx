@@ -7,7 +7,9 @@ export default function LoginPage() {
       <div className="relative w-full max-w-md">
         <div className="backdrop-blur-xl bg-white/50 rounded-2xl p-8 shadow-2xl border border-gray-200">
           <div className="text-center mb-8">
-            <h1 className="text-[32px] text-gray-900 mb-2">PromptHub</h1>
+            <h1 className="text-[42px] font-semibold text-[#6758FF] mb-2">
+              ALGO
+            </h1>
             <p className="text-gray-700 text-[14px]">
               AI 프롬프트 커뮤니티에 오신 것을 환영합니다
             </p>
