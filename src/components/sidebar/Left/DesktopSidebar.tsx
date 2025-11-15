@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { LogIn, LogOut, Moon } from "lucide-react";
+import { LogIn, LogOut, Moon, Sun } from "lucide-react";
 import MenuBtn from "./MenuBtn";
 import Logo from "../../../assets/svg/Logo";
 import type { ReactNode } from "react";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 type MenuItem = {
   title: string;
@@ -40,12 +41,14 @@ export function DesktopSidebar({
   onLogout,
   isActivePath,
 }: DesktopSidebarProps) {
+  const { isDark, toggleTheme } = useTheme();
+
   return (
-    <aside className="hidden lg:block h-full p-6 box-border bg-white/40 border border-white/20 rounded-xl shadow-xl">
+    <aside className="hidden lg:flex flex-col h-full p-6 box-border bg-white/40 border border-white/20 rounded-xl shadow-xl">
       <Link href={"/"}>
         <Logo />
       </Link>
-      <ul className="min-h-[790px] mt-6 flex flex-col justify-between gap-2">
+      <ul className="flex-1 mt-6 flex flex-col justify-between gap-2">
         <div className="space-y-2">
           {menuItems.map((menu) => (
             <MenuBtn
@@ -71,8 +74,8 @@ export function DesktopSidebar({
         </div>
         <div className="flex flex-row justify-center gap-6">
           <li className="rounded-full shadow-xl hover:bg-white hover:shadow-xl">
-            <button className="p-3 cursor-pointer">
-              <Moon />
+            <button onClick={toggleTheme} className="p-3 cursor-pointer">
+              {!isDark ? <Moon /> : <Sun />}
             </button>
           </li>
 

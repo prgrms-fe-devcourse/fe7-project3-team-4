@@ -29,13 +29,11 @@ export default function MenuBtn({
 
   const activeStyle =
     size === "md"
-      ? "bg-[#F3F3F6] text-[#0A0A0A]"
+      ? "bg-[#F3F3F6]"
       : "bg-[#6758FF] text-white shadow-[0px_10px_25px_rgba(0,0,0,0.16),0px_4px_10px_rgba(0,0,0,0.12)]";
 
   const inactiveStyle =
-    size === "md"
-      ? "text-[#0A0A0A] active:bg-[#ececec]"
-      : "text-[#0A0A0A] hover:bg-white hover:shadow-xl";
+    size === "md" ? "active:bg-[#ececec]" : "hover:bg-white hover:shadow-xl";
 
   const className = `${base} ${active ? activeStyle : inactiveStyle}`;
 

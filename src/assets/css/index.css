@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @font-face {
     font-family: 'Pretendard';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Thin.woff2') format('woff2');
@@ -92,9 +94,21 @@ body {
     font-family: "Pretendard", sans-serif;
 }
 
+/* 다크 모드 기본 텍스트 컬러 */
+html.dark body {
+    color: #FFFFFF;
+}
+
+.bgGradient {
+    background: linear-gradient(130deg, #EFF5FE 18.41%, #FBF3FB 81.59%);
+}
+
+html.dark .bgGradient {
+    background: linear-gradient(130deg, #1B0B26 18.41%, #050816 81.59%);
+}
+
 * {
     transition: all 300ms ease;
-
 }
 
 /* 부모 요소에 적용 */
