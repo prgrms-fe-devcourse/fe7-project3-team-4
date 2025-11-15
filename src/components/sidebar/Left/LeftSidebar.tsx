@@ -20,6 +20,8 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import ConfirmModal from "@/components/common/ConfirmModal";
+import { useToast } from "@/components/common/toast/ToastContext";
 
 const MENU_ITEMS = [
   { title: "홈", icon: <House />, url: "/" },
@@ -78,6 +80,8 @@ export default function LeftSidebar() {
   // 안 읽은 채팅 개수
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
 
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const { showToast } = useToast();
   const profileUserId = searchParams.get("userId");
 
   useEffect(() => {
@@ -200,7 +204,7 @@ export default function LeftSidebar() {
           event: "INSERT", // 'messages' 테이블에 새 행이 삽입될 때
           schema: "public",
           table: "messages",
-          // ★참고: RLS 정책(1단계 SQL)이 `sender_id != auth.uid()`로
+          // 참고: RLS 정책(1단계 SQL)이 `sender_id != auth.uid()`로
           // 필터링하므로, 내가 보낸 메시지 INSERT도 여기서 감지되지만
           // 최종 카운트에는 포함되지 않아 안전합니다.
         },
@@ -222,7 +226,16 @@ export default function LeftSidebar() {
     const supabase = await createClient();
     await supabase.auth.signOut();
     router.refresh();
-    router.push("/auth/login");
+    router.push("/");
+  };
+  const handleConfirmLogout = async () => {
+    await handleLogout();
+    setLogoutModalOpen(false);
+    showToast({
+      title: "로그아웃 완료",
+      message: "알고와 함께 해줘서 고마워요!",
+      variant: "default",
+    });
   };
 
   return (
@@ -272,12 +285,21 @@ export default function LeftSidebar() {
               ) : (
                 <button
                   type="button"
-                  onClick={handleLogout}
-                  className="cursor-pointer flex items-center gap-4 flex-1 "
+                  onClick={() => setLogoutModalOpen(true)}
+                  className="flex items-center gap-4 flex-1 "
                 >
                   <LogOut />
                   {/* <span>로그아웃</span> */}
                 </button>
+              )}
+              {logoutModalOpen && (
+                <ConfirmModal
+                  open={logoutModalOpen}
+                  title="로그아웃"
+                  description="정말 로그아웃하시겠습니까?"
+                  onCancel={() => setLogoutModalOpen(false)}
+                  onConfirm={handleConfirmLogout}
+                />
               )}
             </li>
           </div>
