@@ -7,6 +7,7 @@ import {
   MessageCircle,
   Moon,
   Search,
+  Sun,
   TextAlignJustify,
   User,
   X,
@@ -14,6 +15,7 @@ import {
 import MenuBtn from "./MenuBtn";
 import Svg from "@/assets/svg/Svg";
 import { Dispatch, SetStateAction } from "react";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 type MobileHeaderProps = {
   isLogin: boolean;
@@ -34,6 +36,7 @@ export function MobileHeader({
   onToggleMenu,
   onLogout,
 }: MobileHeaderProps) {
+  const { isDark, toggleTheme } = useTheme();
   const closeMenu = () => setClickMenu(false);
   return (
     <header className="lg:hidden z-99 fixed min-w-full bg-white">
@@ -122,11 +125,11 @@ export function MobileHeader({
                 </div>
               </div>
               <div className="p-1 space-y-1.5 border-t border-[#EAEAEC]">
-                <li className="rounded-lg py-2 px-2.5 flex flex-row items-center hover:bg-[#ececec] active:bg-[#ececec]">
+                <li className="rounded-lg flex flex-row items-center hover:bg-[#ececec] active:bg-[#ececec]">
                   {!isLogin ? (
                     <Link
                       href={"auth/login"}
-                      className="flex items-center flex-1 gap-2.5"
+                      className="flex items-center flex-1 gap-2.5 py-2 px-2.5"
                     >
                       <LogIn size={20} />
                       <span>로그인</span>
@@ -135,17 +138,28 @@ export function MobileHeader({
                     <button
                       type="button"
                       onClick={onLogout}
-                      className="cursor-pointer flex items-center flex-1 gap-2.5"
+                      className="cursor-pointer flex items-center flex-1 gap-2.5 py-2 px-2.5"
                     >
                       <LogOut size={20} />
                       <span>로그아웃</span>
                     </button>
                   )}
                 </li>
-                <li className="cursor-pointer rounded-lg py-2 px-2.5 flex flex-row gap-2.5 items-center hover:bg-[#ececec] active:bg-[#ececec]">
+                <li className="cursor-pointer rounded-lg flex flex-row gap-2.5 items-center hover:bg-[#ececec] active:bg-[#ececec]">
                   {/* TODO: 여기 다크모드 토글 아이콘/텍스트로 바꾸기 */}
-                  <Moon display="Mobile" size={20} />
-                  <span>다크모드</span>
+                  <button onClick={toggleTheme} className="py-2 px-2.5">
+                    {!isDark ? (
+                      <>
+                        <Sun display="Mobile" size={20} />
+                        <span>라이트모드</span>
+                      </>
+                    ) : (
+                      <>
+                        <Moon display="Mobile" size={20} />
+                        <span>다크모드</span>
+                      </>
+                    )}
+                  </button>
                 </li>
               </div>
             </ul>

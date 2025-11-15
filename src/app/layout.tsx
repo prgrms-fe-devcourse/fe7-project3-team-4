@@ -1,18 +1,22 @@
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
+
 export const metadata = {
   title: "ALGO | AI PROMPT",
   description: "ALGO | AI PROMPT",
 };
 
-export default async function Layout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ko">
-      <body>
-        <div className="fixed inset-0 min-h-screen bg-[linear-gradient(130deg,#EFF5FE_18.41%,#FBF3FB_81.59%)]"></div>
-        {children}
+    <html lang="ko" suppressHydrationWarning>
+      <body className="min-h-screen">
+        <ThemeProvider>
+          <div className="pointer-events-none fixed inset-0 -z-10 min-h-screen bgGradient" />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
