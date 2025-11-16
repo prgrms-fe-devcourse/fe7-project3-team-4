@@ -37,7 +37,7 @@ export default function MyComments({
     if (subType) {
       return `/?type=${postType}&id=${comment.target_id}&sub_type=${subType}`;
     }
-    
+
     return `/?type=${postType}&id=${comment.target_id}`;
   };
 
@@ -48,29 +48,25 @@ export default function MyComments({
 
         return (
           <ContentBox key={comment.id}>
-            <Link 
+            <Link
               href={getPostUrl(comment)}
-              className="block p-6 hover:bg-gray-50 transition-colors"
+              className="block p-6 hover:bg-gray-50 dark:hover:bg-white/30"
             >
               <div className="flex items-start gap-3">
                 <MessageCircle size={20} className="text-[#6758FF]" />
                 <div className="space-y-3 flex-1">
-                  <p className="text-sm text-gray-800">
-                    {comment.content || "(내용 없음)"}
-                  </p>
+                  <p className="text-sm">{comment.content || "(내용 없음)"}</p>
 
                   <div className="flex justify-between items-center">
-                    <div className="text-[#717182] text-sm flex gap-5">
+                    <div className="text-[#717182] text-sm flex gap-5 dark:text-[#A6A6DB]">
                       <button
                         onClick={(e) => {
                           e.preventDefault();
                           onLikeToggle(comment.id);
                         }}
-                        className="flex items-center gap-2 transition-colors"
+                        className="flex items-center gap-2"
                       >
-                        <ThumbsUp
-                          size={18}
-                        />
+                        <ThumbsUp size={18} />
                         <span>{comment.like_count ?? 0}</span>
                       </button>
 
@@ -80,7 +76,7 @@ export default function MyComments({
                       </div>
                     </div>
 
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-[#717182] dark:text-[#A6A6DB]">
                       {formatTimeAgo(comment.created_at)}
                     </p>
                   </div>

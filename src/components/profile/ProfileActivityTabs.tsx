@@ -65,12 +65,13 @@ ProfileActivityTabsProps) {
 
   const baseBtn =
     "cursor-pointer flex-1 py-4 rounded-xl text-sm transition-colors text-center";
-  const activeClass = "bg-white text-[#111827] shadow-sm";
-  const inactiveClass = "text-[#9CA3AF]";
+  const activeClass =
+    "bg-white text-[#0A0A0A] shadow-sm dark:text-white dark:bg-white/20";
+  const inactiveClass = "text-[#9CA3AF] dark:text-[#A6A6DB]";
 
   return (
     <>
-      <div className="bg-white/40 border border-white/20 rounded-xl shadow-xl mt-6">
+      <div className="bg-white/40 border border-white/20 rounded-xl shadow-xl mt-6 dark:bg-white/20 dark:shadow-white/20">
         <div className="p-1 w-full flex gap-1 leading-none">
           <Link
             href={createTabHref("posts")}

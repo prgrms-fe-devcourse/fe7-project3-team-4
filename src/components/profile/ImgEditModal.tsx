@@ -101,7 +101,7 @@ export function ImgEditModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md lg:max-w-lg relative p-6 bg-[#f6f6f6]/60 border-white/40 rounded-2xl backdrop-blur-md"
+        className="w-full max-w-md lg:max-w-lg relative p-6 bg-[#f6f6f6]/60 border-white/40 rounded-2xl backdrop-blur-md dark:bg-white/20"
       >
         <h3 className="text-xl font-medium mb-7">프로필 이미지 편집</h3>
         <form className="space-y-5" onSubmit={handleSubmit}>
@@ -111,8 +111,8 @@ export function ImgEditModal({
             </p>
           )}
 
-          <div className="flex flex-col gap-4 items-center py-8 rounded-xl bg-white">
-            <div className="w-32 h-32 rounded-full bg-gray-200 relative overflow-hidden">
+          <div className="flex flex-col gap-4 items-center py-8 rounded-xl bg-white dark:bg-white/30">
+            <div className="w-32 h-32 rounded-full bg-gray-200 relative overflow-hidden ">
               {previewUrl ? (
                 <Image
                   src={previewUrl}
@@ -141,7 +141,7 @@ export function ImgEditModal({
               className={`px-5 py-3 rounded-xl text-[#404040] ${
                 isUploading
                   ? "bg-gray-300"
-                  : "bg-[#D0D0D0] cursor-pointer hover:bg-gray-400"
+                  : "bg-[#D0D0D0] cursor-pointer hover:bg-gray-400 dark:bg-white/20 dark:text-white"
               }`}
             >
               이미지 파일 선택
@@ -151,7 +151,7 @@ export function ImgEditModal({
           <div className="flex justify-end gap-3">
             <button
               type="button"
-              className="cursor-pointer py-1.5 px-4 bg-white rounded-lg disabled:opacity-50"
+              className="cursor-pointer py-1.5 px-4 bg-white rounded-lg disabled:opacity-50 dark:bg-white/20"
               onClick={onClose}
               disabled={isUploading}
             >
@@ -159,7 +159,7 @@ export function ImgEditModal({
             </button>
             <button
               type="submit"
-              className="cursor-pointer py-1.5 px-4 bg-[#6758FF] rounded-lg text-white disabled:opacity-50"
+              className="cursor-pointer py-1.5 px-4 bg-[#6758FF] rounded-lg text-white disabled:opacity-50 dark:bg-[]"
               disabled={isUploading || !file}
             >
               {isUploading ? "업로드 중..." : "수정"}
