@@ -126,7 +126,7 @@ export default function CommentForm({
 
   return (
     <div className="flex items-start gap-2 my-6">
-      <div className="relative w-8 h-8 bg-gray-300 rounded-full shrink-0 overflow-hidden">
+      <div className="relative w-8 h-8 rounded-full shrink-0 overflow-hidden ">
         {avatarUrl ? (
           <Image
             src={avatarUrl}
@@ -143,7 +143,7 @@ export default function CommentForm({
       </div>
 
       <form
-        className="flex-1 flex items-center justify-between px-3 py-2 bg-white border border-black/10 self-center rounded-lg gap-2"
+        className="flex-1 flex items-center justify-between px-3 py-2 bg-white border border-black/10 self-center rounded-lg gap-2 dark:bg-white/30"
         onSubmit={handleSubmit}
       >
         <input
@@ -166,14 +166,14 @@ export default function CommentForm({
           )}
           <button
             type="button"
-            className="block cursor-pointer text-[#ADA4FF] disabled:text-gray-400"
+            className="block cursor-pointer text-[#A6A6DB] hover:text-[#6758FF] disabled:text-gray-400"
             disabled={!user || isSubmitting}
           >
             <Smile size={20} />
           </button>
           <button
             type="submit"
-            className="block cursor-pointer text-[#6758FF] disabled:text-gray-400"
+            className="block cursor-pointer text-[#6758FF] disabled:text-gray-400 dark:disabled:text-gray-500"
             disabled={!user || !commentText.trim() || isSubmitting}
           >
             <CircleArrowUp size={20} />

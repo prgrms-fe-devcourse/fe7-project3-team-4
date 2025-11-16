@@ -350,7 +350,7 @@ export default function PostDetail({
         )}
       </div>
 
-      <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
+      <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl dark:bg-white/20">
         <div className="pb-7">
           <div className="flex justify-between">
             <div className="flex gap-3 items-center">
@@ -375,7 +375,7 @@ export default function PostDetail({
               <div className="flex-1 space-y-1 leading-none">
                 <p>
                   {authorName}
-                  <span className="text-[#717182] text-sm ml-1">
+                  <span className="text-[#717182] text-sm ml-1 dark:text-[#A6A6DB]">
                     {authorEmail || "@user"}
                   </span>
                 </p>
@@ -435,15 +435,15 @@ export default function PostDetail({
 
       {post.post_type === "prompt" ||
         (post.post_type === "weekly" && (
-          <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
+          <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl dark:bg-white/20">
             <PromptDetail post={post} />
           </div>
         ))}
 
-      <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
+      <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl dark:bg-white/20">
         <div>
           <p className="ml-2 mb-2 text-ms font-medium">작성자 소개</p>
-          <div className="flex justify-between items-start gap-3 p-3 bg-white rounded-xl">
+          <div className="flex justify-between items-start gap-3 p-3 bg-white rounded-xl dark:bg-white/10">
             <div className="flex-1 flex gap-3">
               <Link
                 href={`/profile?userId=${post.user_id}`}
@@ -466,7 +466,7 @@ export default function PostDetail({
               <div className="flex-1 space-y-1 leading-none">
                 <p>
                   {authorName}
-                  <span className="text-[#717182] text-sm ml-1">
+                  <span className="text-[#717182] text-sm ml-2 dark:text-[#A6A6DB]">
                     {authorEmail || "@user"}
                   </span>
                 </p>
@@ -498,13 +498,15 @@ export default function PostDetail({
         <CommentForm postId={post.id} onCommentAdded={handleCommentAdded} />
 
         <div className="space-y-5">
-          <div className="p-1 flex items-center gap-3 py-1 px-4 bg-white rounded-lg border border-[#F2F2F4]">
+          <div className="p-1 flex items-center gap-3 py-1 px-4 bg-white rounded-lg border border-[#F2F2F4] dark:bg-white/20 dark:border-[#F2F2F4]/40">
             <ArrowUpDown size={12} />
-            <div className="text-sm space-x-1 p-0.5 bg-[#EEEEF0] rounded-lg">
+            <div className="text-sm space-x-1 p-0.5 bg-[#EEEEF0] rounded-lg dark:bg-[#EEEEF0]/40">
               <button
                 onClick={() => setSortOrder("latest")}
                 className={`cursor-pointer py-1 px-3 rounded-lg ${
-                  sortOrder === "latest" ? "bg-white shadow" : ""
+                  sortOrder === "latest"
+                    ? "bg-white shadow dark:text-[#0A0A0A] dark:bg-white/60"
+                    : ""
                 }`}
               >
                 최신순
@@ -512,7 +514,9 @@ export default function PostDetail({
               <button
                 onClick={() => setSortOrder("popular")}
                 className={`cursor-pointer py-1 px-3 rounded-lg ${
-                  sortOrder === "popular" ? "bg-white shadow" : ""
+                  sortOrder === "popular"
+                    ? "bg-white shadow dark:text-[#0A0A0A] dark:bg-white/60"
+                    : ""
                 }`}
               >
                 인기순
