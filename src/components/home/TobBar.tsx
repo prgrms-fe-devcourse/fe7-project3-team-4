@@ -38,9 +38,9 @@ export default function TopBar({
   };
 
   return (
-    <div className="w-full p-1 bg-white/40 border border-[#C2C2C2] rounded-lg flex justify-between items-center text-xs backdrop-blur">
+    <div className="w-full p-1 bg-white/40 border border-[#C2C2C2] rounded-lg flex justify-between items-center text-xs backdrop-blur dark:bg-white/20 dark:border-[#C2C2C2]/60">
       {/* left: 탭 */}
-      <ul className="text-[#9CA3AF] flex gap-2 bg-[#EEEEF0] p-0.5 rounded-lg items-center">
+      <ul className="text-[#9CA3AF] flex gap-2 bg-[#EEEEF0] p-0.5 rounded-lg items-center dark:bg-[#EEEEF0]/40">
         {tabs.map((tab) => {
           const isActive = activeTab === tab;
           return (
@@ -51,7 +51,7 @@ export default function TopBar({
                 "py-1 px-3 rounded-lg cursor-pointer transition-all duration-200",
                 isActive
                   ? "text-[#0A0A0A] bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.10)]"
-                  : "text-[#9CA3AF] hover:text-[#0A0A0A]",
+                  : "text-[#9CA3AF] hover:text-[#0A0A0A] dark:text-white",
               ].join(" ")}
             >
               {tab}
@@ -62,14 +62,14 @@ export default function TopBar({
 
       {/* right: 정렬 + 새 글 */}
       <div className="flex items-center gap-1.5">
-        <ul className="text-[#9CA3AF] flex gap-1 bg-[#EEEEF0] p-0.5 rounded-lg items-center">
+        <ul className="text-[#9CA3AF] flex gap-1 bg-[#EEEEF0] p-0.5 rounded-lg items-center dark:bg-[#EEEEF0]/40">
           {/* [수정] 정렬 버튼 로직 (NewsHeader 참고) */}
           <button
             onClick={() => handleSortClick("published_at")}
             className={`py-1 px-3 rounded-lg cursor-pointer text-1rem ${
               isSortByDate
                 ? "text-[#0A0A0A] bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.10)]"
-                : "text-[#9CA3AF] hover:text-[#0A0A0A]"
+                : "text-[#9CA3AF] hover:text-[#0A0A0A] dark:text-white"
             }`}
           >
             최신순
@@ -79,7 +79,7 @@ export default function TopBar({
             className={`py-1 px-3 rounded-lg cursor-pointer text-1rem ${
               isSortByLikes
                 ? "text-[#0A0A0A] bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.10)]"
-                : "text-[#9CA3AF] hover:text-[#0A0A0A]"
+                : "text-[#9CA3AF] hover:text-[#0A0A0A] dark:text-white"
             }`}
           >
             인기순

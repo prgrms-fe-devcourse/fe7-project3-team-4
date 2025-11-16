@@ -112,7 +112,7 @@ export default function HistoryPost({ data }: { data: ViewHistoryType }) {
         <button
           onClick={handleDelete}
           disabled={isDeleting}
-          className="absolute top-5 right-4 p-1 rounded-full text-gray-400 hover:bg-gray-200 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 z-10 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="cursor-pointer absolute top-5 right-4 p-1 rounded-full text-gray-400 hover:bg-gray-200 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 z-10 disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label="기록 삭제"
         >
           <X size={18} />
@@ -146,7 +146,7 @@ export default function HistoryPost({ data }: { data: ViewHistoryType }) {
             </div>
 
             <Link href={postUrl} className="block mt-1">
-              <h3 className="text-lg font-bold text-gray-900 truncate">
+              <h3 className="text-lg font-semibold text-gray-900 truncate">
                 {post.title}
               </h3>
             </Link>

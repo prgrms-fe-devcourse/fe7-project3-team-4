@@ -80,7 +80,7 @@ export default function Svg({
     return display === "lg" ? (
       <>
         <svg
-          className="text-[#0A0A0A] dark:text-white"
+          className="text-[#0A0A0A]"
           width="24"
           height="24"
           viewBox="0 0 24 24"

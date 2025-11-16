@@ -1,6 +1,12 @@
 "use client";
 
-import { Bookmark, BookmarkCheck, Eye, Heart, MessageSquare } from "lucide-react";
+import {
+  Bookmark,
+  BookmarkCheck,
+  Eye,
+  Heart,
+  MessageSquare,
+} from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 
@@ -43,7 +49,9 @@ export default function PostActions({
 
     const setupRealtimeSubscriptions = async () => {
       // 현재 유저 가져오기
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       // 좋아요 상태 구독
@@ -129,11 +137,11 @@ export default function PostActions({
   };
 
   return (
-    <div className="flex justify-center gap-30 text-[#717182] py-6">
+    <div className="flex justify-center gap-30 text-[#717182] py-6 dark:text-[#A6A6DB]">
       <button
         className={`cursor-pointer py-1 px-2 rounded-md transition-colors ${
           realtimeLiked
-            ? "text-[#FF569B] bg-[#F7E6ED]"
+            ? "text-[#FF569B] bg-[#F7E6ED] dark:bg-[#e4c3cf]"
             : "hover:text-[#FF569B] hover:bg-[#F7E6ED]"
         }`}
         onClick={handleLikeClick}
@@ -147,7 +155,7 @@ export default function PostActions({
         </div>
       </button>
 
-      <button className="cursor-pointer py-1 px-2 rounded-md hover:bg-gray-200">
+      <button className="cursor-pointer py-1 px-2 rounded-md hover:bg-gray-200 dark:hover:text-[#6758FF] dark:hover:bg-[#A6A6DB]">
         <div className="flex gap-2 text-sm items-center">
           <MessageSquare size={18} />
           <span>{commentCount}</span>
@@ -168,7 +176,7 @@ export default function PostActions({
           className={`cursor-pointer py-1 px-2 rounded-md transition-colors ${
             realtimeBookmarked
               ? "text-[#6758FF] bg-[#D8D4FF]"
-              : "hover:text-[#6758FF] hover:bg-[#D8D4FF]"
+              : "hover:text-[#6758FF] hover:bg-[#D8D4FF] dark:hover:bg-[#A6A6DB]"
           }`}
           aria-pressed={realtimeBookmarked}
           aria-label="북마크"

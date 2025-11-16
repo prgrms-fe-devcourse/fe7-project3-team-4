@@ -44,7 +44,7 @@ export function DesktopSidebar({
   const { isDark, toggleTheme } = useTheme();
 
   return (
-    <aside className="hidden lg:flex flex-col h-full p-6 box-border bg-white/40 border border-white/20 rounded-xl shadow-xl">
+    <aside className="hidden lg:flex flex-col h-full p-6 box-border bg-white/40 dark:bg-white/20 border border-white/20 rounded-xl shadow-[0_10px_25px_rgba(255,255,255,0.1),0_4px_10px_rgba(255,255,255,0.1)] dark:shadow-white/20">
       <Link href={"/"}>
         <Logo />
       </Link>
@@ -73,13 +73,13 @@ export function DesktopSidebar({
           ))}
         </div>
         <div className="flex flex-row justify-center gap-6">
-          <li className="rounded-full shadow-xl hover:bg-white hover:shadow-xl">
+          <li className="rounded-full shadow-xl hover:bg-white hover:shadow-xl dark:hover:bg-white/30">
             <button onClick={toggleTheme} className="p-3 cursor-pointer">
               {!isDark ? <Moon /> : <Sun />}
             </button>
           </li>
 
-          <li className="rounded-full cursor-pointer shadow-xl hover:bg-gray-200 hover:shadow-xl">
+          <li className="rounded-full shadow-xl hover:bg-white hover:shadow-xl dark:hover:bg-white/30">
             {!isLogin ? (
               <Link
                 href={"auth/login"}

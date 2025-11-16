@@ -81,7 +81,7 @@ export function MainEditorSection({
     editorProps: {
       attributes: {
         class:
-          "min-h-[160px] w-full border border-[#D9D9D9] p-4 rounded-lg text-[#0A0A0A] focus:outline-none prose prose-sm max-w-none",
+          "min-h-[160px] w-full border border-[#D9D9D9] p-4 rounded-lg focus:outline-none prose prose-sm max-w-none dark:border-[#D9D9D9]/70",
       },
     },
     onUpdate: ({ editor }) => {
@@ -112,14 +112,14 @@ export function MainEditorSection({
   };
 
   return (
-    <div className="grid bg-white/40 shadow-lg rounded-xl p-6 gap-4">
+    <div className="grid bg-white/40 shadow-xl rounded-xl p-6 gap-4 dark:bg-white/20">
       {/* 제목 */}
       <input
         type="text"
         name="title"
         placeholder="제목"
         defaultValue={initialTitle}
-        className="placeholder-[#A8A8A8] border border-[#D9D9D9] rounded-lg pl-4 py-1.5 outline-none"
+        className="placeholder-[#A8A8A8] border border-[#D9D9D9] rounded-lg pl-4 py-1.5 outline-none dark:border-[#D9D9D9]/70"
       />
 
       {/* 대표 이미지 업로드 */}
@@ -133,7 +133,7 @@ export function MainEditorSection({
         onChange={handleImgFileUpload}
       />
 
-      <div className="relative flex flex-col items-center py-8 rounded-lg bg-[#D9D9D9]/20 border border-dashed border-[#D9D9D9]">
+      <div className="relative flex flex-col items-center py-8 rounded-lg bg-[#D9D9D9]/20 border border-dashed border-[#D9D9D9] dark:border-[#D9D9D9]/70">
         {previewUrl ? (
           <>
             <div className="relative py-2">
@@ -155,7 +155,9 @@ export function MainEditorSection({
           </>
         ) : (
           <>
-            <p className="text-[#404040] mb-4">Upload image</p>
+            <p className="text-[#404040] mb-4 dark:text-[#dfdfdf]">
+              Upload image
+            </p>
             <label
               htmlFor="writeImg"
               className="px-5 py-3 rounded-xl text-[#404040] bg-[#D0D0D0] cursor-pointer"
@@ -193,7 +195,7 @@ export function MainEditorSection({
               key={hashtag.id}
               type="button"
               onClick={() => toggleHashtag(hashtag.name)}
-              className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg 
+              className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] dark:text-[#A6A6DB] border border-[#D9D9D9] rounded-lg dark:border-[#D9D9D9]/70
                 ${active ? "bg-[#248AFF] text-white" : "hover:bg-[#daebff]"}`}
             >
               #{getTranslatedTag(hashtag.name!)}

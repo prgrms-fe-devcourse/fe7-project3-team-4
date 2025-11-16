@@ -183,7 +183,7 @@ export default function Rank() {
 
           const rankColor =
             rankNumber === 1
-              ? "#EFAF00"
+              ? "#F7B500"
               : rankNumber === 2
               ? "#C0C0C0"
               : rankNumber === 3
@@ -197,7 +197,7 @@ export default function Rank() {
             >
               <Link
                 href={`/profile?userId=${item.user_id}`}
-                className="flex items-center gap-1.5 flex-1 min-w-0 hover:bg-gray-50 rounded-lg p-2 transition-colors"
+                className="flex items-center gap-1.5 flex-1 min-w-0 hover:bg-gray-50 rounded-lg p-2 transition-colors dark:hover:bg-white/30"
               >
                 <div className="w-8" style={{ color: rankColor }}>
                   {rankNumber}
@@ -220,22 +220,22 @@ export default function Rank() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm truncate">{displayName}</p>
-                    <p className="text-[11px] text-[#717182] truncate">
+                    <p className="text-xs text-[#717182] truncate dark:text-[#A6A6DB]">
                       {email}
                     </p>
                   </div>
                 </div>
+                <div className="shrink-0">
+                  {!isSelf && (
+                    <RankFollowButton
+                      targetUserId={item.user_id}
+                      isFollowing={userIsFollowing}
+                      currentUserId={currentUserId}
+                      onFollowToggle={handleFollowToggle}
+                    />
+                  )}
+                </div>
               </Link>
-              <div className="shrink-0">
-                {!isSelf && (
-                  <RankFollowButton
-                    targetUserId={item.user_id}
-                    isFollowing={userIsFollowing}
-                    currentUserId={currentUserId}
-                    onFollowToggle={handleFollowToggle}
-                  />
-                )}
-              </div>
             </div>
           );
         })}

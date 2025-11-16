@@ -19,7 +19,7 @@ export default function ModelToggle(props: ModelToggleProps) {
     "leading-none px-3 py-1 cursor-pointer rounded-lg transition-colors text-xs";
 
   return (
-    <div className="inline-flex bg-white/70 text-sm p-0.5 rounded-lg border border-white space-x-1 mb-6">
+    <div className="inline-flex bg-white/70 text-sm p-0.5 rounded-lg border border-white/60 space-x-1 mb-6 dark:bg-white/40">
       {props.mode === "prompt" && (
         <>
           <button
@@ -29,7 +29,7 @@ export default function ModelToggle(props: ModelToggleProps) {
               baseBtn +
               (props.active === "GPT"
                 ? " bg-[#74AA9C] text-white"
-                : " bg-transparent text-[#717182] hover:bg-[#74aa9c1f]")
+                : " bg-transparent text-[#717182] hover:bg-[#74aa9c1f] dark:text-white")
             }
           >
             GPT
@@ -41,7 +41,7 @@ export default function ModelToggle(props: ModelToggleProps) {
               baseBtn +
               (props.active === "Gemini"
                 ? " bg-[#2FBAD2] text-white"
-                : " bg-transparent text-[#717182] hover:bg-[#2fbad21f]")
+                : " bg-transparent text-[#717182] hover:bg-[#2fbad21f] dark:text-white")
             }
           >
             Gemini
@@ -58,7 +58,7 @@ export default function ModelToggle(props: ModelToggleProps) {
               baseBtn +
               (props.active === "Text"
                 ? " bg-[#6758FF] text-white"
-                : " bg-transparent text-[#717182] hover:bg-[#ECE9FF]")
+                : " bg-transparent text-[#717182] hover:bg-[#ECE9FF] dark:text-white")
             }
           >
             텍스트
@@ -70,7 +70,7 @@ export default function ModelToggle(props: ModelToggleProps) {
               baseBtn +
               (props.active === "Image"
                 ? " bg-[#FF569B] text-white"
-                : " bg-transparent text-[#717182] hover:bg-[#FFE5F0]")
+                : " bg-transparent text-[#717182] hover:bg-[#FFE5F0] dark:text-white")
             }
           >
             이미지

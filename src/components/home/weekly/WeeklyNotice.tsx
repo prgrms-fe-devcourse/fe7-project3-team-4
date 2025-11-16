@@ -10,8 +10,8 @@ export default function WeeklyNotice({ active }: { active: WeeklyModel }) {
           <h3 className="text-center font-bold text-2xl">ALGO 주간 챌린지</h3>
           <Zap size={24} strokeWidth={3} className="text-[#eec40a]" />
         </div>
-        <div className="p-6 bg-white/40 border border-white/20 rounded-xl shadow-xl font-medium text-lg space-y-1">
-          <div className="flex items-center gap-1">
+        <div className="p-6 bg-white/40 border border-white/20 rounded-xl shadow-xl font-medium text-lg space-y-1 dark:bg-white/20">
+          <div className="flex items-center gap-2">
             <svg
               width="18"
               height="18"
@@ -30,7 +30,7 @@ export default function WeeklyNotice({ active }: { active: WeeklyModel }) {
               <span className="text-[#248AFF]">주제</span> 공개
             </p>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <svg
               width="18"
               height="18"
@@ -46,7 +46,7 @@ export default function WeeklyNotice({ active }: { active: WeeklyModel }) {
             </svg>
             <p>사용한 AI 모델(GPT/Gemini), 프롬프트와 함께 결과물 업로드</p>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <svg
               width="18"
               height="18"
@@ -66,7 +66,7 @@ export default function WeeklyNotice({ active }: { active: WeeklyModel }) {
             </p>
           </div>
         </div>
-        <div className="bg-white/40 border border-white/20 rounded-xl shadow-xl p-6 space-y-3">
+        <div className="bg-white/40 border border-white/20 rounded-xl shadow-xl p-6 space-y-3 dark:bg-white/20">
           <div className="space-y-1">
             <p className="font-medium text-lg">
               이번 주 {active === "Image" ? "이미지" : "텍스트"} 주제:{" "}
