@@ -25,7 +25,7 @@ export default function FormClient({
   return (
     <>
       <form
-        className="mt-6 p-4 flex gap-3 bg-white border border-[#F6F6F8] rounded-xl shadow mb-4"
+        className="mt-6 p-4 flex gap-3 bg-white border border-[#F6F6F8] rounded-xl shadow mb-4 dark:bg-white/20 dark:border-[#F6F6F8]/40 dark:shadow-md dark:shadow-white/20"
         onSubmit={handleFormSubmit}
       >
         <Search size={20} className="text-[#D1D5DB]" />

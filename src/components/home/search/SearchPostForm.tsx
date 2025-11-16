@@ -168,8 +168,12 @@ export default async function SearchPostForm({
         <div className="flex gap-2.5 flex-wrap">
           <Link
             href={searchTerm ? `?q=${searchTerm}` : "/search"}
-            className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg
-     ${!tagTerm ? "bg-[#9787ff] font-bold text-white" : "hover:bg-[#ECE9FF]"}`} // tagTerm이 없을 때 "활성화"
+            className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg dark:border-[#F6F6F8]/40 dark:text-[#A6A6DB]
+            ${
+              !tagTerm
+                ? "bg-[#9787ff] font-semibold text-white dark:text-white"
+                : "hover:bg-[#ECE9FF] dark:hover:bg-white/30"
+            }`}
           >
             #전체
           </Link>
@@ -189,11 +193,11 @@ export default async function SearchPostForm({
               <Link
                 key={tag.id}
                 href={href} // 수정된 href
-                className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg
+                className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg dark:border-[#F6F6F8]/40 dark:text-[#A6A6DB]
           ${
             isActive
-              ? "bg-[#9787ff] font-bold text-white"
-              : "hover:bg-[#ECE9FF]"
+              ? "bg-[#9787ff] font-semibold text-white dark:text-white"
+              : "hover:bg-[#ECE9FF] dark:hover:bg-white/30"
           }`}
               >
                 #{label}
