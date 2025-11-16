@@ -276,7 +276,6 @@ export default function MessagePageClient() {
   useEffect(() => {
     if (!me) return;
 
-     
     const patchRoomUpdate = (r: any) => {
       if (roomId === r.id) {
         const peerLR =
@@ -773,7 +772,7 @@ export default function MessagePageClient() {
     <>
       <div className="w-full h-full pt-0 lg:pt-10 lg:p-18">
         <div className="lg:max-w-250 mx-auto">
-          <div className="bg-white/40 rounded-xl shadow-md lg:shadow-xl h-200 lg:min-w-50 flex flex-row">
+          <div className="bg-white/40 rounded-xl border border-white/10 lg:shadow-xl h-200 lg:min-w-50 flex flex-row dark:bg-white/20 dark:shadow-white/20">
             {/* ============ 왼쪽 패널 ============ */}
             <div
               className={`flex-none h-full w-full lg:w-auto ${
@@ -781,8 +780,8 @@ export default function MessagePageClient() {
               } lg:block`}
             >
               {/* 검색 바 */}
-              <div className="p-4 bg-white/40 rounded-tl-xl border-b border-b-[#E5E5E5]">
-                <div className="relative flex items-center gap-3 border border-[#E5E5E5] rounded-lg p-3">
+              <div className="p-4 bg-white/40 rounded-tl-xl border-b border-b-[#E5E5E5] dark:bg-white/15 dark:border-b-[#E5E5E5]/50">
+                <div className="relative flex items-center gap-3 border border-[#E5E5E5] rounded-lg p-3 dark:border-[#E5E5E5]/50">
                   <Search className="text-[#DBDBDB]" />
                   <input
                     value={q}
@@ -801,7 +800,7 @@ export default function MessagePageClient() {
                         setQ("");
                         setIsSearching(false);
                       }}
-                      className="cursor-pointer absolute right-2 text-xs text-[#717182]"
+                      className="cursor-pointer absolute right-2 text-xs text-[#717182] dark:text-white/60"
                     >
                       <X />
                     </button>
@@ -815,12 +814,12 @@ export default function MessagePageClient() {
                   {isSearching ? (
                     <>
                       {debouncedQ && isLoading && (
-                        <div className="flex items-center justify-center min-h-180 text-[#717182] text-center">
+                        <div className="flex items-center justify-center min-h-180 text-[#717182] text-center dark:text-white/60">
                           <p>검색 중…</p>
                         </div>
                       )}
                       {debouncedQ && !isLoading && results.length === 0 && (
-                        <div className="flex items-center justify-center min-h-180 text-[#717182] text-center">
+                        <div className="flex items-center justify-center min-h-180 text-[#717182] text-center dark:text-white/60">
                           <p>검색 결과가 없어요.</p>
                         </div>
                       )}
@@ -854,12 +853,12 @@ export default function MessagePageClient() {
                   ) : (
                     <>
                       {roomsLoading && (
-                        <div className="p-4 pt-10 text-[#717182] text-center">
+                        <div className="p-4 pt-10 text-[#717182] text-center dark:text-white/60">
                           <p>채팅방을 불러오는 중…</p>
                         </div>
                       )}
                       {!roomsLoading && rooms.length === 0 && (
-                        <div className="flex items-center justify-center min-h-180 text-[#717182] text-center">
+                        <div className="flex items-center justify-center min-h-180 text-[#717182] text-center dark:text-white/60">
                           <p>
                             아직 대화 내역이 없어요.
                             <br />
@@ -881,7 +880,7 @@ export default function MessagePageClient() {
                                 scroll: false,
                               });
                             }}
-                            className="relative flex w-full items-center gap-3 px-6 py-4 hover:bg-[#EAE8FF] cursor-pointer"
+                            className="relative flex w-full items-center gap-3 px-6 py-4 hover:bg-[#EAE8FF] cursor-pointer dark:hover:bg-[#8b80ff]/50"
                           >
                             <div className="w-11 h-11 bg-[#6D6D6D] rounded-full overflow-hidden flex items-center justify-center">
                               <Image
@@ -893,15 +892,13 @@ export default function MessagePageClient() {
                               />
                             </div>
                             <div className="text-left">
-                              <div className="text-[#0A0A0A]">
-                                {r.other_name ?? "대화 상대"}
-                              </div>
-                              <div className="text-sm text-[#717182] truncate max-w-[420px]">
+                              <div>{r.other_name ?? "대화 상대"}</div>
+                              <div className="text-sm text-[#717182] truncate max-w-[420px] dark:text-[#A6A6DB]">
                                 {r.last_message_text ?? "대화를 시작해보세요"}
                               </div>
                             </div>
                             <div className="absolute right-4 flex flex-col items-end">
-                              <div className="text-xs text-[#717182]">
+                              <div className="text-xs text-[#717182] dark:text-white/60">
                                 {r.last_message_at
                                   ? new Date(
                                       r.last_message_at
@@ -912,7 +909,7 @@ export default function MessagePageClient() {
                                   : ""}
                               </div>
                               {r.unread_count > 0 && (
-                                <span className="mt-1 inline-flex min-w-5 h-5 items-center justify-center rounded-full bg-[#6758FF] text-white text-[10px] px-1">
+                                <span className="mt-1 inline-flex min-w-5 h-5 items-center justify-center rounded-full bg-[#6758FF] text-white text-xs px-1">
                                   {r.unread_count > 99 ? "99+" : r.unread_count}
                                 </span>
                               )}
@@ -932,7 +929,7 @@ export default function MessagePageClient() {
               } lg:flex flex-1 flex-col justify-between h-full`}
             >
               {/* 상단 바 */}
-              <div className="flex justify-between p-4 bg-white/40 rounded-tr-xl border-b border-b-[#E5E5E5]">
+              <div className="flex justify-between p-4 bg-white/40 rounded-tr-xl border-b border-b-[#E5E5E5] dark:bg-white/15 dark:border-b-[#E5E5E5]/50">
                 {/* 모바일 전용 뒤로가기 */}
                 <button
                   type="button"
@@ -971,7 +968,7 @@ export default function MessagePageClient() {
                       {peer?.display_name ??
                         (roomId ? "대화 상대" : "대화 상대 선택")}
                     </p>
-                    <p className="text-[#717182] text-sm">
+                    <p className="text-[#717182] text-sm dark:text-[#A6A6DB]">
                       {peer
                         ? `${peer.email}`
                         : roomId
@@ -988,12 +985,12 @@ export default function MessagePageClient() {
               <div className="px-6 py-4 flex flex-col gap-2 overflow-x-hidden overflow-y-auto">
                 <div>
                   {!roomId && !peerId && (
-                    <div className="flex items-center justify-center text-[#717182]">
+                    <div className="flex items-center justify-center text-[#717182] dark:text-white/60">
                       <p>좌측에서 유저를 검색해 대화를 시작해보세요!</p>
                     </div>
                   )}
                   {!roomId && peerId && (
-                    <div className="flex items-center justify-center text-[#717182]">
+                    <div className="flex items-center justify-center text-[#717182] dark:text-white/60">
                       <p>
                         첫 대화를 나눠보세요! (메시지를 보내면 채팅방이
                         생성됩니다)
@@ -1001,7 +998,7 @@ export default function MessagePageClient() {
                     </div>
                   )}
                   {roomId && msgs.length === 0 && (
-                    <div className="flex items-center justify-center text-[#717182]">
+                    <div className="flex items-center justify-center text-[#717182] dark:text-white/60">
                       <p>아직 메시지가 없어요. 대화를 시작해보세요!</p>
                     </div>
                   )}
@@ -1027,8 +1024,8 @@ export default function MessagePageClient() {
                                 key={`sep-${dateKey}`}
                                 className="relative my-4"
                               >
-                                <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-black/10"></div>
-                                <div className="relative mx-auto w-fit rounded-full border border-black/10 bg-white/60 px-3 py-1 text-xs text-[#4B4B57] backdrop-blur">
+                                <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-black/10 dark:bg-gray-400"></div>
+                                <div className="relative mx-auto w-fit rounded-full border border-black/10 bg-white/60 px-3 py-1 text-xs text-[#4B4B57] backdrop-blur dark:text-white dark:bg-white/20">
                                   {label}
                                 </div>
                               </div>
@@ -1053,13 +1050,13 @@ export default function MessagePageClient() {
                                     return unreadByPeer ? (
                                       <span
                                         title="상대 미읽음"
-                                        className="inline-block rounded-full text-xs font-semibold text-[#6758FF]"
+                                        className="inline-block rounded-full text-xs font-semibold text-[#6758FF] dark:text-[#A6A6DB]"
                                       >
                                         1
                                       </span>
                                     ) : null;
                                   })()}
-                                  <span className="text-[#717182] text-xs">
+                                  <span className="text-[#717182] text-xs dark:text-white/60">
                                     {dt.toLocaleTimeString([], {
                                       hour: "2-digit",
                                       minute: "2-digit",
@@ -1073,7 +1070,7 @@ export default function MessagePageClient() {
                                 className={`${
                                   mine
                                     ? "bg-[#6758FF] text-white"
-                                    : "bg-white/50 text-[#0A0A0A]"
+                                    : "bg-white/50 dark:bg-white/20"
                                 } border border-[#6758FF]/30 rounded-xl px-4 py-2 max-w-[70%]`}
                               >
                                 {m.image_url && (
@@ -1093,7 +1090,7 @@ export default function MessagePageClient() {
                               {/* 상대 메시지: 시간/내 미읽음 점 */}
                               {!mine && (
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[#717182] text-xs">
+                                  <span className="text-[#717182] text-xs dark:text-white/60">
                                     {dt.toLocaleTimeString([], {
                                       hour: "2-digit",
                                       minute: "2-digit",
@@ -1105,9 +1102,11 @@ export default function MessagePageClient() {
                                       m.created_at > myLastReadAt;
                                     return unread ? (
                                       <span
-                                        title="미읽음"
-                                        className="inline-block w-2 h-2 rounded-full bg-[#6758FF]"
-                                      ></span>
+                                        title="상대 미읽음"
+                                        className="inline-block rounded-full text-xs font-semibold text-[#6758FF] dark:text-[#A6A6DB]"
+                                      >
+                                        1
+                                      </span>
                                     ) : null;
                                   })()}
                                 </div>
@@ -1147,7 +1146,7 @@ export default function MessagePageClient() {
 
               {/* 입력창 */}
               <div className="p-4">
-                <div className="flex items-center gap-3 border border-[#E5E5E5] rounded-lg p-3">
+                <div className="flex items-center gap-3 border border-[#E5E5E5] rounded-lg p-3 dark:border-[#E5E5E5]/50 ">
                   <input
                     ref={inputRef}
                     value={draft}
