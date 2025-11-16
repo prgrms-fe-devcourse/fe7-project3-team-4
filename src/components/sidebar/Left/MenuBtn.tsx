@@ -33,7 +33,9 @@ export default function MenuBtn({
       : "bg-[#6758FF] text-white shadow-[0px_10px_25px_rgba(0,0,0,0.16),0px_4px_10px_rgba(0,0,0,0.12)]";
 
   const inactiveStyle =
-    size === "md" ? "active:bg-[#ececec]" : "hover:bg-white hover:shadow-xl";
+    size === "md"
+      ? "active:bg-[#ececec]"
+      : "dark:hover:bg-white/30 hover:bg-white hover:shadow-xl";
 
   const className = `${base} ${active ? activeStyle : inactiveStyle}`;
 

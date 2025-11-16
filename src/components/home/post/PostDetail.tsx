@@ -443,11 +443,11 @@ export default function PostDetail({
       <div className="p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
         <div>
           <p className="ml-2 mb-2 text-ms font-medium">작성자 소개</p>
-          <div className="flex justify-between items-start gap-3 p-3 bg-white rounded-lg">
+          <div className="flex justify-between items-start gap-3 p-3 bg-white rounded-xl">
             <div className="flex-1 flex gap-3">
               <Link
                 href={`/profile?userId=${post.user_id}`}
-                className="relative w-11 h-11 bg-gray-300 rounded-full overflow-hidden hover:opacity-80 transition-opacity"
+                className="relative w-11 h-11 rounded-full overflow-hidden hover:opacity-80 transition-opacity"
               >
                 {authorAvatar ? (
                   <Image
