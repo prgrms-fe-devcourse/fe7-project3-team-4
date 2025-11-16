@@ -38,7 +38,7 @@ export default function HistoryClientView({
           {isPending ? "삭제 중..." : "내역 삭제"}
         </button>
       </div>
-      <div className="space-y-4 mt-7">
+      <div className="space-y-6 mt-7">
         {(views as ViewHistoryType[]).map((view) => (
           <HistoryPost key={view.id} data={view} />
         ))}
