@@ -416,7 +416,7 @@ export function WritePostForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-10">
+    <form onSubmit={handleSubmit} className="space-y-10 mt-6 lg:mt-0">
       <PostTypeSelect
         postType={postType}
         onChange={setPostType}

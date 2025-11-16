@@ -3,7 +3,7 @@
 // ============================================
 "use client";
 
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, type Content } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import { useEffect } from "react";
@@ -26,7 +26,7 @@ export function DetailRenderer({ content }: { content: Json | null }) {
   const editor = useEditor({
     editable: false,
     immediatelyRender: false,
-    content: content,
+    content: content as Content,
     extensions: editorExtensions,
     editorProps: {
       attributes: { class: "prose prose-lg max-w-none" },
@@ -35,7 +35,7 @@ export function DetailRenderer({ content }: { content: Json | null }) {
 
   useEffect(() => {
     if (editor && content) {
-      editor.commands.setContent(content, { emitUpdate: false });
+      editor.commands.setContent(content as Content, { emitUpdate: false });
     }
   }, [editor, content]);
 

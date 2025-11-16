@@ -80,6 +80,9 @@ const nextConfig: NextConfig = {
     unoptimized: process.env.NODE_ENV === "development",
   },
   reactStrictMode: false,
+
+  // 👇 [re2] 빌드 오류 해결을 위해 이 부분을 추가합니다.
+  serverExternalPackages: ["re2"],
 };
 
 export default nextConfig;

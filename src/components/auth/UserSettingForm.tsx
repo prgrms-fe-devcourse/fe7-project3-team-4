@@ -21,7 +21,6 @@ export default function UserSettingForm({
 
   useEffect(() => {
     if (state.success && !state.error) {
-      alert("프로필이 성공적으로 업데이트 되었습니다.");
       router.push(url ? url : "/");
     }
   }, [state.success, state.error, url, router]);
@@ -69,7 +68,7 @@ export default function UserSettingForm({
               />
             </div>
             <div className="text-center pt-3 mb-2">
-              <span className="text-[10px] text-gray-400 leading-snug">
+              <span className="text-[12px] text-gray-400 leading-snug">
                 {"이 스페이스에 접속하면, "}
                 <a href="#" className="text-purple-600 hover:text-purple-700">
                   이용 약관

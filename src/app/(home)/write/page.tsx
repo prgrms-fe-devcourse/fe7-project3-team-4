@@ -1,105 +1,42 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/utils/supabase/server";
-import { WritePostForm } from "@/components/write/WritePostForm";
-import { Hashtag, Post } from "@/types";
-import { ParsedPostContent, parsePostContent } from "@/utils/parsePostContent";
+import { Suspense } from "react";
+import WritePageClient from "@/components/write/WritePageClient"; // 1번 파일 import
+
+// ✅ [필수] useSearchParams를 사용(할 예정이거나) 하위 컴포넌트가
+// searchParams에 의존하므로 동적 렌더링을 강제합니다.
+// (사실 이 페이지는 searchParams를 Promise로 받아 await 하므로
+// 이미 동적이지만, 명시적으로 dynamic을 추가하여 빌드 오류 방지)
+export const dynamic = "force-dynamic";
 
 type PageProps = {
   searchParams?: Promise<{
-    mode?: string; // "edit" | undefined
-    postId?: string; // 수정할 게시글 id
-    type?: string; // "prompt" | "free" | "weekly" 등
+    mode?: string;
+    postId?: string;
+    type?: string;
   }>;
 };
 
-export default async function Page({ searchParams }: PageProps) {
-  const search = await searchParams;
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/auth/login");
-  }
-
-  const { data: hashtags } = await supabase.from("hashtags").select("*");
-  if (!hashtags) return null;
-
-  // 쿼리스트링에서 모드, 타입, postId 추출
-  const mode = search?.mode === "edit" ? "edit" : "create";
-  const postId = search?.postId ?? null;
-  const initialPostType = search?.type as PostType | null;
-
-  let initialPost: Post | null = null;
-
-  // 수정 모드 + postId 있을 때 기존 게시글 조회
-  if (mode === "edit" && postId) {
-    const { data, error } = await supabase
-      .from("posts")
-      .select("*")
-      .eq("id", postId)
-      .single();
-
-    if (error) {
-      console.error("[write/page] 게시글 불러오기 실패:", error);
-      // 필요하면 404 페이지로 보내도 됨
-      // redirect("/not-found");
-    } else {
-      initialPost = data;
-    }
-  }
-
-  const parsed: ParsedPostContent = initialPost?.content
-    ? parsePostContent(initialPost.content)
-    : {
-        promptInput: null,
-        resultText: null,
-        resultImageUrl: null,
-        resultLink: null,
-      };
-
-  // DB에 result_mode 컬럼이 있다면 우선 사용
-  const dbResultMode = initialPost?.result_mode as ResultMode | undefined;
-
-  const effectiveResultMode: ResultMode =
-    dbResultMode ??
-    // 둘 다 없으면, 이미지 유무 기반으로 최후 추론
-    (parsed.resultImageUrl ? "Image" : "Text");
-
-  // Prompt 결과 값: Text 모드면 text, Image 모드면 image URL
-  const initialPromptResult =
-    effectiveResultMode === "Image"
-      ? parsed.resultImageUrl ?? ""
-      : parsed.resultText ?? "";
-
+// 간단한 로딩 스켈레톤
+function WritePageLoading() {
   return (
-    <>
-      <section className="relative max-w-2xl mx-auto">
-        <WritePostForm
-          hashtags={hashtags}
-          // 생성/수정 모드
-          mode={mode}
-          // 수정 대상 게시글 id
-          postId={postId ?? undefined}
-          // 타입 잠그기용 (URL + 실제 post 기록 중 우선순위는 아래 컴포넌트에서 처리)
-          initialPostType={
-            (initialPost?.post_type as PostType) ?? initialPostType
-          }
-          // 미리 채울 값들
-          initialTitle={initialPost?.title ?? ""}
-          initialSubtitle={initialPost?.subtitle ?? ""}
-          initialThumbnail={initialPost?.thumbnail}
-          initialHashtags={initialPost?.hashtags as Hashtag["name"][]}
-          // 프롬프트에 들어갈 정보
-          initialModel={(initialPost?.model as ModelType) ?? ""}
-          initialResultMode={(initialPost?.result_mode as ResultMode) ?? ""}
-          initialPromptInput={parsed.promptInput ?? ""}
-          initialPromptResult={initialPromptResult}
-          initialResultLink={parsed.resultLink ?? ""}
-        />
-      </section>
-    </>
+    <section className="relative max-w-2xl mx-auto p-4">
+      {/* 제목 영역 스켈레톤 */}
+      <div className="h-10 w-3/4 bg-gray-200 rounded-md animate-pulse mb-4 dark:bg-gray-700"></div>
+      {/* 폼 영역 스켈레톤 */}
+      <div className="space-y-4">
+        <div className="h-8 w-1/3 bg-gray-200 rounded-md animate-pulse dark:bg-gray-700"></div>
+        <div className="h-40 bg-gray-200 rounded-lg animate-pulse dark:bg-gray-700"></div>
+        <div className="h-20 bg-gray-200 rounded-lg animate-pulse dark:bg-gray-700"></div>
+      </div>
+    </section>
+  );
+}
+
+// 이 페이지는 Suspense 래퍼(Wrapper) 역할을 합니다.
+export default function Page({ searchParams }: PageProps) {
+  return (
+    <Suspense fallback={<WritePageLoading />}>
+      {/* ✅ 실제 로직을 처리하는 클라이언트를 Suspense로 감쌉니다. */}
+      <WritePageClient searchParams={searchParams} />
+    </Suspense>
   );
 }

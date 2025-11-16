@@ -4,16 +4,17 @@ import {
   createContext,
   useContext,
   ReactNode,
-  useRef,
-  useState, // [추가]
-  useEffect, // [추가]
+  // useRef,
+  useState,
+  useEffect,
+  useCallback, // [추가]
 } from "react";
 import { useNewsFeed } from "@/hooks/news/useNewsFeed";
 import { useNewsUpload } from "@/hooks/news/useNewsUpload";
-import { SortKey, NewsItemWithState } from "@/types";
-import { createClient } from "@/utils/supabase/client"; // [추가]
+// import { SortKey, NewsItemWithState } from "@/types";
+import { createClient } from "@/utils/supabase/client";
 
-// [추가] LatestNewsCarousel이 요구하는 최소한의 타입
+// LatestNewsCarousel이 요구하는 최소한의 타입
 type LatestNews = {
   id: string;
   title: string;
@@ -21,14 +22,12 @@ type LatestNews = {
 };
 
 // 1. useNewsFeed와 useNewsUpload 훅의 반환 타입을 합칩니다.
-// [수정] useNewsFeed의 반환 타입에서 latestNews를 제거하고,
-//       독립적인 latestNews 타입을 수동으로 추가합니다.
 type NewsFeedContextType = Omit<ReturnType<typeof useNewsFeed>, "latestNews"> & {
-  fileInputRef: React.RefObject<HTMLInputElement>;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
   loadingUpload: boolean;
-  handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   triggerFileInput: () => void;
-  latestNews: LatestNews[]; // [수정]
+  latestNews: LatestNews[];
 };
 
 // 2. Context 생성
@@ -45,17 +44,18 @@ export function NewsFeedProvider({ children }: { children: ReactNode }) {
     onUploadSuccess: () => {
       newsFeed.setMessage("✅ 기사 저장 완료! 목록을 새로고침합니다.");
       newsFeed.refreshFeed();
-      // [추가] 업로드 성공 시 캐러셀도 갱신
+      // [수정] useCallback으로 생성된 함수 호출
       fetchLatestNews();
     },
     onUploadError: (errorMessage) => newsFeed.setMessage(errorMessage),
   });
 
-  // [추가] 캐러셀 전용 상태 및 fetch 로직
+  // 캐러셀 전용 상태 및 fetch 로직
   const [latestNews, setLatestNews] = useState<LatestNews[]>([]);
   const supabase = createClient();
 
-  const fetchLatestNews = async () => {
+  // [수정] 함수를 useCallback으로 감싸서 메모이제이션합니다.
+  const fetchLatestNews = useCallback(async () => {
     // 캐러셀은 id, title, images 필드만 필요합니다.
     const { data, error } = await supabase
       .from("news")
@@ -68,18 +68,20 @@ export function NewsFeedProvider({ children }: { children: ReactNode }) {
     } else if (data) {
       setLatestNews(data);
     }
-  };
+    // [수정] useCallback의 의존성 배열에 supabase 클라이언트 추가
+  }, [supabase]); 
 
   // 컴포넌트 마운트 시 캐러셀 데이터 1회 로드
   useEffect(() => {
     fetchLatestNews();
-  }, []);
+    // [수정] 의존성 배열에 fetchLatestNews 추가
+  }, [fetchLatestNews]);
 
   // 두 훅의 반환값을 하나로 합쳐서 value로 제공
   const value = {
     ...newsFeed,
     ...newsUpload,
-    latestNews, // [수정] useNewsFeed에서 온 것이 아닌, 독립적인 상태를 제공
+    latestNews,
   };
 
   return (

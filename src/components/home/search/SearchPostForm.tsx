@@ -163,7 +163,7 @@ export default async function SearchPostForm({
       {/* 검색 입력 창 */}
       <FormClient searchTerm={searchTerm} tagTerm={tagTerm} />
       {/* 인기 해시태그 */}
-      <div className="space-y-2 px-6 py-4 mb-6">
+      <div className="space-y-2 py-4 mb-6">
         <p>인기 해시태그</p>
         <div className="flex gap-2.5 flex-wrap">
           <Link
@@ -211,7 +211,7 @@ export default async function SearchPostForm({
 
           return (
             <div key={type} className="space-y-4 mb-8">
-              <p className="ml-6 text-xl">{title}</p>
+              <p className="text-xl">{title}</p>
               {posts.length > 0 ? (
                 <div className="space-y-8 pb-6">
                   {posts.map((post) => (

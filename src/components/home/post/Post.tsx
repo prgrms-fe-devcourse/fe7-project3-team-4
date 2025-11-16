@@ -27,7 +27,7 @@ export default function Post({
   const authorAvatar = data.profiles?.avatar_url;
   const displayDate = (data.created_at || "").slice(0, 10);
 
-// [✅ 수정] postUrl 로직 수정
+  // [✅ 수정] postUrl 로직 수정
   const postUrl = useMemo(() => {
     if (activeTab === "전체") {
       // '전체' 탭에서 클릭 시 'type=all'을 유지 (이전 수정)
@@ -76,7 +76,7 @@ export default function Post({
 
         <Link href={postUrl} className="block my-5 space-y-4">
           {/* 중간: 제목 */}
-          <h3 className="text-[18px] font-semibold">{data.title}</h3>
+          <h3 className="text-lg font-semibold">{data.title}</h3>
           {/* 썸네일 이미지 (thumbnail) - 존재할 경우에만 렌더링 */}
           {data.thumbnail && (
             <div className="relative w-full aspect-video overflow-hidden rounded-lg">

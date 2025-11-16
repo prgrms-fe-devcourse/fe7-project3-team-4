@@ -13,12 +13,11 @@ export default function RootLayout({
 }) {
   return (
     <>
-      <div className="fixed inset-0 min-h-screen bg-[linear-gradient(130deg,#EFF5FE_18.41%,#FBF3FB_81.59%)]"></div>
       <div className="relative">
         <div className="z-5">
           <FollowProvider>
             <NewsFeedProvider>
-              <div className="p-6 grid lg:grid-cols-[208px_minmax(0,1fr)_332px] gap-6 h-screen">
+              <div className="relative pt-[84px] px-2 pb-2 lg:p-6 grid lg:grid-cols-[208px_minmax(0,1fr)_332px] gap-6 h-screen">
                 <LeftSidebar />
                 <DragScrollMain>{children}</DragScrollMain>
                 <RightSidebar />

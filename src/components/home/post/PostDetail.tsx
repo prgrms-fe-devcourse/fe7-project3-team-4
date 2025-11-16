@@ -79,6 +79,35 @@ export default function PostDetail({
     incrementViewCount();
   }, [post.id, supabase]);
 
+  // [★신규★] 2. (개인) '조회 내역' 기록 (로그인한 경우에만 실행)
+  useEffect(() => {
+    const recordViewHistory = async () => {
+      // 1. currentUserId가 있어야 (로그인해야) 기록합니다.
+      if (currentUserId) {
+        const { error } = await supabase.from("user_post_views").upsert(
+          {
+            user_id: currentUserId,
+            post_id: post.id,
+            viewed_at: new Date().toISOString(), // "언제" 봤는지 현재 시간으로 갱신
+          },
+          {
+            // "만약 (user_id, post_id)가 겹치면 (UNIQUE 충돌 시)"
+            // viewed_at 컬럼만 덮어씁니다.
+            onConflict: "user_id, post_id",
+          }
+        );
+
+        if (error) {
+          console.error("조회 내역 기록 오류:", error.message);
+        }
+      }
+    };
+
+    recordViewHistory();
+
+    // currentUserId와 post.id가 확정되면 이 훅을 실행합니다.
+  }, [currentUserId, post.id, supabase]);
+
   const fetchComments = useCallback(async () => {
     const { data, error } = await supabase
       .from("comments")
@@ -133,6 +162,8 @@ export default function PostDetail({
             : {
                 display_name: "익명",
                 email: "user",
+                avatar_url: null,
+                bio: null,
               },
         })
       );
@@ -293,7 +324,7 @@ export default function PostDetail({
         </button>
         {/* 내가 작성한 게시글에서만 보이도록 */}
         {post.user_id === currentUserId && (
-          <div className="flex gap-4 px-2 items-center">
+          <div className="flex gap-2 px-2 items-center">
             {/* 수정 */}
             <button
               type="button"
@@ -302,7 +333,7 @@ export default function PostDetail({
                   `/write?mode=edit&postId=${post.id}&type=${post.post_type}`
                 )
               }
-              className="w-6 h-6 leading-none cursor-pointer flex justify-center items-center gap-2 text-white bg-[#6758FF] rounded-md"
+              className="p-1 leading-none cursor-pointer flex justify-center items-center gap-2 text-[#6758FF] border border-[#6758FF] rounded-md hover:text-white hover:bg-[#776bff]"
             >
               <Edit size={18} />
             </button>
@@ -311,9 +342,9 @@ export default function PostDetail({
               type="button"
               onClick={handleDeletePost}
               disabled={isDeleting}
-              className="leading-none cursor-pointer flex items-center gap-2 text-[#ff4646]"
+              className="p-1 leading-none cursor-pointer flex justify-center items-center gap-2 text-[#ff4646] border border-[#ff4646] rounded-md hover:text-white hover:bg-[#ff4646]"
             >
-              <Trash />
+              <Trash size={18} />
             </button>
           </div>
         )}

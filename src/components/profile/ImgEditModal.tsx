@@ -101,7 +101,7 @@ export function ImgEditModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg relative p-6 bg-[#f6f6f6]/60 border-white/40 rounded-2xl backdrop-blur-md"
+        className="w-full max-w-md lg:max-w-lg relative p-6 bg-[#f6f6f6]/60 border-white/40 rounded-2xl backdrop-blur-md"
       >
         <h3 className="text-xl font-medium mb-7">프로필 이미지 편집</h3>
         <form className="space-y-5" onSubmit={handleSubmit}>
