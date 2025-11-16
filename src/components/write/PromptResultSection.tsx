@@ -49,7 +49,7 @@ export function PromptResultSection({
       <input type="hidden" name="resultMode" value={resultMode} />
       <input type="hidden" name="model" value={model} />
 
-      <div className="grid bg-white/40 shadow-lg rounded-xl p-6">
+      <div className="grid bg-white/40 shadow-lg rounded-xl p-6 dark:bg-white/20">
         <div className="flex justify-between mb-6">
           <div className="font-semibold text-xl">프롬프트 및 결과</div>
           <div className="flex items-center gap-1 p-0.5 rounded-lg text-xs bg-white/40 border border-black/20">
@@ -60,7 +60,7 @@ export function PromptResultSection({
                 "cursor-pointer py-1 px-3 leading-none rounded-lg transition-shadow " +
                 (model === "GPT"
                   ? "bg-[#74AA9C] text-white shadow-2xl"
-                  : "text-[#9CA3AF] bg-transparent")
+                  : "text-[#9CA3AF] bg-transparent hover:bg-[#74AA9C]/50 dark:text-white")
               }
             >
               GPT
@@ -72,7 +72,7 @@ export function PromptResultSection({
                 "cursor-pointer py-1 px-3 leading-none rounded-lg transition-shadow " +
                 (model === "Gemini"
                   ? "bg-[#4285F4] text-white shadow-2xl"
-                  : "text-[#9CA3AF] bg-transparent")
+                  : "text-[#9CA3AF] bg-transparent hover:bg-[#4285F4]/50 dark:text-white")
               }
             >
               Gemini
@@ -85,7 +85,7 @@ export function PromptResultSection({
           name="promptInput"
           placeholder="입력한 프롬프트"
           defaultValue={initialPromptInput ?? ""}
-          className="border border-[#D9D9D9] rounded-lg h-40 p-4 outline-none mb-8"
+          className="border border-[#D9D9D9] rounded-lg h-40 p-4 outline-none mb-8 dark:border-[#D9D9D9]/70"
         />
 
         <div className="flex flex-col gap-4">
@@ -97,8 +97,8 @@ export function PromptResultSection({
                 className={
                   "cursor-pointer py-1 px-3 leading-none rounded-lg transition-shadow " +
                   (resultMode === "Text"
-                    ? "bg-white shadow-2xl"
-                    : "text-[#9CA3AF]")
+                    ? "bg-white shadow-2xl dark:bg-[#248AFF]"
+                    : "text-[#9CA3AF] dark:text-white")
                 }
               >
                 텍스트
@@ -109,8 +109,8 @@ export function PromptResultSection({
                 className={
                   "cursor-pointer py-1 px-3 leading-none rounded-lg transition-shadow " +
                   (resultMode === "Image"
-                    ? "bg-white shadow-2xl"
-                    : "text-[#9CA3AF]")
+                    ? "bg-white shadow-2xl dark:bg-[#248AFF]"
+                    : "text-[#9CA3AF] dark:text-white")
                 }
               >
                 이미지
@@ -124,7 +124,7 @@ export function PromptResultSection({
               name="promptResult"
               placeholder="프롬프트의 결과"
               defaultValue={initialPromptResult ?? ""}
-              className="bg-[#D9D9D9]/20 rounded-lg h-40 p-4 outline-none border border-[#D9D9D9] mb-8"
+              className="bg-[#D9D9D9]/30 rounded-lg h-40 p-4 outline-none border border-[#D9D9D9] mb-8 dark:border-[#D9D9D9]/70 dark:bg-[#D9D9D9]/15"
             />
           ) : (
             <>
@@ -137,7 +137,7 @@ export function PromptResultSection({
                 ref={fileInputRef}
                 onChange={handleImgFileUpload}
               />
-              <div className="relative flex flex-col items-center py-8 rounded-lg bg-[#D9D9D9]/20 border border-dashed border-[#D9D9D9] mb-8">
+              <div className="relative flex flex-col items-center py-8 rounded-lg bg-[#D9D9D9]/20 border border-dashed border-[#D9D9D9] mb-8 dark:border-[#D9D9D9]/70">
                 {previewUrl ? (
                   <>
                     <div className="relative py-2">

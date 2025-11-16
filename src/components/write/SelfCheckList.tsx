@@ -22,7 +22,7 @@ export function SelfCheckList({ values, onChange }: Props) {
   };
 
   return (
-    <div className="grid bg-white/40 shadow-lg rounded-xl p-6 gap-3">
+    <div className="grid bg-white/40 shadow-lg rounded-xl p-6 gap-3 dark:bg-white/20">
       <p className="font-semibold text-xl mb-2">자가진단 문항</p>
 
       <div className="w-4/5 mx-auto">
