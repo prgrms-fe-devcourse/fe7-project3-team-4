@@ -107,18 +107,18 @@ export default function HistoryPost({ data }: { data: ViewHistoryType }) {
   const boardTitle = getBoardTitle(post.post_type, post.model);
 
   return (
-    <article className="bg-white/40 border border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl overflow-hidden">
-      <div className="relative py-3 px-4 ">
+    <article className="bg-white/40 border border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl overflow-hidden dark:bg-white/20 dark:shadow-white/10 dark:hover:shadow-white/20">
+      <div className="relative p-4">
         <button
           onClick={handleDelete}
           disabled={isDeleting}
-          className="cursor-pointer absolute top-5 right-4 p-1 rounded-full text-gray-400 hover:bg-gray-200 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 z-10 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="cursor-pointer absolute top-3 right-3 p-1 rounded-full text-gray-400 hover:bg-gray-200 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 z-10 disabled:opacity-50 disabled:cursor-not-allowed dark:text-[#A6A6DB]"
           aria-label="기록 삭제"
         >
           <X size={18} />
         </button>
 
-        <div className="text-sm font-bold mb-3">{boardTitle}</div>
+        <div className="text-xl font-semibold mb-3">{boardTitle}</div>
 
         <div className="flex gap-3 items-start">
           <div className="relative w-10 h-10 bg-gray-300 rounded-full shrink-0 overflow-hidden">
@@ -140,25 +140,23 @@ export default function HistoryPost({ data }: { data: ViewHistoryType }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center flex-wrap text-sm">
               <span className="font-medium mr-1.5">{authorName}</span>
-              <span className="text-gray-500 text-xs ml-2">
+              <span className="text-gray-500 text-xs ml-2 dark:text-[#A6A6DB]">
                 {timeAgo(post.created_at)}
               </span>
             </div>
 
             <Link href={postUrl} className="block mt-1">
-              <h3 className="text-lg font-semibold text-gray-900 truncate">
-                {post.title}
-              </h3>
-            </Link>
+              <h3 className="text-lg truncate">{post.title}</h3>
 
-            <div className="flex justify-between items-center mt-1.5">
-              <p className="text-sm text-gray-700 truncate mr-30">
-                {post.subtitle}
-              </p>
-              <p className="text-xs text-gray-500 whitespace-nowrap shrink-0 mr-3">
-                {displayTime}에 마지막으로 봄
-              </p>
-            </div>
+              <div className="flex justify-between items-center mt-1.5">
+                <p className="text-sm text-gray-700 truncate mr-30 dark:text-gray-300">
+                  {post.subtitle}
+                </p>
+                <p className="text-xs text-gray-500 whitespace-nowrap shrink-0 mr-3 dark:text-[#A6A6DB]">
+                  {displayTime}에 마지막으로 봄
+                </p>
+              </div>
+            </Link>
           </div>
         </div>
       </div>
