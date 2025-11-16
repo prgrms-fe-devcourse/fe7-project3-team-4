@@ -206,20 +206,20 @@ export function ProfileHeader({
           {isOwnProfile && (
             <Pencil
               size={20}
-              className="text-white opacity-0 group-hover:opacity-100 transition-opacity"
+              className="text-white opacity-0 group-hover:opacity-100"
             />
           )}
         </div>
 
         {/* 프로필 정보 박스 */}
-        <div className="bg-white/40 border border-white/20 rounded-xl shadow-xl">
+        <div className="bg-white/40 border border-white/20 rounded-xl shadow-xl dark:bg-white/20 dark:shadow-white/20">
           <div className="px-6 pb-6 pt-3">
             <div className="w-full flex justify-end mb-8">
               {isOwnProfile ? (
                 <button
                   type="button"
                   onClick={onEditClick}
-                  className="cursor-pointer leading-none px-4 py-3 flex items-center gap-2 bg-white rounded-xl hover:-translate-y-0.5 hover:shadow-xl"
+                  className="cursor-pointer leading-none px-4 py-3 flex items-center gap-2 bg-white rounded-xl hover:-translate-y-0.5 hover:shadow-xl dark:bg-white/20"
                 >
                   <SquarePen size={20} />
                   <span>프로필 편집</span>
@@ -240,7 +240,7 @@ export function ProfileHeader({
             <p className="text-[22px] mb-3">
               {profile!.display_name || "닉네임"}
             </p>
-            <p className="text-sm text-[#717182] mb-5">
+            <p className="text-sm text-[#717182] mb-5 dark:text-[#A6A6DB]">
               {profile!.email || "이메일 정보 없음"}
             </p>
             <p className="text-lg mb-6">{profile!.bio || "자기소개"}</p>
@@ -251,17 +251,21 @@ export function ProfileHeader({
                   className="cursor-pointer hover:underline"
                 >
                   <span>{profile!.following_count}</span>{" "}
-                  <span className="text-[#717182]">팔로잉</span>
+                  <span className="text-[#717182] dark:text-[#A6A6DB]">
+                    팔로잉
+                  </span>
                 </button>
                 <button
                   onClick={() => handleOpenModal("follower")}
                   className="cursor-pointer hover:underline"
                 >
                   <span>{profile!.followed_count}</span>{" "}
-                  <span className="text-[#717182]">팔로워</span>
+                  <span className="text-[#717182] dark:text-[#A6A6DB]">
+                    팔로워
+                  </span>
                 </button>
               </div>
-              <div className="flex items-center gap-1 text-[#717182]">
+              <div className="flex items-center gap-1 text-[#717182] dark:text-[#A6A6DB]">
                 <Calendar size={16} />
                 <span className="text-sm">{joinedDate}에 가입</span>
               </div>
@@ -277,7 +281,7 @@ export function ProfileHeader({
           onClick={handleCloseModal}
         >
           <div
-            className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden"
+            className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden dark:bg-[#181818]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 모달 헤더 */}
@@ -287,7 +291,7 @@ export function ProfileHeader({
               </h2>
               <button
                 onClick={handleCloseModal}
-                className="text-gray-500 hover:text-gray-700"
+                className="cursor-pointer text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-500"
               >
                 <X size={24} />
               </button>
@@ -297,7 +301,9 @@ export function ProfileHeader({
             <div className="overflow-y-auto max-h-[400px]">
               {loading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="text-gray-500">로딩 중...</div>
+                  <div className="text-gray-500 dark:text-white/80">
+                    로딩 중...
+                  </div>
                 </div>
               ) : users.length === 0 ? (
                 <div className="flex items-center justify-center py-12">
@@ -312,13 +318,13 @@ export function ProfileHeader({
                   {users.map((user) => (
                     <div
                       key={user.id}
-                      className="p-4 hover:bg-gray-50 transition-colors"
+                      className="p-4 hover:bg-gray-50 transition-colors dark:hover:bg-gray-600"
                     >
                       <div className="flex items-center gap-3">
                         {/* 프로필 이미지 */}
                         <div
                           onClick={() => handleProfileClick(user.id)}
-                          className="w-[50px] h-[50px] bg-gray-400 rounded-full overflow-hidden flex items-center justify-center hover:opacity-80 transition-opacity shrink-0 cursor-pointer"
+                          className="w-[50px] h-[50px] rounded-full overflow-hidden flex items-center justify-center hover:opacity-80 transition-opacity shrink-0 cursor-pointer"
                         >
                           {user.avatar_url ? (
                             <Image
@@ -340,7 +346,7 @@ export function ProfileHeader({
                           <p className="font-medium truncate">
                             {user.display_name}
                           </p>
-                          <p className="text-sm text-[#717182] truncate">
+                          <p className="text-sm text-[#717182] truncate dark:text-[#A6A6DB]">
                             @{user.email}
                           </p>
                         </div>

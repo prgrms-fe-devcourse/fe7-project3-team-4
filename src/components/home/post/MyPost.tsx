@@ -19,7 +19,7 @@ export default function MyPost({
   const postUrl = `/?type=${data.post_type}&id=${data.id}`;
 
   return (
-    <article className="bg-white/40 border border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl overflow-hidden">
+    <article className="bg-white/40 border border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl overflow-hidden dark:bg-white/20 dark:shadow-white/10 dark:hover:shadow-white/20">
       <div className="p-6 pb-0">
         {/* 상단: 작성자 정보 */}
         <div className="flex justify-between">

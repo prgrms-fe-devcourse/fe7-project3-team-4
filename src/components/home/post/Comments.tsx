@@ -174,7 +174,10 @@ export default function Comments({
           .single();
 
         if (parentComment) {
-          const newReplyCount = Math.max((parentComment.reply_count || 0) - 1, 0);
+          const newReplyCount = Math.max(
+            (parentComment.reply_count || 0) - 1,
+            0
+          );
           await supabase
             .from("comments")
             .update({
@@ -183,7 +186,7 @@ export default function Comments({
             })
             .eq("id", comment.id);
         }
-        
+
         fetchReplies();
       } else {
         // 부모 댓글 삭제 시 전체 목록 새로고침
@@ -223,10 +226,12 @@ export default function Comments({
       }
       // 3️⃣ 좋아요 추가
       else {
-        const { error: insertError } = await supabase.from("comment_likes").insert({
-          user_id: user.id,
-          comment_id: commentId,
-        });
+        const { error: insertError } = await supabase
+          .from("comment_likes")
+          .insert({
+            user_id: user.id,
+            comment_id: commentId,
+          });
 
         if (insertError) throw insertError;
       }
@@ -266,7 +271,7 @@ export default function Comments({
         supabase.removeChannel(channel);
       };
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [comment.id, showReplies]);
 
   const isOwner = user?.id === comment.user_id;
@@ -294,8 +299,12 @@ export default function Comments({
             </div>
             {/* 이름 + 이메일 */}
             <div className="mb-1.5">
-              <div className="text-sm font-medium">{comment.profiles?.display_name}</div>
-              <div className="text-xs text-[#717182]">@{comment.profiles?.email}</div>
+              <div className="text-sm font-medium">
+                {comment.profiles?.display_name}
+              </div>
+              <div className="text-xs text-[#717182] dark:text-[#A6A6DB]">
+                @{comment.profiles?.email}
+              </div>
             </div>
           </div>
           {/* 수정/삭제 버튼 */}
@@ -303,14 +312,14 @@ export default function Comments({
             <div className="flex gap-2">
               <button
                 onClick={() => setIsEditing(!isEditing)}
-                className="text-blue-500 hover:text-blue-700"
+                className="cursor-pointer text-blue-500 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-500"
               >
                 <Edit size={16} />
               </button>
               <button
                 onClick={() => handleDelete(comment.id)}
                 disabled={isDeleting}
-                className="text-red-500 hover:text-red-700 disabled:text-gray-400"
+                className="cursor-pointer text-red-500 hover:text-red-700 disabled:text-gray-400 dark:text-red-300 dark:hover:text-red-500"
               >
                 <Trash2 size={16} />
               </button>
@@ -324,13 +333,13 @@ export default function Comments({
               <textarea
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
-                className="w-full px-3 py-2 bg-[#EBF2FF] text-sm rounded-[10px] border border-blue-300 focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 bg-[#EBF2FF] text-sm rounded-xl border border-gray-300 focus:outline-none focus:border-gray-500 dark:bg-[#EBF2FF]/30"
                 rows={3}
               />
               <div className="flex gap-2">
                 <button
                   onClick={handleEdit}
-                  className="px-3 py-1 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600"
+                  className="cursor-pointer px-3 py-1 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600"
                 >
                   저장
                 </button>
@@ -339,7 +348,7 @@ export default function Comments({
                     setIsEditing(false);
                     setEditContent(comment.content);
                   }}
-                  className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-400"
+                  className="cursor-pointer px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-400"
                 >
                   취소
                 </button>
@@ -347,31 +356,33 @@ export default function Comments({
             </div>
           ) : (
             <>
-              <span className="inline-block px-3 py-2 bg-[#EBF2FF] text-sm rounded-[10px]">
+              <span className="inline-block px-3 py-2 bg-[#EBF2FF] text-sm rounded-xl dark:bg-[#EBF2FF]/30">
                 {comment.content}
               </span>
               {/* 댓글 메뉴 버튼 */}
-              <div className="ml-1 text-[#717182] flex items-center gap-1 mt-2">
+              <div className="ml-1 text-[#717182] dark:text-white flex items-center gap-1.5 mt-2">
                 <button
                   onClick={() => handleLikeToggle(comment.id)}
-                  className="cursor-pointer flex items-center justify-center w-5 h-5 rounded-full bg-white border border-[#F0F0F0] hover:bg-gray-100"
+                  className="cursor-pointer flex items-center justify-center w-5 h-5 rounded-full bg-white border border-[#F0F0F0] hover:bg-gray-200 dark:bg-white/20 dark:border-[#F0F0F0]/40 dark:hover:bg-gray-300  dark:hover:text-[#6758FF]"
                 >
                   <ThumbsUp size={10} />
                 </button>
-                <span className="text-xs">{comment.like_count || 0}</span>
+                <span className="text-xs dark:text-white">
+                  {comment.like_count || 0}
+                </span>
                 <button
                   onClick={() => setShowReplyForm(!showReplyForm)}
-                  className="cursor-pointer flex items-center justify-center w-5 h-5 rounded-full bg-white border border-[#F0F0F0] hover:bg-gray-100 ml-1"
+                  className="cursor-pointer flex items-center justify-center w-5 h-5 rounded-full bg-white border border-[#F0F0F0] hover:bg-gray-200 ml-1 dark:bg-white/20 dark:border-[#F0F0F0]/40 dark:hover:bg-gray-300  dark:hover:text-[#6758FF]"
                 >
                   <CornerDownRight size={10} />
                 </button>
-                <span className="ml-1 text-xs">
+                <span className="ml-1 text-xs dark:text-white">
                   {comment.created_at.slice(0, 10)}
                 </span>
               </div>
             </>
           )}
-          
+
           {/* 대댓글 입력 폼 */}
           {showReplyForm && (
             <div className="mt-3">
@@ -389,7 +400,7 @@ export default function Comments({
             <>
               <button
                 onClick={handleShowReplies}
-                className="block cursor-pointer text-[#0094FF] text-sm mt-2 hover:text-[#0095ff8f]"
+                className="block cursor-pointer text-[#0094FF] text-sm mt-2 hover:text-[#0095ff8f] dark:text-[#70c3ff8f] dark:hover:text-[#70c3ff]"
               >
                 {showReplies
                   ? "답글 숨기기"
@@ -400,7 +411,10 @@ export default function Comments({
               {showReplies && (
                 <div className="mt-3 space-y-3 pl-6 border-l-2 border-gray-200">
                   {replies.map((reply) => (
-                    <div key={reply.id} className="flex justify-between items-start gap-2">
+                    <div
+                      key={reply.id}
+                      className="flex justify-between items-start gap-2"
+                    >
                       <div className="flex gap-2 flex-1">
                         {/* 프로필 이미지 */}
                         <div className="relative w-8 h-8 rounded-full bg-gray-300 shrink-0 overflow-hidden">
@@ -428,7 +442,9 @@ export default function Comments({
                             <div className="space-y-2 mt-1">
                               <textarea
                                 value={editReplyContent}
-                                onChange={(e) => setEditReplyContent(e.target.value)}
+                                onChange={(e) =>
+                                  setEditReplyContent(e.target.value)
+                                }
                                 className="w-full px-2 py-1 bg-[#F5F5F5] text-xs rounded-lg border border-gray-300 focus:outline-none focus:border-blue-500"
                                 rows={2}
                               />
@@ -462,7 +478,9 @@ export default function Comments({
                                 >
                                   <ThumbsUp size={8} />
                                 </button>
-                                <span className="text-xs">{reply.like_count || 0}</span>
+                                <span className="text-xs">
+                                  {reply.like_count || 0}
+                                </span>
                                 <span className="ml-1 text-xs">
                                   {reply.created_at.slice(0, 10)}
                                 </span>

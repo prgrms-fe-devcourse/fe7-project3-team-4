@@ -33,7 +33,7 @@ export default function Toast({
 
   return (
     // 화면 중앙 상단에 위치
-    <div className="fixed inset-x-0 top-6 z-[9999] flex justify-center pointer-events-none">
+    <div className="fixed inset-x-0 top-6 z-9999 flex justify-center pointer-events-none">
       {/* 한 번에 하나만 쓰지만, 나중에 여러 개 쌓아올려도 대응 가능 */}
       <div
         className={`

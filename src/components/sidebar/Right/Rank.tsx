@@ -193,11 +193,11 @@ export default function Rank() {
           return (
             <div
               key={item.user_id}
-              className="flex justify-between items-center"
+              className="cursor-pointer flex justify-between items-center hover:bg-gray-50 dark:hover:bg-white/30 rounded-lg pr-2"
             >
               <Link
                 href={`/profile?userId=${item.user_id}`}
-                className="flex items-center gap-1.5 flex-1 min-w-0 hover:bg-gray-50 rounded-lg p-2 transition-colors dark:hover:bg-white/30"
+                className="flex items-center gap-1.5 flex-1 min-w-0 p-2"
               >
                 <div className="w-8" style={{ color: rankColor }}>
                   {rankNumber}
@@ -225,17 +225,18 @@ export default function Rank() {
                     </p>
                   </div>
                 </div>
-                <div className="shrink-0">
-                  {!isSelf && (
-                    <RankFollowButton
-                      targetUserId={item.user_id}
-                      isFollowing={userIsFollowing}
-                      currentUserId={currentUserId}
-                      onFollowToggle={handleFollowToggle}
-                    />
-                  )}
-                </div>
               </Link>
+
+              <div className="shrink-0">
+                {!isSelf && (
+                  <RankFollowButton
+                    targetUserId={item.user_id}
+                    isFollowing={userIsFollowing}
+                    currentUserId={currentUserId}
+                    onFollowToggle={handleFollowToggle}
+                  />
+                )}
+              </div>
             </div>
           );
         })}

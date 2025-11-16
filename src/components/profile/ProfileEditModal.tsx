@@ -44,7 +44,7 @@ export function ProfileEditModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md lg:max-w-lg relative p-6 bg-[#f6f6f6]/60 border-white/40 rounded-2xl backdrop-blur-md" // [5.1] 스타일 수정
+        className="w-full max-w-md lg:max-w-lg relative p-6 bg-[#f6f6f6]/60 border-white/40 rounded-2xl backdrop-blur-md dark:bg-white/20" // [5.1] 스타일 수정
       >
         <h3 className="text-xl font-medium mb-7">프로필 편집</h3>
 
@@ -64,7 +64,7 @@ export function ProfileEditModal({
               name="display_name"
               type="text"
               defaultValue={profile?.display_name ?? ""}
-              className="bg-white rounded-lg py-2 px-3 w-full outline-0 mt-1"
+              className="bg-white rounded-lg py-2 px-3 w-full outline-0 mt-1 dark:bg-white/20"
               required
             />
           </div>
@@ -78,7 +78,7 @@ export function ProfileEditModal({
               name="email"
               type="email"
               defaultValue={profile?.email ?? ""}
-              className="bg-gray-100 rounded-lg py-2 px-3 w-full outline-0 mt-1 text-gray-500"
+              className="bg-gray-100 rounded-lg py-2 px-3 w-full outline-0 mt-1 text-gray-500 dark:bg-white/20 dark:text-[#A6A6DB]"
               disabled
             />
           </div>
@@ -92,7 +92,7 @@ export function ProfileEditModal({
               name="bio"
               rows={3}
               defaultValue={profile?.bio ?? ""}
-              className="bg-white rounded-lg py-2 px-3 w-full resize-none outline-0 mt-1"
+              className="bg-white rounded-lg py-2 px-3 w-full resize-none outline-0 mt-1 dark:bg-white/20"
               placeholder="자신을 소개해주세요."
             />
           </div>
@@ -100,7 +100,7 @@ export function ProfileEditModal({
           <div className="flex justify-end gap-3">
             <button
               type="button"
-              className="cursor-pointer py-1.5 px-4 bg-white rounded-lg"
+              className="cursor-pointer py-1.5 px-4 bg-white rounded-lg dark:bg-white/20"
               onClick={onClose}
               disabled={isPending}
             >

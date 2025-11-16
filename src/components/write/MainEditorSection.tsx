@@ -196,7 +196,11 @@ export function MainEditorSection({
               type="button"
               onClick={() => toggleHashtag(hashtag.name)}
               className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] dark:text-[#A6A6DB] border border-[#D9D9D9] rounded-lg dark:border-[#D9D9D9]/70
-                ${active ? "bg-[#248AFF] text-white" : "hover:bg-[#daebff]"}`}
+                ${
+                  active
+                    ? "bg-[#248AFF] text-white dark:text-white"
+                    : "hover:bg-[#daebff]"
+                }`}
             >
               #{getTranslatedTag(hashtag.name!)}
             </button>
