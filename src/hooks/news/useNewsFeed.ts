@@ -1,3 +1,5 @@
+// src/lib/hooks/useNewsFeed.ts
+
 "use client";
 
 import {
@@ -129,6 +131,9 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
   const [message, setMessage] = useState("");
   const [isAuthReady, setIsAuthReady] = useState(false);
 
+  // [✅ 신규] 전체 DB 중 최신 10개를 저장하는 상태
+  const [latestNews, setLatestNews] = useState<NewsItemWithState[]>([]);
+
   const observerRef = useRef<IntersectionObserver | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const userIdRef = useRef<string | null>(null);
@@ -139,6 +144,8 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const maxRetries = 5;
   const isUnmountedRef = useRef(false);
+
+  // ... 기존 fetchNews 함수 ...
 
   const fetchNews = useCallback(
     async (
@@ -555,6 +562,66 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
     }
   }, [isAuthReady, sortBy, fetchNews, isLoading, isLoadingMore]);
 
+  // [✅ 신규] 전체 DB 중 최신 뉴스 10개 가져오기
+  const fetchLatestNews = useCallback(async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const userId = user?.id || null;
+
+    console.log("[useNewsFeed] 🔄 Fetching latest 10 news from entire DB");
+
+    const { data, error } = await supabase
+      .from("news")
+      .select(
+        `
+        id, title, site_name, created_at, published_at, images, tags,
+        user_news_likes!left(user_id),
+        user_news_bookmarks!left(user_id)
+      `
+      )
+      .filter(
+        "user_news_likes.user_id",
+        "eq",
+        userId || "00000000-0000-0000-0000-000000000000"
+      )
+      .filter(
+        "user_news_bookmarks.user_id",
+        "eq",
+        userId || "00000000-0000-0000-0000-000000000000"
+      )
+      .order("published_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    if (error) {
+      console.error("[useNewsFeed] ❌ Failed to fetch latest news:", error);
+      return;
+    }
+
+    if (data) {
+      const typedData = data as SupabaseNewsItem[];
+      const dataWithState: NewsItemWithState[] = typedData.map((item) => ({
+        ...item,
+        isLiked: !!(item.user_news_likes && item.user_news_likes.length > 0),
+        isBookmarked: !!(
+          item.user_news_bookmarks && item.user_news_bookmarks.length > 0
+        ),
+        user_news_likes: undefined,
+        user_news_bookmarks: undefined,
+      }));
+      setLatestNews(dataWithState);
+      console.log(
+        `[useNewsFeed] ✅ Latest news loaded: ${dataWithState.length} items`
+      );
+    }
+  }, [supabase]);
+
+  // [✅ 신규] 컴포넌트 마운트시 최신 뉴스 로드
+  useEffect(() => {
+    fetchLatestNews();
+  }, [fetchLatestNews]);
+
   const loadMoreTriggerRef = useCallback(
     (node: HTMLDivElement) => {
       if (isLoading || isLoadingMore) return;
@@ -734,17 +801,8 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
     [newsList, supabase]
   );
 
-  const latestNews = useMemo(() => {
-    return [...newsList]
-      .sort((a, b) => {
-        const dateA = new Date(a.published_at || a.created_at).getTime();
-        const dateB = new Date(b.published_at || b.created_at).getTime();
-        if (isNaN(dateA)) return 1;
-        if (isNaN(dateB)) return -1;
-        return dateB - dateA;
-      })
-      .slice(0, 10);
-  }, [newsList]);
+  // [❌ 제거] 기존의 memoized latestNews
+  // const latestNews = useMemo(() => { ... }, [newsList]);
 
   return {
     isLoading,
@@ -759,6 +817,6 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
     handleBookmarkToggle,
     loadMoreTriggerRef,
     refreshFeed,
-    latestNews,
+    latestNews, // ✅ 이제 전체 DB에서 가져온 최신 10개
   };
 }

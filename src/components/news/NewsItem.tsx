@@ -112,11 +112,13 @@ export default function NewsItem({
       <div className="p-6">
         <div className="flex justify-between">
           <div className="flex gap-3 items-center">
-            <div className="w-11 h-11 bg-gray-300 rounded-full shrink-0"></div>
+            <div className="w-11 h-11 bg-gray-300 rounded-full flex items-center justify-center font-bold text-gray-500 shrink-0 dark:bg-gray-600 dark:text-gray-300">
+              {(siteName[0] || "?").toUpperCase()}
+            </div>
             <div className="space-y-1 leading-none">
-              <p>{siteName}</p>
+              <p className="font-medium dark:text-white">{siteName}</p>
               <p className="text-[#717182] text-sm dark:text-[#A6A6DB]">
-                @user · {displayDate}
+                @{siteName} · {displayDate}
               </p>
             </div>
           </div>
@@ -133,7 +135,7 @@ export default function NewsItem({
         </div>
 
         <div className="my-5">
-          <Link href={`/news/${item.id}`}>
+          <Link href={`/?type=news&id=${item.id}`}>
             <div className="mb-6">
               <h3 className="text-[18px] font-semibold mb-6">{item.title}</h3>
             </div>
