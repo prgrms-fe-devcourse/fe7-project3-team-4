@@ -1,10 +1,12 @@
+// src/components/home/HomePageClient.tsx
+
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import All from "@/components/home/All";
 import Prompt from "@/components/home/Prompt";
-import TopBar from "@/components/home/TobBar";
+import TopBar from "@/components/home/TopBar";
 import Free from "@/components/home/Free";
 import Weekly from "@/components/home/Weekly";
 import PostDetail from "@/components/home/post/PostDetail";
@@ -17,6 +19,7 @@ import { PostType } from "@/types/Post";
 import { createClient } from "@/utils/supabase/client";
 import { Json } from "@/utils/supabase/supabase";
 import NewsItemSkeleton from "@/components/news/NewsItemSkeleton";
+import NewsDetail from "@/components/news/NewsDetail";
 
 type Tab = "전체" | "뉴스" | "프롬프트" | "자유" | "주간";
 
@@ -68,16 +71,7 @@ export default function HomePageClient() {
 
   const [posts, setPosts] = useState<PostType[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
-  const [detailLoading, setDetailLoading] = useState(false); // 상세페이지 로딩 상태 추가
-
-  const activeTab: Tab = useMemo(() => {
-    const type = searchParams.get("type") || "all";
-    return typeToTab[type] ?? "전체";
-  }, [searchParams]);
-
-  const activeSubType = useMemo(() => {
-    return searchParams.get("sub_type");
-  }, [searchParams]);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const {
     isLoading: newsLoading,
@@ -95,6 +89,35 @@ export default function HomePageClient() {
     handleFileChange,
     triggerFileInput,
   } = useNewsFeedContext();
+
+  const activeTab: Tab = useMemo(() => {
+    const type = searchParams.get("type") || "all";
+    return typeToTab[type] ?? "전체";
+  }, [searchParams]);
+
+  const activeSubType = useMemo(() => {
+    return searchParams.get("sub_type");
+  }, [searchParams]);
+
+  // [✅ 신규] ID만으로 뉴스와 게시글을 구분하는 통합 로직
+  const selectedItem = useMemo(() => {
+    const id = searchParams.get("id");
+    if (!id) return null;
+
+    // 1. 먼저 뉴스에서 찾기 (제일 빠르게 실패해야 함)
+    const newsItem = newsList.find((n) => n.id === id);
+    if (newsItem) {
+      return { type: "news" as const, data: newsItem };
+    }
+
+    // 2. 없으면 게시글에서 찾기
+    const postItem = posts.find((p) => p.id === id);
+    if (postItem) {
+      return { type: "post" as const, data: postItem };
+    }
+
+    return null;
+  }, [searchParams, newsList, posts]);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -129,6 +152,7 @@ export default function HomePageClient() {
           "eq",
           userId || "00000000-0000-0000-0000-000000000000"
         );
+
       if (sortBy === "like_count") {
         query = query.order("like_count", {
           ascending: false,
@@ -212,22 +236,18 @@ export default function HomePageClient() {
     };
   }, [supabase, sortBy]);
 
-  // URL 변경 감지하여 상세페이지 로딩 상태 관리
+  // [✅ 수정] ID 기반 로딩 상태 관리
   useEffect(() => {
-    const postId = searchParams.get("id");
-
-    if (postId && activeTab !== "뉴스") {
-      // posts가 로딩 중이면 스켈레톤 표시
-      if (postsLoading) {
-        setDetailLoading(true);
-      } else {
-        // posts 로딩이 끝나면 스켈레톤 해제
-        setDetailLoading(false);
-      }
+    const id = searchParams.get("id");
+    if (id) {
+      setDetailLoading(true);
+      // 실제로는 데이터 로딩이 빠르므로 짧은 딜레이 후 해제
+      const timer = setTimeout(() => setDetailLoading(false), 100);
+      return () => clearTimeout(timer);
     } else {
       setDetailLoading(false);
     }
-  }, [searchParams, activeTab, postsLoading]); // posts 제거
+  }, [searchParams]);
 
   const postsByType = useMemo(
     () => ({
@@ -237,19 +257,6 @@ export default function HomePageClient() {
     }),
     [posts]
   );
-
-  const selectedPost = useMemo(() => {
-    const id = searchParams.get("id");
-    if (!id || activeTab === "뉴스") return null;
-
-    if (activeTab !== "전체") {
-      const currentType = tabToType[activeTab];
-      const post = posts.find((p) => p.id === id);
-      return post && post.post_type === currentType ? post : null;
-    }
-
-    return posts.find((post) => post.id === id) ?? null;
-  }, [searchParams, posts, activeTab]);
 
   const handleTabChange = (tab: Tab) => {
     const scrollContainer = document.querySelector(".scrollbar-custom");
@@ -263,7 +270,7 @@ export default function HomePageClient() {
     params.delete("sub_type");
 
     if (tab !== activeTab) {
-      setDetailLoading(false); // 탭 변경 시 로딩 상태 초기화
+      setDetailLoading(false);
     }
 
     const type = tabToType[tab];
@@ -280,7 +287,7 @@ export default function HomePageClient() {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("id");
     params.delete("posttype");
-    setDetailLoading(false); // 뒤로가기 시 로딩 상태 초기화
+    setDetailLoading(false);
     router.push(`/?${params.toString()}`, { scroll: false });
   };
 
@@ -301,17 +308,18 @@ export default function HomePageClient() {
       const currentLikes = currentItem.like_count ?? 0;
 
       setPosts((prev) =>
-        prev.map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                isLiked: !isCurrentlyLiked,
-                like_count: !isCurrentlyLiked
-                  ? currentLikes + 1
-                  : Math.max(0, currentLikes - 1),
-              }
-            : item
-        )
+        prev.map((item) => {
+          if (item.id === id) {
+            return {
+              ...item,
+              isLiked: !isCurrentlyLiked,
+              like_count: !isCurrentlyLiked
+                ? currentLikes + 1
+                : Math.max(0, currentLikes - 1),
+            };
+          }
+          return item;
+        })
       );
 
       try {
@@ -326,6 +334,7 @@ export default function HomePageClient() {
           const { error } = await supabase
             .from("user_post_likes")
             .insert({ user_id: user.id, post_id: id });
+
           if (error && error.code !== "23505") throw error;
         }
       } catch (err) {
@@ -386,6 +395,7 @@ export default function HomePageClient() {
           const { error } = await supabase
             .from("user_post_bookmarks")
             .insert({ user_id: user.id, post_id: id });
+
           if (error && error.code !== "23505") throw error;
         }
       } catch (err) {
@@ -430,23 +440,27 @@ export default function HomePageClient() {
           />
         </div>
 
-        {searchParams.get("id") && activeTab !== "뉴스" ? (
-          // URL에 id가 있으면 상세페이지 영역
-          detailLoading || postsLoading ? (
+        {/* [✅ 수정] ID 기반 통합 상세 페이지 렌더링 */}
+        {searchParams.get("id") ? (
+          // 로딩 중이면 스켈레톤
+          detailLoading || postsLoading || newsLoading ? (
             <NewsItemSkeleton />
-          ) : selectedPost ? (
-            <PostDetail
-              post={selectedPost}
-              onBack={handleBack}
-              onLikeToggle={handlePostLikeToggle}
-              onBookmarkToggle={handlePostBookmarkToggle}
-            />
+          ) : selectedItem ? (
+            // 타입에 따라 적절한 컴포넌트 렌더링
+            selectedItem.type === "news" ? (
+              <NewsDetail news={selectedItem.data} onBack={handleBack} />
+            ) : (
+              <PostDetail
+                post={selectedItem.data}
+                onBack={handleBack}
+                onLikeToggle={handlePostLikeToggle}
+                onBookmarkToggle={handlePostBookmarkToggle}
+              />
+            )
           ) : (
-            // 게시글을 찾지 못한 경우
+            // 아이템을 찾지 못한 경우
             <div className="flex flex-col items-center justify-center py-20 px-4">
-              <p className="text-gray-500 text-center">
-                게시글을 찾을 수 없습니다.
-              </p>
+              <p className="text-gray-500 text-center">콘텐츠를 찾을 수 없습니다.</p>
               <button
                 onClick={handleBack}
                 className="mt-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
@@ -456,6 +470,7 @@ export default function HomePageClient() {
             </div>
           )
         ) : (
+          // 목록 렌더링
           <>
             <div className="space-y-8 pb-6">
               {activeTab === "전체" && (
