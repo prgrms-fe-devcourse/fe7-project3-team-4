@@ -89,7 +89,7 @@ export default function NewsDetail({ news, onBack }: NewsDetailProps) {
             <div className="space-y-1 leading-none">
               <p className="font-medium dark:text-white">{author}</p>
               <p className="text-[#717182] text-sm dark:text-[#A6A6DB]">
-                @user · {displayDate}
+                @{author} · {displayDate}
               </p>
             </div>
           </div>

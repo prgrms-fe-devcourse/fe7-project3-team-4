@@ -7,11 +7,15 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useNewsFeedContext } from "@/context/NewsFeedContext";
+import { useSearchParams } from "next/navigation";
 
 const MAX_VISIBILITY = 3;
 
 export default function LatestNewsCarousel() {
   const { latestNews } = useNewsFeedContext();
+
+  const searchParams = useSearchParams(); // ✅ 추가
+  const currentType = searchParams.get("type") || "all"; // ✅ 현재 탭 읽기
 
   const [active, setActive] = useState(0);
   const count = latestNews.length;
@@ -54,6 +58,8 @@ export default function LatestNewsCarousel() {
 
       <div className="relative w-37.5 h-36.5">
         {latestNews.map((news, i) => {
+          const detailUrl = `/?type=${currentType}&id=${news.id}`;
+
           let rawDiff = active - i;
 
           if (count > MAX_VISIBILITY) {
@@ -91,7 +97,7 @@ export default function LatestNewsCarousel() {
               aria-hidden={!isActive}
             >
               {/* [✅ 수정] 홈페이지 내에서 NewsDetail 렌더링 */}
-              <Link href={`/?type=news&id=${news.id}`}>
+              <Link href={detailUrl}>
                 <div
                   className="group w-full h-full rounded-xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow cursor-pointer"
                   style={{
