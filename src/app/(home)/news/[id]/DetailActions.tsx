@@ -79,7 +79,7 @@ export default function DetailActions({
   }, [handleBookmarkToggle, id]);
 
   return (
-    <div className="flex justify-center gap-30 text-[#717182] py-6">
+    <div className="flex justify-center gap-30 text-[#717182] py-6 dark:text-[#A6A6DB]">
       {/* 좋아요 버튼 - NewsItem과 동일한 스타일 */}
       <button
         onClick={onLikeClick}

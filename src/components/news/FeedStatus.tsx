@@ -11,7 +11,6 @@ export default function FeedStatus({
   listLength,
   message,
 }: FeedStatusProps) {
-
   if (message) {
     const isError = message.startsWith("❌");
     return (
@@ -20,7 +19,7 @@ export default function FeedStatus({
           isError ? "text-red-600" : "text-green-700"
         }`}
         role="status"
-        aria-live="polite" 
+        aria-live="polite"
       >
         {message}
       </p>
@@ -29,7 +28,7 @@ export default function FeedStatus({
 
   if (!isLoading && listLength === 0 && !message) {
     return (
-      <p className="text-gray-500 text-center py-20">
+      <p className="text-gray-500 text-center py-20 dark:text-[#A6A6DB]">
         아직 저장된 뉴스가 없습니다.
       </p>
     );

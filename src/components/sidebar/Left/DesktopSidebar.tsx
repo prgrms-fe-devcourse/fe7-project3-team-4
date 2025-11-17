@@ -46,7 +46,7 @@ export function DesktopSidebar({
   return (
     <aside className="hidden lg:flex flex-col h-full p-6 box-border bg-white/40 dark:bg-white/20 border border-white/20 rounded-xl shadow-[0_10px_25px_rgba(255,255,255,0.1),0_4px_10px_rgba(255,255,255,0.1)] dark:shadow-white/20">
       <Link href={"/"}>
-        <Logo />
+        <Logo size="lg" />
       </Link>
       <ul className="flex-1 mt-6 flex flex-col justify-between gap-2">
         <div className="space-y-2">

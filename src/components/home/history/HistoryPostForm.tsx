@@ -49,7 +49,7 @@ export default async function HistoryPostForm() {
             내역 삭제
           </button>
         </div>
-        <div className="mt-7 text-center text-gray-500">
+        <div className="mt-7 text-center text-gray-500 dark:text-white">
           조회 내역이 없습니다.
         </div>
       </div>
