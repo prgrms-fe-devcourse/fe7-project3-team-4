@@ -286,19 +286,100 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
       </div>
       {/* 페이지 루트 */}
       <div
-        className="relative z-10 flex min-h-[80vh] w-full items-center justify-center px-4 py-6 md:px-6 md:py-10 outline-none"
+        className="relative z-10 flex min-h-[80vh] w-full items-center justify-center px-4 py-6 lg:px-6 lg:py-10 outline-none"
         tabIndex={0}
         onKeyDown={handleKeyDown}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <main className="flex w-full max-w-5xl flex-col gap-7 rounded-4xl border border-white/20 bg-white/40 p-6 shadow-xl md:flex-row md:gap-10 md:p-8">
+        <main className="flex w-full max-w-5xl flex-col gap-7 rounded-4xl border border-white/20 bg-white/40 p-6 shadow-xl lg:flex-row lg:gap-10 lg:p-8">
           {/* 왼쪽: 뱃지 카드 캐러셀 */}
-          <section className="flex flex-1 flex-col items-center justify-center gap-4 md:gap-5">
+          {/* ====== 모바일 전용: 좌우 슬라이더 ====== */}
+          <section className="flex flex-1 flex-col items-center justify-center gap-4 lg:hidden">
+            <div className="relative w-full max-w-[420px] overflow-hidden">
+              <div
+                className="flex transition-transform duration-500 ease-out"
+                style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+              >
+                {initialBadges.map((badge) => {
+                  const rarity = badge.rarity ?? "common";
+                  const cardIsOwned = ownedBadgeIds.has(badge.id);
+                  const cardIsEquipped = equippedBadgeId === badge.id;
+
+                  return (
+                    <div
+                      key={badge.id}
+                      className="shrink-0 w-full h-[260px] rounded-3xl overflow-hidden cursor-pointer bg-slate-900/90 flex items-center justify-center"
+                      onClick={() =>
+                        updateCarousel(
+                          initialBadges.findIndex((b) => b.id === badge.id)
+                        )
+                      }
+                    >
+                      <div className="relative h-full w-full flex flex-col items-center justify-center gap-4">
+                        {/* 장착 / 보유 뱃지 상태 라벨 */}
+                        {cardIsEquipped && (
+                          <div className="absolute left-0 top-6 z-10 w-full -rotate-3 bg-blue-500/90 py-1 text-center text-[10px] font-bold uppercase tracking-widest text-white shadow-sm backdrop-blur-sm">
+                            Equipped
+                          </div>
+                        )}
+
+                        {!cardIsEquipped && cardIsOwned && (
+                          <div className="absolute right-4 top-4 z-10 rounded-full bg-slate-800/60 px-2 py-0.5 text-[10px] font-bold uppercase text-white backdrop-blur-sm">
+                            Owned
+                          </div>
+                        )}
+
+                        {/* 원형 뱃지 아이콘 */}
+                        <div
+                          className={`relative flex h-40 w-40 items-center justify-center rounded-full bg-linear-to-br ${badgeGradient[rarity]}`}
+                        >
+                          <div className="absolute inset-2 rounded-full bg-slate-950/80 backdrop-blur-xl" />
+                          <div className="relative flex flex-col items-center justify-center text-center">
+                            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-200/90">
+                              {rarityLabel[rarity]}
+                            </span>
+                            <span className="mt-1 text-base font-bold text-white">
+                              {badge.name}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* 카드 하단 라벨 */}
+                        <div className="px-4 text-center text-xs text-slate-200/80">
+                          {badge.tagline}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 모바일 네비게이션 버튼 (좌우) */}
+            <div className="flex items-center justify-center gap-4">
+              <button
+                type="button"
+                className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600"
+                onClick={() => updateCarousel(currentIndex - 1)}
+              >
+                ←
+              </button>
+              <button
+                type="button"
+                className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600"
+                onClick={() => updateCarousel(currentIndex + 1)}
+              >
+                →
+              </button>
+            </div>
+          </section>
+
+          {/* ====== 데스크탑 전용: 기존 위/아래 스택 캐러셀 ====== */}
+          <section className="hidden lg:flex flex-1 flex-col items-center justify-center gap-5">
             <div className="relative h-[360px] w-full max-w-[420px] transform-gpu">
               {initialBadges.map((badge, index) => {
                 const rarity = badge.rarity ?? "common";
-                // 카드의 뱃지 상태 확인 (보유 여부, 장착 여부)
                 const cardIsOwned = ownedBadgeIds.has(badge.id);
                 const cardIsEquipped = equippedBadgeId === badge.id;
 
@@ -308,14 +389,12 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                     className={`${cardBase} ${getCardPositionClass(index)}`}
                     onClick={() => updateCarousel(index)}
                   >
-                    {/* 장착 중이면 표시되는 띠 (Overlay) */}
                     {cardIsEquipped && (
                       <div className="absolute left-0 top-6 z-10 w-full -rotate-3 bg-blue-500/90 py-1 text-center text-[10px] font-bold uppercase tracking-widest text-white shadow-sm backdrop-blur-sm">
                         Equipped
                       </div>
                     )}
 
-                    {/* 보유 중이지만 미장착이면 표시 */}
                     {!cardIsEquipped && cardIsOwned && (
                       <div className="absolute right-4 top-4 z-10 rounded-full bg-slate-800/60 px-2 py-0.5 text-[10px] font-bold uppercase text-white backdrop-blur-sm">
                         Owned
@@ -323,7 +402,6 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                     )}
 
                     <div className="flex h-full w-full flex-col items-center justify-center gap-4">
-                      {/* 원형 뱃지 아이콘 */}
                       <div
                         className={`relative flex h-40 w-40 items-center justify-center rounded-full bg-linear-to-br ${badgeGradient[rarity]}`}
                       >
@@ -338,7 +416,6 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                         </div>
                       </div>
 
-                      {/* 카드 하단 라벨 */}
                       <div className="px-4 text-center text-xs text-slate-200/80">
                         {badge.tagline}
                       </div>
@@ -348,7 +425,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
               })}
             </div>
 
-            {/* 네비게이션 버튼 */}
+            {/* 데스크탑 네비게이션 버튼 (위/아래) */}
             <div className="flex items-center justify-center gap-4">
               <button
                 type="button"
@@ -380,7 +457,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="inline-block text-3xl font-extrabold leading-tight tracking-[-0.02em] text-[#0b1f4a] md:text-[2.1rem]">
+                  <h2 className="inline-block text-3xl font-extrabold leading-tight tracking-[-0.02em] text-[#0b1f4a] lg:text-[2.1rem]">
                     <span className="relative inline-block pb-1">
                       {currentBadge.name}
                       <span className="absolute bottom-0 left-0 h-[3px] w-[72px] rounded-full bg-linear-to-r from-blue-500 via-indigo-500 to-pink-500" />
