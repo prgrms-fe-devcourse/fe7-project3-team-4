@@ -17,6 +17,8 @@ import { PostType } from "@/types/Post";
 import { createClient } from "@/utils/supabase/client";
 import { Json } from "@/utils/supabase/supabase";
 import NewsItemSkeleton from "@/components/news/NewsItemSkeleton";
+import NewsDetail from "@/components/news/NewsDetail";
+import { NewsItemWithState } from "@/types";
 
 type Tab = "전체" | "뉴스" | "프롬프트" | "자유" | "주간";
 
@@ -406,6 +408,12 @@ export default function HomePageClient() {
     [supabase, posts, handleNewsBookmarkToggle]
   );
 
+  const selectedNews = useMemo(() => {
+    const id = searchParams.get("id");
+    if (!id || activeTab !== "뉴스") return null;
+    return newsList.find((n) => n.id === id) ?? null;
+  }, [searchParams, newsList, activeTab]);
+
   return (
     <>
       <section className="relative max-w-2xl mx-auto">
@@ -430,8 +438,27 @@ export default function HomePageClient() {
           />
         </div>
 
-        {searchParams.get("id") && activeTab !== "뉴스" ? (
-          // URL에 id가 있으면 상세페이지 영역
+        {searchParams.get("id") ? (
+          activeTab === "뉴스" ? (
+            // 뉴스 상세페이지
+            newsLoading ? (
+              <NewsItemSkeleton />
+            ) : selectedNews ? (
+              <NewsDetail news={selectedNews} onBack={handleBack} />
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20 px-4">
+                <p className="text-gray-500 text-center">
+                  뉴스를 찾을 수 없습니다.
+                </p>
+                <button
+                  onClick={handleBack}
+                  className="mt-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
+                >
+                  목록으로 돌아가기
+                </button>
+              </div>
+            )
+          ) : // 게시글 상세페이지
           detailLoading || postsLoading ? (
             <NewsItemSkeleton />
           ) : selectedPost ? (
@@ -442,7 +469,6 @@ export default function HomePageClient() {
               onBookmarkToggle={handlePostBookmarkToggle}
             />
           ) : (
-            // 게시글을 찾지 못한 경우
             <div className="flex flex-col items-center justify-center py-20 px-4">
               <p className="text-gray-500 text-center">
                 게시글을 찾을 수 없습니다.
