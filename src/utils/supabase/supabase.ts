@@ -39,6 +39,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      badges: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          price: number
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+        }
+        Relationships: []
+      }
       comment_likes: {
         Row: {
           comment_id: string | null
@@ -468,10 +495,12 @@ export type Database = {
           created_at: string | null
           display_name: string | null
           email: string | null
+          equipped_badge_id: string | null
           exist_id: boolean
           followed_count: number | null
           following_count: number | null
           id: string
+          points: number
         }
         Insert: {
           avatar_url?: string | null
@@ -479,10 +508,12 @@ export type Database = {
           created_at?: string | null
           display_name?: string | null
           email?: string | null
+          equipped_badge_id?: string | null
           exist_id?: boolean
           followed_count?: number | null
           following_count?: number | null
           id: string
+          points?: number
         }
         Update: {
           avatar_url?: string | null
@@ -490,12 +521,55 @@ export type Database = {
           created_at?: string | null
           display_name?: string | null
           email?: string | null
+          equipped_badge_id?: string | null
           exist_id?: boolean
           followed_count?: number | null
           following_count?: number | null
           id?: string
+          points?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_equipped_badge_id_fkey"
+            columns: ["equipped_badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_badges: {
+        Row: {
+          acquired_at: string | null
+          badge_id: string
+          user_id: string
+        }
+        Insert: {
+          acquired_at?: string | null
+          badge_id: string
+          user_id: string
+        }
+        Update: {
+          acquired_at?: string | null
+          badge_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_badges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_news_bookmarks: {
         Row: {
@@ -670,6 +744,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      buy_badge: { Args: { badge_id_to_buy: string }; Returns: undefined }
       decrement_post_like_count: {
         Args: { p_post_id: string }
         Returns: undefined
