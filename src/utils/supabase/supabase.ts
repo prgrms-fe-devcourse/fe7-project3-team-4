@@ -782,7 +782,14 @@ export type Database = {
       mark_room_read: { Args: { room_id: string }; Returns: undefined }
     }
     Enums: {
-      badge_type: "legendary" | "epic" | "rare" | "uncommon" | "common"
+      badge_type:
+        | "legendary"
+        | "epic"
+        | "ultra-rare"
+        | "rare"
+        | "uncommon"
+        | "common"
+        | "basic"
       comment_target_type: "posts" | "news"
       hashtag_type:
         | "education"
@@ -937,7 +944,15 @@ export const Constants = {
   },
   public: {
     Enums: {
-      badge_type: ["legendary", "epic", "rare", "uncommon", "common"],
+      badge_type: [
+        "legendary",
+        "epic",
+        "ultra-rare",
+        "rare",
+        "uncommon",
+        "common",
+        "basic",
+      ],
       comment_target_type: ["posts", "news"],
       hashtag_type: [
         "education",

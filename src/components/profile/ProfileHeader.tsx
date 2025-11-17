@@ -3,10 +3,11 @@
 
 import { Profile } from "@/types";
 import { Calendar, Pencil, SquarePen, X } from "lucide-react";
-import Image from "next/image";
+import Image from "next/image"; // Image is still used as a fallback/placeholder conceptually, but UserAvatar will be primary
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
+import UserAvatar from "../shop/UserAvatar";
 
 type ProfileHeaderProps = {
   profile: Profile;
@@ -17,11 +18,13 @@ type ProfileHeaderProps = {
   onEditClick?: () => void;
 };
 
+// 🌟 2. FollowUser 타입에 equipped_badge_id 추가
 type FollowUser = {
   id: string;
   display_name: string;
   email: string;
   avatar_url: string | null;
+  equipped_badge_id: string | null; // 👈 뱃지 ID 추가
 };
 
 export function ProfileHeader({
@@ -55,7 +58,7 @@ export function ProfileHeader({
     router.push(`/profile?userId=${userId}`);
   };
 
-  // 팔로잉 목록 조회
+  // 🌟 3. 팔로잉 목록 조회 쿼리 수정
   const fetchFollowing = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -67,7 +70,8 @@ export function ProfileHeader({
           id,
           display_name,
           email,
-          avatar_url
+          avatar_url,
+          equipped_badge_id
         )
       `
       )
@@ -87,13 +91,14 @@ export function ProfileHeader({
           display_name: item.profiles.display_name || "익명",
           email: item.profiles.email || "",
           avatar_url: item.profiles.avatar_url,
+          equipped_badge_id: item.profiles.equipped_badge_id, // 👈 뱃지 ID 매핑
         }));
       setUsers(followingUsers);
     }
     setLoading(false);
   };
 
-  // 팔로워 목록 조회
+  // 🌟 4. 팔로워 목록 조회 쿼리 수정
   const fetchFollowers = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -105,7 +110,8 @@ export function ProfileHeader({
           id,
           display_name,
           email,
-          avatar_url
+          avatar_url,
+          equipped_badge_id
         )
       `
       )
@@ -125,6 +131,7 @@ export function ProfileHeader({
           display_name: item.profiles.display_name || "익명",
           email: item.profiles.email || "",
           avatar_url: item.profiles.avatar_url,
+          equipped_badge_id: item.profiles.equipped_badge_id, // 👈 뱃지 ID 매핑
         }));
       setUsers(followerUsers);
     }
@@ -184,30 +191,26 @@ export function ProfileHeader({
   return (
     <>
       <div className="mt-6 relative pt-10">
-        {/* 프로필 이미지 - 본인만 클릭 가능 */}
+        {/* 🌟 5. 메인 프로필 아바타 수정 */}
         <div
-          className={`group absolute top-0 left-6 z-10 w-24 h-24 rounded-full bg-gray-300 border-2 flex items-center justify-center border-white ${
-            isOwnProfile ? "hover:bg-black/60 cursor-pointer" : "cursor-default"
+          className={`group absolute top-0 left-6 z-10 w-24 h-24 rounded-full border-2 flex items-center justify-center border-white ${
+            // 👈 bg-gray-300 제거
+            isOwnProfile ? "cursor-pointer" : "cursor-default"
           }`}
           onClick={isOwnProfile ? onAvatarClick : undefined}
         >
-          {profile!.avatar_url ? (
-            <Image
-              src={profile!.avatar_url}
-              alt="프로필 이미지"
-              fill
-              className="object-cover rounded-full"
-            />
-          ) : (
-            <span className="flex items-center justify-center h-full text-gray-500 group-hover:text-white">
-              ...
-            </span>
-          )}
+          {/* UserAvatar가 null src도 처리, className으로 크기 전달 */}
+          <UserAvatar
+            src={profile!.avatar_url}
+            alt="프로필 이미지"
+            equippedBadgeId={profile?.equipped_badge_id}
+            className="w-full h-full" // 👈 부모 div(w-24 h-24)를 꽉 채움
+          />
+
           {isOwnProfile && (
-            <Pencil
-              size={20}
-              className="text-white opacity-0 group-hover:opacity-100"
-            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 rounded-full transition-opacity">
+              <Pencil size={32} className="text-white" />
+            </div>
           )}
         </div>
 
@@ -321,24 +324,17 @@ export function ProfileHeader({
                       className="p-4 hover:bg-gray-50 transition-colors dark:hover:bg-gray-600"
                     >
                       <div className="flex items-center gap-3">
-                        {/* 프로필 이미지 */}
+                        {/* 🌟 6. 모달 내부 아바타 수정 */}
                         <div
                           onClick={() => handleProfileClick(user.id)}
-                          className="w-[50px] h-[50px] rounded-full overflow-hidden flex items-center justify-center hover:opacity-80 transition-opacity shrink-0 cursor-pointer"
+                          className="shrink-0 cursor-pointer"
                         >
-                          {user.avatar_url ? (
-                            <Image
-                              src={user.avatar_url}
-                              alt={`${user.display_name} avatar`}
-                              width={50}
-                              height={50}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-xs text-neutral-100">
-                              profile
-                            </span>
-                          )}
+                          <UserAvatar
+                            src={user.avatar_url}
+                            alt={`${user.display_name} avatar`}
+                            equippedBadgeId={user.equipped_badge_id}
+                            className="w-[50px] h-[50px]" // 👈 className으로 크기 지정
+                          />
                         </div>
 
                         {/* 사용자 정보 */}

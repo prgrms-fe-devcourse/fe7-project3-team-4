@@ -3,6 +3,7 @@
 
 import { createClient } from "@/utils/supabase/client";
 import { ArrowLeft, Image as ImageIcon, Search, Send, X } from "lucide-react";
+// 🌟 1. UserAvatar 임포트 (Logo는 헤더에서만 사용)
 import Logo from "../../../assets/svg/Logo";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,15 +11,18 @@ import { useSearchParams, useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { JSX } from "react";
 import uploadImageMessage from "@/utils/supabase/storage/messages";
+import UserAvatar from "@/components/shop/UserAvatar";
 
 /* =========================
  * 타입
  * ========================= */
+// 🌟 2. ChatProfile 타입에 뱃지 ID 추가
 type ChatProfile = {
   id: string;
   display_name: string;
   avatar_url: string;
   email: string;
+  equipped_badge_id: string | null; // 👈 뱃지 ID 추가
 };
 type ChatMessage = {
   id: string;
@@ -28,11 +32,13 @@ type ChatMessage = {
   content: string | null;
   image_url: string | null;
 };
+// 🌟 3. RoomListItem 타입에 뱃지 ID 추가
 type RoomListItem = {
   id: string;
   other_id: string;
   other_name: string | null;
   other_avatar: string | null;
+  other_equipped_badge_id: string | null; // 👈 뱃지 ID 추가
   last_message_at: string | null;
   last_message_text: string | null;
   unread_count: number;
@@ -41,6 +47,7 @@ type RoomListItem = {
 /* =========================
  * 유틸: 로컬 기준 YYYY-MM-DD, 날짜 라벨
  * ========================= */
+// ... (ymdLocal, formatDateLabel 함수 동일) ...
 // 로컬(브라우저) 기준 YYYY-MM-DD
 const ymdLocal = (d: Date) => {
   const y = d.getFullYear();
@@ -112,6 +119,7 @@ export default function MessagePageClient() {
   };
 
   /* ===== 자정(오전 12시) 지나면 날짜 라벨이 자동으로 갱신되도록 리렌더 유도 ===== */
+  // ... (nowTs 로직 동일) ...
   const [nowTs, setNowTs] = useState<number>(() => Date.now());
   useEffect(() => {
     const now = new Date();
@@ -208,9 +216,10 @@ export default function MessagePageClient() {
         return;
       }
 
+      // 🌟 4. 쿼리 수정: 뱃지 ID 추가
       const { data: plist } = await supabase
         .from("profiles")
-        .select("id, display_name, avatar_url")
+        .select("id, display_name, avatar_url, equipped_badge_id")
         .in("id", otherIds);
 
       const byId = new Map(plist?.map((p) => [p.id, p]) ?? []);
@@ -224,12 +233,14 @@ export default function MessagePageClient() {
           const lastReadAt =
             r.pair_min === me ? r.last_read_at_min : r.last_read_at_max;
 
+          // 🌟 5. 매핑 수정: 뱃지 ID 추가
           return [
             {
               id: r.id,
               other_id,
               other_name: p?.display_name ?? null,
               other_avatar: p?.avatar_url ?? null,
+              other_equipped_badge_id: p?.equipped_badge_id ?? null, // 👈 뱃지 ID 추가
               last_message_at: r.last_message_at ?? null,
               last_message_text: r.last_message_text ?? null,
               unread_count: 0,
@@ -257,6 +268,7 @@ export default function MessagePageClient() {
         other_id: item.other_id,
         other_name: item.other_name,
         other_avatar: item.other_avatar,
+        other_equipped_badge_id: item.other_equipped_badge_id, // 👈 뱃지 ID 추가
         last_message_at: item.last_message_at,
         last_message_text: item.last_message_text,
         unread_count: counts[idx],
@@ -315,16 +327,19 @@ export default function MessagePageClient() {
         }
 
         (async () => {
+          // 🌟 6. 쿼리 수정: 뱃지 ID 추가
           const { data: p } = await supabase
             .from("profiles")
-            .select("id, display_name, avatar_url")
+            .select("id, display_name, avatar_url, equipped_badge_id")
             .eq("id", other_id)
             .maybeSingle();
+          // 🌟 7. 매핑 수정: 뱃지 ID 추가
           const item: RoomListItem = {
             id: r.id,
             other_id,
             other_name: p?.display_name ?? null,
             other_avatar: p?.avatar_url ?? null,
+            other_equipped_badge_id: p?.equipped_badge_id ?? null, // 👈 뱃지 ID 추가
             last_message_at: newLastAt,
             last_message_text: newLastText,
             unread_count: 0,
@@ -335,6 +350,7 @@ export default function MessagePageClient() {
       });
     };
 
+    // ... (channel 구독 로직 동일) ...
     const channel = supabase
       .channel(`rooms-realtime-${me}`)
       .on(
@@ -365,6 +381,7 @@ export default function MessagePageClient() {
   }, [me, roomId, supabase]);
 
   // 새 메시지 리얼타임 , 내가 보고있지 않은 방에만 뱃지 적용
+  // ... (ch 구독 로직 동일) ...
   useEffect(() => {
     if (!me) return;
     const ch = supabase
@@ -436,9 +453,10 @@ export default function MessagePageClient() {
     }
     (async () => {
       setLoading(true);
+      // 🌟 8. 쿼리 수정: 뱃지 ID 추가
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, display_name, avatar_url, email")
+        .select("id, display_name, avatar_url, email, equipped_badge_id")
         .neq("id", me ?? "00000000-0000-0000-0000-000000000000")
         .ilike("display_name", `%${debouncedQ}%`)
         .limit(20);
@@ -483,9 +501,10 @@ export default function MessagePageClient() {
       });
 
       if (otherId) {
+        // 🌟 9. 쿼리 수정: 뱃지 ID 추가
         const { data: p } = await supabase
           .from("profiles")
-          .select("id, display_name, avatar_url, email")
+          .select("id, display_name, avatar_url, email, equipped_badge_id")
           .eq("id", otherId)
           .maybeSingle();
         if (!cancelled) setPeer(p as ChatProfile | null);
@@ -524,9 +543,10 @@ export default function MessagePageClient() {
       };
     }
     (async () => {
+      // 🌟 10. 쿼리 수정: 뱃지 ID 추가
       const { data: p } = await supabase
         .from("profiles")
-        .select("id, display_name, avatar_url, email")
+        .select("id, display_name, avatar_url, email, equipped_badge_id")
         .eq("id", peerId)
         .maybeSingle();
       if (!cancelled) setPeer(p as ChatProfile | null);
@@ -540,6 +560,7 @@ export default function MessagePageClient() {
   /* =========================
    * 방 열기/생성
    * ========================= */
+  // ... (openRoomWith 함수 동일) ...
   const openRoomWith = async (otherUserId: string) => {
     const { data: u } = await supabase.auth.getUser();
     const myId = u?.user?.id;
@@ -581,6 +602,7 @@ export default function MessagePageClient() {
    * 전송 (낙관적 UI + 포커스/스크롤)
    * ========================= */
 
+  // ... (sendMessage, handleImageSelected 함수 동일) ...
   const sendMessage = async (opts?: { imageFile?: File }) => {
     const hasImage = !!opts?.imageFile;
     const content = draft.trim();
@@ -744,6 +766,7 @@ export default function MessagePageClient() {
   /* =========================
    * 포커스 & 스크롤 관리
    * ========================= */
+  // ... (포커스/스크롤 useEffects 동일) ...
   useEffect(() => {
     if (isThreadOpen && !sending) {
       const t = setTimeout(() => inputRef.current?.focus(), 0);
@@ -833,15 +856,13 @@ export default function MessagePageClient() {
                             onClick={() => openRoomWith(u.id)}
                             className="cursor-pointer relative flex w-full items-center gap-3 px-6 py-4 hover:bg-[#EAE8FF]"
                           >
-                            <div className="w-11 h-11 bg-[#6D6D6D] rounded-full overflow-hidden flex items-center justify-center">
-                              <Image
-                                src={u.avatar_url ?? ""}
-                                alt={`${u.display_name} avatar`}
-                                width={44}
-                                height={44}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
+                            {/* 🌟 11. JSX 수정: 검색 결과 아바타 */}
+                            <UserAvatar
+                              src={u.avatar_url}
+                              alt={`${u.display_name} avatar`}
+                              equippedBadgeId={u.equipped_badge_id}
+                              className="w-11 h-11 shrink-0"
+                            />
                             <div className="text-left">
                               <div className="text-[#0A0A0A]">
                                 {u.display_name}
@@ -882,15 +903,13 @@ export default function MessagePageClient() {
                             }}
                             className="relative flex w-full items-center gap-3 px-6 py-4 hover:bg-[#EAE8FF] cursor-pointer dark:hover:bg-[#8b80ff]/50"
                           >
-                            <div className="w-11 h-11 bg-[#6D6D6D] rounded-full overflow-hidden flex items-center justify-center">
-                              <Image
-                                src={r.other_avatar ?? ""}
-                                alt={`${r.other_name ?? "profile"} avatar`}
-                                width={44}
-                                height={44}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
+                            {/* 🌟 12. JSX 수정: 채팅방 목록 아바타 */}
+                            <UserAvatar
+                              src={r.other_avatar}
+                              alt={`${r.other_name ?? "profile"} avatar`}
+                              equippedBadgeId={r.other_equipped_badge_id}
+                              className="w-11 h-11 shrink-0"
+                            />
                             <div className="text-left">
                               <div>{r.other_name ?? "대화 상대"}</div>
                               <div className="text-sm text-[#717182] truncate max-w-[420px] dark:text-[#A6A6DB]">
@@ -941,28 +960,27 @@ export default function MessagePageClient() {
                   <ArrowLeft size={26} />
                 </button>
                 <div className="flex gap-3 items-center">
-                  <div className="w-[50px] h-[50px] bg-gray-400 rounded-full overflow-hidden">
-                    <Link
-                      href={peer ? `/profile?userId=${peer.id}` : "#"}
-                      className={`w-[50px] h-[50px] bg-gray-400 rounded-full overflow-hidden flex items-center justify-center ${
-                        peer ? "hover:opacity-80 transition-opacity" : ""
-                      }`}
-                    >
-                      {peer?.avatar_url ? (
-                        <Image
-                          src={peer?.avatar_url ?? "/default-avatar.png"}
-                          alt={`${peer?.display_name ?? "profile"} avatar`}
-                          width={50}
-                          height={50}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-[50px] h-[50px] flex  items-center bg-white/70">
-                          <Logo size="md" />
-                        </div>
-                      )}
-                    </Link>
-                  </div>
+                  {/* 🌟 13. JSX 수정: 채팅방 헤더 아바타 */}
+                  <Link
+                    href={peer ? `/profile?userId=${peer.id}` : "#"}
+                    className={`shrink-0 ${
+                      peer ? "hover:opacity-80 transition-opacity" : ""
+                    }`}
+                  >
+                    {peer?.avatar_url ? (
+                      <UserAvatar
+                        src={peer?.avatar_url}
+                        alt={`${peer?.display_name ?? "profile"} avatar`}
+                        equippedBadgeId={peer?.equipped_badge_id}
+                        className="w-[50px] h-[50px]"
+                      />
+                    ) : (
+                      <div className="w-[50px] h-[50px] flex  items-center bg-white/70">
+                        <Logo size="md" />
+                      </div>
+                    )}
+                  </Link>
+
                   <div>
                     <p>
                       {peer?.display_name ??
@@ -981,7 +999,7 @@ export default function MessagePageClient() {
               </div>
 
               {/* 대화 내용 (스크롤 영역) */}
-              {/* overflow-y-auto 로 스크롤 가능, 내부에서 항상 맨 아래로 내리기 위해 센티넬 사용 */}
+              {/* ... (대화 내용, 입력창 로직은 모두 동일) ... */}
               <div className="px-6 py-4 flex flex-col gap-2 overflow-x-hidden overflow-y-auto">
                 <div>
                   {!roomId && !peerId && (
@@ -1185,8 +1203,12 @@ export default function MessagePageClient() {
                   {/* ✅ 보내기 버튼 (마우스다운으로 포커스 뺏기 방지) */}
                   <button
                     type="button"
-                    onClick={() => sendMessage}
-                    disabled={(!roomId && !peerId) || sending || !draft.trim()}
+                    onClick={() => sendMessage()}
+                    disabled={
+                      (!roomId && !peerId) ||
+                      sending ||
+                      (!draft.trim() && !fileInputRef.current?.files?.length)
+                    }
                     className="bg-[#6758FF] p-1.5 rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
                     onMouseDown={(e) => e.preventDefault()}
                     aria-label="메시지 전송"

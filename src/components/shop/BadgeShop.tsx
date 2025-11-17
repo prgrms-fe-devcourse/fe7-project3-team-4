@@ -2,47 +2,19 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { Database } from "@/types";
 import { User } from "@supabase/supabase-js";
 import { Coins } from "lucide-react";
 import { BadgeRow } from "@/app/(home)/shop/page";
 
-// DB의 rarity Enum과 UI 스타일링을 매핑하기 위한 타입 가드
-type BadgeVariant = Database["public"]["Enums"]["badge_type"];
+// 👇 1. 스타일 정의를 외부 파일에서 가져옵니다.
+import { rarityLabel, rarityClass, badgeGradient } from "@/lib/badgeStyle"; // (경로는 실제 위치에 맞게 수정)
 
 // Props 타입 정의
 interface BadgeShopProps {
   initialBadges: BadgeRow[];
 }
 
-// UI 스타일 매핑 객체들
-const rarityLabel: Record<BadgeVariant, string> = {
-  legendary: "Legendary",
-  epic: "Epic",
-  rare: "Rare",
-  uncommon: "Uncommon",
-  common: "Common",
-};
-
-const rarityClass: Record<BadgeVariant, string> = {
-  legendary:
-    "border-amber-400/80 bg-amber-50/90 text-amber-800 shadow-[0_0_20px_rgba(245,158,11,0.45)]",
-  epic: "border-indigo-400/80 bg-indigo-50/90 text-indigo-800",
-  rare: "border-sky-400/80 bg-sky-50/90 text-sky-800",
-  uncommon: "border-emerald-400/80 bg-emerald-50/90 text-emerald-800",
-  common: "border-slate-300/80 bg-slate-50/90 text-slate-700",
-};
-
-const badgeGradient: Record<BadgeVariant, string> = {
-  legendary:
-    "from-amber-300 via-rose-400 to-fuchsia-500 shadow-[0_18px_40px_rgba(236,72,153,0.6)]",
-  epic: "from-indigo-400 via-sky-400 to-purple-500 shadow-[0_18px_40px_rgba(79,70,229,0.55)]",
-  rare: "from-sky-400 via-cyan-400 to-emerald-400 shadow-[0_18px_40px_rgba(56,189,248,0.5)]",
-  uncommon:
-    "from-emerald-400 via-lime-400 to-amber-300 shadow-[0_18px_40px_rgba(34,197,94,0.45)]",
-  common:
-    "from-slate-400 via-slate-500 to-slate-600 shadow-[0_18px_40px_rgba(148,163,184,0.5)]",
-};
+// ❌ 2. 여기에 있던 모든 스타일 매핑 객체들 (rarityLabel 등)을 삭제합니다.
 
 export default function BadgeShop({ initialBadges }: BadgeShopProps) {
   const [currentIndex, setCurrentIndex] = useState(0);

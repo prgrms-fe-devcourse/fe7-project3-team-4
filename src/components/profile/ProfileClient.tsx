@@ -212,17 +212,42 @@ export default function ProfileClient({
       channel.on(
         "postgres_changes",
         {
-          event: "*", // 1. "*"로 변경 (혹은 이미 하셨다면 유지)
+          event: "*",
           schema: "public",
           table: "posts",
           filter: `user_id=eq.${targetUserId}`,
         },
-        (payload) => {
-          // 2. eventType에 따라 분기
+        async (payload) => {
+          // 👈 async 추가 필수!
+          // [CASE 1] 새 글이 작성되었을 때 (INSERT)
           if (payload.eventType === "INSERT") {
-            const newPost = payload.new as PostType;
-            setMyPosts((prev) => [newPost, ...prev]);
-          } else if (payload.eventType === "UPDATE") {
+            const newPostId = payload.new.id;
+
+            // 🌟 중요: ID로 조인된 완전한 데이터(작성자 정보, 뱃지 포함)를 다시 가져옵니다.
+            const { data: fullPostData, error } = await supabase
+              .from("posts")
+              .select(
+                `
+                *,
+                profiles:user_id (
+                  display_name,
+                  email,
+                  avatar_url,
+                  equipped_badge_id
+                )
+              `
+              )
+              .eq("id", newPostId)
+              .single();
+
+            if (!error && fullPostData) {
+              // PostType으로 안전하게 변환 후 상태 업데이트
+              const newPost = fullPostData as PostType;
+              setMyPosts((prev) => [newPost, ...prev]);
+            }
+          }
+          // [CASE 2] 글이 수정되었을 때 (UPDATE)
+          else if (payload.eventType === "UPDATE") {
             const updatedPost = payload.new as PostType;
             setMyPosts((prev) =>
               prev.map((post) =>
@@ -231,6 +256,7 @@ export default function ProfileClient({
                       ...post,
                       like_count: updatedPost.like_count,
                       view_count: updatedPost.view_count,
+                      // 필요한 경우 제목이나 내용 업데이트도 여기에 추가 가능
                     }
                   : post
               )
@@ -242,10 +268,11 @@ export default function ProfileClient({
                   : item
               )
             );
-          } else if (payload.eventType === "DELETE") {
+          }
+          // [CASE 3] 글이 삭제되었을 때 (DELETE)
+          else if (payload.eventType === "DELETE") {
             const oldPost = payload.old as { id: string };
             setMyPosts((prev) => prev.filter((post) => post.id !== oldPost.id));
-            // 북마크된 항목에서도 제거
             setMyBookmarks((prev) =>
               prev.filter(
                 (item) => !(item.type === "post" && item.id === oldPost.id)
@@ -462,7 +489,7 @@ export default function ProfileClient({
           const { data: postData, error } = await supabase
             .from("posts")
             .select(
-              "*, user_post_likes ( user_id ), profiles:user_id ( avatar_url, display_name, email )"
+              "*, user_post_likes ( user_id ), profiles:user_id ( avatar_url, display_name, email, equipped_badge_id )"
             )
             .eq("id", newBookmark.post_id)
             .single();
