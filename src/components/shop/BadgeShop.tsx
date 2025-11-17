@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Database } from "@/types";
 import { User } from "@supabase/supabase-js";
-import { Coins, Sparkles } from "lucide-react";
+import { Coins } from "lucide-react";
 import { BadgeRow } from "@/app/(home)/shop/page";
 
 // DB의 rarity Enum과 UI 스타일링을 매핑하기 위한 타입 가드
@@ -286,13 +286,13 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
       </div>
       {/* 페이지 루트 */}
       <div
-        className="relative z-10 flex min-h-[80vh] w-full items-center justify-center px-4 py-6 lg:px-6 lg:py-10 outline-none"
+        className="relative z-10 flex min-h-[80vh] w-full items-center justify-center px-4 py-6 outline-none"
         tabIndex={0}
         onKeyDown={handleKeyDown}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <main className="flex w-full max-w-5xl flex-col gap-7 rounded-4xl border border-white/20 bg-white/40 p-6 shadow-xl lg:flex-row lg:gap-10 lg:p-8">
+        <main className="flex w-full max-w-5xl flex-col gap-7 rounded-4xl border border-white/20 bg-white/40 p-6 shadow-xl lg:flex-row lg:gap-10 lg:p-8 dark:bg-white/20 dark:shadow-white/10">
           {/* 왼쪽: 뱃지 카드 캐러셀 */}
           {/* ====== 모바일 전용: 좌우 슬라이더 ====== */}
           <section className="flex flex-1 flex-col items-center justify-center gap-4 lg:hidden">
@@ -360,14 +360,14 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
             <div className="flex items-center justify-center gap-4">
               <button
                 type="button"
-                className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600"
+                className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600 dark:bg-white/30 dark:border-slate-300/50 dark:hover:bg-blue-50/70"
                 onClick={() => updateCarousel(currentIndex - 1)}
               >
                 ←
               </button>
               <button
                 type="button"
-                className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600"
+                className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600 dark:bg-white/30 dark:border-slate-300/50 dark:hover:bg-blue-50/70"
                 onClick={() => updateCarousel(currentIndex + 1)}
               >
                 →
@@ -429,14 +429,14 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
             <div className="flex items-center justify-center gap-4">
               <button
                 type="button"
-                className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600"
+                className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600 dark:bg-white/30 dark:border-slate-300/50 dark:hover:bg-blue-50/70"
                 onClick={() => updateCarousel(currentIndex - 1)}
               >
                 ↑
               </button>
               <button
                 type="button"
-                className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600"
+                className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600 dark:bg-white/30 dark:border-slate-300/50 dark:hover:bg-blue-50/70"
                 onClick={() => updateCarousel(currentIndex + 1)}
               >
                 ↓
@@ -446,7 +446,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
 
           {/* 오른쪽: 뱃지 상세 / 가격 / 버튼 영역 */}
           <section className="flex flex-1 flex-col justify-center gap-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-[#A6A6DB]">
               Badge shop
             </p>
 
@@ -458,12 +458,12 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h2 className="inline-block text-3xl font-extrabold leading-tight tracking-[-0.02em] text-[#0b1f4a] lg:text-[2.1rem]">
-                    <span className="relative inline-block pb-1">
+                    <span className="relative inline-block pb-1 dark:text-[#80a8ff]">
                       {currentBadge.name}
                       <span className="absolute bottom-0 left-0 h-[3px] w-[72px] rounded-full bg-linear-to-r from-blue-500 via-indigo-500 to-pink-500" />
                     </span>
                   </h2>
-                  <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-300">
                     {rarityLabel[currentBadge.rarity ?? "common"]} badge
                   </p>
                 </div>
@@ -476,19 +476,17 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                 </span>
               </div>
 
-              <p className=" font-medium text-slate-700">
-                {currentBadge.tagline}
-              </p>
-              <p className="max-w-md leading-relaxed text-slate-600">
+              <p className=" font-medium">{currentBadge.tagline}</p>
+              <p className="max-w-md leading-relaxed text-slate-600 dark:text-[#A6A6DB]">
                 {currentBadge.description}
               </p>
 
               {currentBadge.perks && currentBadge.perks.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-300">
                     Perks
                   </p>
-                  <ul className="space-y-1.5 text-slate-600">
+                  <ul className="space-y-1.5 text-slate-600 dark:text-[#A6A6DB]">
                     {currentBadge.perks.map((perk) => (
                       <li key={perk} className="flex items-center gap-2">
                         <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-[#6758FF]" />
@@ -501,13 +499,13 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
             </div>
 
             {/* 🌟 [New] 버튼 영역: 상태에 따른 분기 처리 */}
-            <div className="mt-2 flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 shadow-[0_10px_25px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+            <div className="mt-2 flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 shadow-lg backdrop-blur-xl dark:bg-white/10 dark:border-white/40">
               <div className="flex items-end justify-between gap-3">
                 <div>
                   {isOwned ? (
                     // 보유 중일 때 메시지
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-[#A6A6DB]">
                         Status
                       </p>
                       <div className="flex items-center gap-2 pt-1">
@@ -522,14 +520,14 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                   ) : (
                     // 미보유 시 가격 표시
                     <div className="space-y-1">
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-[#A6A6DB]">
                         Price
                       </p>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-extrabold text-slate-900">
+                        <span className="text-2xl font-extrabold">
                           {currentBadge.price.toLocaleString()}
                         </span>
-                        <span className="text-sm font-semibold text-slate-500">
+                        <span className="text-sm font-semibold text-slate-500 dark:text-[#A6A6DB]">
                           points
                         </span>
                       </div>
@@ -543,11 +541,11 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                   <button
                     type="button"
                     disabled={isProcessing}
-                    className={`cursor-pointer inline-flex items-center justify-center rounded-xl bg-linear-to-r from-indigo-400 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(79,70,229,0.45)]
+                    className={`cursor-pointer inline-flex items-center justify-center rounded-xl bg-linear-to-r from-indigo-400 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_4px_10px_rgba(79,70,229,0.45)]
                       ${
                         isProcessing
                           ? "cursor-wait opacity-70"
-                          : "hover:-translate-y-px hover:shadow-[0_18px_40px_rgba(79,70,229,0.65)] active:translate-y-0 active:scale-[0.98]"
+                          : "hover:-translate-y-px hover:shadow-[0_8px_16px_rgba(79,70,229,0.65)] active:translate-y-0"
                       }`}
                     onClick={() => handleBuy(currentBadge)}
                   >
@@ -565,7 +563,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                       ${
                         isProcessing
                           ? "cursor-wait opacity-70"
-                          : "hover:bg-slate-50 active:scale-[0.98]"
+                          : "hover:bg-slate-50"
                       }`}
                     onClick={handleUnequip}
                   >
@@ -589,7 +587,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                 )}
               </div>
 
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-[#A6A6DB]">
                 * 포인트는 활동 보상, 챌린지 참여, 이벤트 등을 통해 적립할 수
                 있어요.
               </p>
