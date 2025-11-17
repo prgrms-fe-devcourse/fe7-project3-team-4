@@ -3,15 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Database } from "@/types";
-import { BadgeRow } from "@/app/(home)/badge_store/page";
 import { User } from "@supabase/supabase-js";
 import { Coins, Sparkles } from "lucide-react";
+import { BadgeRow } from "@/app/(home)/shop/page";
 
 // DB의 rarity Enum과 UI 스타일링을 매핑하기 위한 타입 가드
 type BadgeVariant = Database["public"]["Enums"]["badge_type"];
 
 // Props 타입 정의
-interface BadgeStoreProps {
+interface BadgeShopProps {
   initialBadges: BadgeRow[];
 }
 
@@ -44,7 +44,7 @@ const badgeGradient: Record<BadgeVariant, string> = {
     "from-slate-400 via-slate-500 to-slate-600 shadow-[0_18px_40px_rgba(148,163,184,0.5)]",
 };
 
-export default function BadgeStore({ initialBadges }: BadgeStoreProps) {
+export default function BadgeShop({ initialBadges }: BadgeShopProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [infoFading, setInfoFading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false); // 로딩 상태 통합 (구매/장착/해제)
