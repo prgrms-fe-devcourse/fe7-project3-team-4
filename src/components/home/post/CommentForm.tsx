@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { createClient } from "@/utils/supabase/client";
@@ -5,15 +6,17 @@ import { CircleArrowUp, Smile, X } from "lucide-react";
 import { useState, FormEvent, useEffect } from "react";
 import type { User } from "@supabase/supabase-js";
 import { Database } from "@/utils/supabase/supabase";
-import Image from "next/image";
+import UserAvatar from "@/components/shop/UserAvatar";
+// 🌟 1. UserAvatar 임포트
 
 type CommentInsert = Database["public"]["Tables"]["comments"]["Insert"];
 
-// ✅ 완전한 프로필 타입 정의
+// 🌟 2. 프로필 타입에 뱃지 ID 추가
 type UserProfile = {
   avatar_url: string | null;
   display_name: string | null;
   email: string | null;
+  equipped_badge_id: string | null; // 👈 뱃지 ID 추가
 };
 
 // ✅ Props 인터페이스 명확화
@@ -47,10 +50,10 @@ export default function CommentForm({
       if (user) {
         setUser(user);
 
-        // ✅ profiles 테이블에서 모든 필요한 필드 조회
+        // 🌟 3. profiles 테이블 조회 시 뱃지 ID 추가
         const { data: profile, error } = await supabase
           .from("profiles")
-          .select("avatar_url, display_name, email")
+          .select("avatar_url, display_name, email, equipped_badge_id") // 👈 뱃지 ID 조회
           .eq("id", user.id)
           .single();
 
@@ -90,7 +93,7 @@ export default function CommentForm({
 
       // // ✅ 댓글 수 증가 RPC 호출
       // await supabase.rpc("increment_post_comment_count", {
-      //   post_id: postId,
+      //   post_id: postId,
       // });
 
       // ✅ 대댓글 로직
@@ -121,26 +124,15 @@ export default function CommentForm({
     setIsSubmitting(false);
   };
 
-  const avatarUrl = userProfile?.avatar_url ?? null;
-  const displayName = userProfile?.display_name ?? "익명";
-
   return (
     <div className="flex items-start gap-2 my-6">
-      <div className="relative w-8 h-8 rounded-full shrink-0 overflow-hidden ">
-        {avatarUrl ? (
-          <Image
-            src={avatarUrl}
-            alt={displayName}
-            fill
-            className="object-cover"
-            sizes="32px" // ✅ Next.js Image 최적화
-          />
-        ) : (
-          <span className="flex items-center justify-center h-full w-full text-gray-500 text-sm font-semibold">
-            {displayName[0]?.toUpperCase() || "?"}
-          </span>
-        )}
-      </div>
+      {/* 🌟 4. <img> 태그를 UserAvatar 컴포넌트로 교체 */}
+      <UserAvatar
+        src={userProfile?.avatar_url}
+        alt={userProfile?.display_name || "User"}
+        equippedBadgeId={userProfile?.equipped_badge_id}
+        className="w-8 h-8 shrink-0" // 👈 크기 지정
+      />
 
       <form
         className="flex-1 flex items-center justify-between px-3 py-2 bg-white border border-black/10 self-center rounded-lg gap-2 dark:bg-white/30"

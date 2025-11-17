@@ -12,9 +12,12 @@ import PromptDetail from "./PromptDetail";
 import Link from "next/link";
 import { extractImageSrcArr } from "@/utils/extractTextFromJson";
 import { useFollow } from "@/context/FollowContext";
-import { getTranslatedTag } from "@/utils/tagTranslator"; // [✅ 추가] 임포트
+import { getTranslatedTag } from "@/utils/tagTranslator";
 import { useRouter } from "next/navigation";
+import UserAvatar from "@/components/shop/UserAvatar";
+import { Json } from "@/utils/supabase/supabase"; // 🌟 1. Json 타입 임포트
 
+// ... (RawComment, PostComment 타입 정의는 동일) ...
 type RawComment = {
   id: string;
   content: string | null;
@@ -30,7 +33,55 @@ type RawComment = {
     email: string | null;
     avatar_url?: string | null;
     bio?: string | null;
+    equipped_badge_id?: string | null;
   } | null;
+};
+
+type PostComment = {
+  id: string;
+  content: string;
+  created_at: string;
+  updated_at: string | null;
+  like_count: number;
+  reply_count: number;
+  has_reply: boolean;
+  parent_id: string | null;
+  user_id: string;
+  profiles: {
+    display_name: string;
+    email: string;
+    avatar_url: string | null;
+    bio: string | null;
+    equipped_badge_id: string | null;
+  };
+};
+
+// 🌟 2. Supabase 쿼리 반환 타입을 정확히 정의 (any 대신 사용)
+type PostDetailQueryData = {
+  id: string;
+  title: string | null;
+  content: Json;
+  created_at: string | null;
+  updated_at: string | null;
+  post_type: string | null;
+  hashtags: string[] | null;
+  like_count: number | null;
+  view_count: number | null;
+  comment_count: number | null;
+  user_id: string | null;
+  model: string | null;
+  result_mode: string | null;
+  thumbnail: string | null;
+  subtitle: string | null;
+  profiles: {
+    display_name: string | null;
+    email: string | null;
+    avatar_url: string | null;
+    bio: string | null;
+    equipped_badge_id: string | null;
+  } | null;
+  user_post_likes: { user_id: string }[];
+  user_post_bookmarks: { user_id: string }[];
 };
 
 interface PostDetailProps {
@@ -41,11 +92,12 @@ interface PostDetailProps {
 }
 
 export default function PostDetail({
-  post,
+  post: initialPost,
   onLikeToggle,
   onBookmarkToggle,
   onBack,
 }: PostDetailProps) {
+  const [post, setPost] = useState(initialPost);
   const [comments, setComments] = useState<PostComment[]>([]);
   const [sortOrder, setSortOrder] = useState<"latest" | "popular">("latest");
   const [isFollowLoading, setIsFollowLoading] = useState(false);
@@ -54,16 +106,94 @@ export default function PostDetail({
   const supabase = createClient();
   const router = useRouter();
 
-  // ✅ Follow Context 사용
   const { isFollowing, toggleFollow, currentUserId } = useFollow();
 
   const authorName = post.profiles?.display_name || "익명";
   const authorEmail = post.profiles?.email || "";
   const authorAvatar = post.profiles?.avatar_url || null;
   const authorUserId = post.user_id;
+  const authorEquippedBadgeId = post.profiles?.equipped_badge_id || null;
 
-  // 팔로우 상태는 Context에서 가져옴
   const isAuthorFollowing = isFollowing(authorUserId);
+
+  // 🌟 3. 게시글의 최신 정보를 가져오는 useEffect 수정
+  useEffect(() => {
+    const fetchLatestPostData = async () => {
+      // 쿼리는 HomePageClient의 것과 거의 동일
+      const { data: postData, error } = await supabase
+        .from("posts")
+        .select(
+          `
+          *,
+          profiles:user_id (
+            display_name,
+            email,
+            avatar_url,
+            bio,
+            equipped_badge_id
+          ),
+          user_post_likes!left(user_id),
+          user_post_bookmarks!left(user_id)
+        `
+        )
+        .eq("id", initialPost.id)
+        .eq(
+          "user_post_likes.user_id",
+          currentUserId || "00000000-0000-0000-0000-000000000000"
+        )
+        .eq(
+          "user_post_bookmarks.user_id",
+          currentUserId || "00000000-0000-0000-0000-000000000000"
+        )
+        .single(); // 👈 단일 게시글이므로 .single() 사용
+
+      if (error) {
+        console.error("Error refetching post details:", error);
+      } else if (postData) {
+        // HomePageClient의 매핑 로직과 동일하게 변환
+
+        // 🌟 4. 'as any' 대신 정확한 타입 단언 사용
+        const typedData = postData as PostDetailQueryData;
+
+        const postWithState: PostType = {
+          id: typedData.id,
+          title: typedData.title || "",
+          content: typedData.content,
+          created_at: typedData.created_at || "",
+          post_type: typedData.post_type || "",
+          hashtags: typedData.hashtags || undefined,
+          like_count: typedData.like_count || 0,
+          comment_count: typedData.comment_count || 0,
+          view_count: typedData.view_count || 0,
+          user_id: typedData.user_id || "",
+          model: (typedData.model as "GPT" | "Gemini") || undefined,
+          result_mode: (typedData.result_mode as "text" | "image") || undefined,
+          thumbnail: typedData.thumbnail || "",
+          subtitle: typedData.subtitle || "",
+          isLiked: !!(
+            typedData.user_post_likes && typedData.user_post_likes.length > 0
+          ),
+          isBookmarked: !!(
+            typedData.user_post_bookmarks &&
+            typedData.user_post_bookmarks.length > 0
+          ),
+          profiles: typedData.profiles
+            ? {
+                display_name: typedData.profiles.display_name,
+                email: typedData.profiles.email,
+                avatar_url: typedData.profiles.avatar_url,
+                bio: typedData.profiles.bio, // bio 추가
+                equipped_badge_id: typedData.profiles.equipped_badge_id,
+              }
+            : undefined,
+        };
+        // 🌟 4. state를 최신 정보로 업데이트
+        setPost(postWithState);
+      }
+    };
+
+    fetchLatestPostData();
+  }, [initialPost.id, currentUserId, supabase]);
 
   useEffect(() => {
     const incrementViewCount = async () => {
@@ -79,20 +209,16 @@ export default function PostDetail({
     incrementViewCount();
   }, [post.id, supabase]);
 
-  // [★신규★] 2. (개인) '조회 내역' 기록 (로그인한 경우에만 실행)
   useEffect(() => {
     const recordViewHistory = async () => {
-      // 1. currentUserId가 있어야 (로그인해야) 기록합니다.
       if (currentUserId) {
         const { error } = await supabase.from("user_post_views").upsert(
           {
             user_id: currentUserId,
             post_id: post.id,
-            viewed_at: new Date().toISOString(), // "언제" 봤는지 현재 시간으로 갱신
+            viewed_at: new Date().toISOString(),
           },
           {
-            // "만약 (user_id, post_id)가 겹치면 (UNIQUE 충돌 시)"
-            // viewed_at 컬럼만 덮어씁니다.
             onConflict: "user_id, post_id",
           }
         );
@@ -104,8 +230,6 @@ export default function PostDetail({
     };
 
     recordViewHistory();
-
-    // currentUserId와 post.id가 확정되면 이 훅을 실행합니다.
   }, [currentUserId, post.id, supabase]);
 
   const fetchComments = useCallback(async () => {
@@ -126,7 +250,8 @@ export default function PostDetail({
           display_name,
           email,
           avatar_url,
-          bio
+          bio,
+          equipped_badge_id 
         )
       `
       )
@@ -158,12 +283,14 @@ export default function PostDetail({
                 email: comment.profiles.email ?? "user",
                 avatar_url: comment.profiles.avatar_url ?? null,
                 bio: comment.profiles.bio ?? null,
+                equipped_badge_id: comment.profiles.equipped_badge_id ?? null,
               }
             : {
                 display_name: "익명",
                 email: "user",
                 avatar_url: null,
                 bio: null,
+                equipped_badge_id: null,
               },
         })
       );
@@ -175,7 +302,7 @@ export default function PostDetail({
     fetchComments();
   }, [fetchComments]);
 
-  // 댓글 및 게시글 Realtime 구독
+  // Realtime 구독
   useEffect(() => {
     const commentsChannel = supabase
       .channel(`comments:${post.id}`)
@@ -208,11 +335,12 @@ export default function PostDetail({
             comment_count: number;
             like_count?: number;
           };
-          console.log(
-            "[PostDetail] 게시글 실시간 업데이트:",
-            updatedPost.comment_count,
-            updatedPost.like_count
-          );
+          // 🌟 5. (옵션) 실시간 업데이트 시 post state도 갱신
+          setPost((prev) => ({
+            ...prev,
+            comment_count: updatedPost.comment_count,
+            like_count: updatedPost.like_count ?? prev.like_count,
+          }));
         }
       )
       .subscribe();
@@ -223,7 +351,7 @@ export default function PostDetail({
     };
   }, [post.id, supabase, fetchComments]);
 
-  // ✅ Follow Context의 toggleFollow 사용
+  // ... (handleFollowToggle, handleCommentAdded, handleDeletePost 로직은 동일) ...
   const handleFollowToggle = async () => {
     if (!currentUserId || !authorUserId) {
       alert("로그인이 필요합니다.");
@@ -356,21 +484,14 @@ export default function PostDetail({
             <div className="flex gap-3 items-center">
               <Link
                 href={`/profile?userId=${post.user_id}`}
-                className="relative w-11 h-11 bg-gray-300 rounded-full overflow-hidden hover:opacity-80 transition-opacity"
+                className="relative shrink-0 w-11 h-11 hover:opacity-80 transition-opacity"
               >
-                {authorAvatar ? (
-                  <Image
-                    src={authorAvatar}
-                    alt={authorName}
-                    fill
-                    className="object-cover"
-                    sizes="44px"
-                  />
-                ) : (
-                  <span className="flex items-center justify-center h-full w-full text-gray-500 text-lg font-semibold">
-                    {(authorName[0] || "?").toUpperCase()}
-                  </span>
-                )}
+                <UserAvatar
+                  src={authorAvatar}
+                  alt={authorName}
+                  equippedBadgeId={authorEquippedBadgeId}
+                  className="w-full h-full"
+                />
               </Link>
               <div className="flex-1 space-y-1 leading-none">
                 <p>
@@ -416,7 +537,7 @@ export default function PostDetail({
           {post.hashtags && post.hashtags.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-5 text-sm text-[#248AFF]">
               {post.hashtags.map((tag, i) => (
-                <span key={i}>#{getTranslatedTag(tag)}</span> // [✅ 수정]
+                <span key={i}>#{getTranslatedTag(tag)}</span>
               ))}
             </div>
           )}
@@ -446,21 +567,14 @@ export default function PostDetail({
             <div className="flex-1 flex gap-3">
               <Link
                 href={`/profile?userId=${post.user_id}`}
-                className="relative w-11 h-11 rounded-full overflow-hidden hover:opacity-80 transition-opacity"
+                className="relative shrink-0 w-11 h-11 hover:opacity-80 transition-opacity"
               >
-                {authorAvatar ? (
-                  <Image
-                    src={authorAvatar}
-                    alt={authorName}
-                    fill
-                    className="object-cover"
-                    sizes="44px"
-                  />
-                ) : (
-                  <span className="flex items-center justify-center h-full w-full text-gray-500 text-lg font-semibold">
-                    {(authorName[0] || "?").toUpperCase()}
-                  </span>
-                )}
+                <UserAvatar
+                  src={authorAvatar}
+                  alt={authorName}
+                  equippedBadgeId={authorEquippedBadgeId}
+                  className="w-full h-full"
+                />
               </Link>
               <div className="flex-1 space-y-1 leading-none">
                 <p>

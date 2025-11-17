@@ -5,13 +5,14 @@ import Link from "next/link";
 import { Tables } from "@/utils/supabase/supabase";
 import PostWrapper from "../post/PostWrapper";
 
+// 🌟 1. ProfileData 타입에 equipped_badge_id 추가
 type ProfileData = Pick<
   Tables<"profiles">,
-  "email" | "display_name" | "avatar_url" | "bio" // [수정] 'bio' 추가
+  "email" | "display_name" | "avatar_url" | "bio" | "equipped_badge_id"
 >;
 
 type PostQueryData = Tables<"posts"> & {
-  profiles: ProfileData | null; // [수정] email:string 객체가 아닌 ProfileData 타입으로
+  profiles: ProfileData | null;
   user_post_bookmarks: Pick<Tables<"user_post_bookmarks">, "user_id">[];
   user_post_likes: Pick<Tables<"user_post_likes">, "user_id">[];
 };
@@ -43,7 +44,7 @@ type TransformedPostData = {
   user_id: string;
   view_count: number;
   email: string;
-  profiles: ProfileData | undefined;
+  profiles: ProfileData | undefined; // 🌟 이 타입은 이미 ProfileData를 사용하므로 OK
   image?: string;
   hashtags: string[];
   isBookmarked: boolean;
@@ -84,10 +85,11 @@ export default async function SearchPostForm({
     data: { user },
   } = await supabase.auth.getUser();
 
+  // 🌟 2. select 쿼리에 equipped_badge_id 추가
   let query = supabase.from("posts").select(
     `
     *,
-    profiles!posts_user_id_fkey ( email, display_name, avatar_url, bio ),
+    profiles!posts_user_id_fkey ( email, display_name, avatar_url, bio, equipped_badge_id ),
     user_post_bookmarks!left ( user_id ),
     user_post_likes!left ( user_id )
   `
@@ -121,6 +123,8 @@ export default async function SearchPostForm({
     return <div>데이터를 불러오는 중 오류가 발생했습니다.</div>;
   }
 
+  // 🌟 3. transformedPosts 매핑 로직은 수정할 필요 없음
+  // (post.profiles가 이미 올바른 ProfileData 타입을 따르므로)
   const transformedPosts: TransformedPostData[] = data
     ? data.map((post: PostQueryData): TransformedPostData => {
         const contentJson = post.content as PostContentJson | null;
@@ -135,7 +139,7 @@ export default async function SearchPostForm({
             contentJson?.prompt_result_image_url ||
             undefined,
           email: post.profiles?.email ?? "이메일 없음",
-          profiles: post.profiles ?? undefined,
+          profiles: post.profiles ?? undefined, // 👈 뱃지 ID가 포함된 profiles 객체가 통째로 전달됨
           isBookmarked: post.user_post_bookmarks.length > 0,
           isLiked: post.user_post_likes.length > 0,
           hashtags: (post.hashtags as string[]) ?? [],
@@ -194,11 +198,11 @@ export default async function SearchPostForm({
                 key={tag.id}
                 href={href} // 수정된 href
                 className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg dark:border-[#F6F6F8]/40 dark:text-[#A6A6DB]
-          ${
-            isActive
-              ? "bg-[#9787ff] font-semibold text-white dark:text-white"
-              : "hover:bg-[#ECE9FF] dark:hover:bg-white/30"
-          }`}
+        ${
+          isActive
+            ? "bg-[#9787ff] font-semibold text-white dark:text-white"
+            : "hover:bg-[#ECE9FF] dark:hover:bg-white/30"
+        }`}
               >
                 #{label}
               </Link>

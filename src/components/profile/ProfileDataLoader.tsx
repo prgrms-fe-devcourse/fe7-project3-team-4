@@ -10,6 +10,7 @@ type DbPostRow = Database["public"]["Tables"]["posts"]["Row"] & {
     display_name: string | null;
     email: string | null;
     avatar_url: string | null;
+    equipped_badge_id: string | null;
   } | null;
   user_post_likes?: { user_id: string }[] | null;
   user_post_bookmarks?: { user_id: string }[] | null;
@@ -62,6 +63,7 @@ function dbPostToPostType(dbPost: DbPostRow): PostType {
           display_name: dbPost.profiles.display_name ?? null,
           email: dbPost.profiles.email ?? null,
           avatar_url: dbPost.profiles.avatar_url ?? null,
+          equipped_badge_id: dbPost.profiles.equipped_badge_id ?? null,
         }
       : undefined,
   };
@@ -131,7 +133,8 @@ export default async function ProfileDataLoader({
       profiles:user_id (
         display_name,
         email,
-        avatar_url
+        avatar_url,
+        equipped_badge_id
       ),
       user_post_likes!left(user_id),
       user_post_bookmarks!left(user_id)
@@ -152,7 +155,8 @@ export default async function ProfileDataLoader({
         profiles:user_id (
           display_name,
           email,
-          avatar_url
+          avatar_url,
+          equipped_badge_id
         ),
         user_post_likes!left(user_id)
       )

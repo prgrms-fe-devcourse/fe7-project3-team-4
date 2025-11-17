@@ -1,5 +1,3 @@
-// src/components/home/HomePageClient.tsx
-
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from "react";
@@ -39,6 +37,7 @@ const tabToType: Record<Tab, string> = {
   주간: "weekly",
 };
 
+// 🌟 1. SupabasePostItem 타입에 뱃지 ID 추가
 type SupabasePostItem = {
   id: string;
   title: string | null;
@@ -61,6 +60,7 @@ type SupabasePostItem = {
     display_name: string;
     email: string;
     avatar_url: string | null;
+    equipped_badge_id: string | null; // 👈 뱃지 ID 타입 추가
   } | null;
 };
 
@@ -128,6 +128,7 @@ export default function HomePageClient() {
       } = await supabase.auth.getUser();
       const userId = user?.id;
 
+      // 🌟 2. 쿼리에 뱃지 ID 추가
       let query = supabase
         .from("posts")
         .select(
@@ -136,7 +137,8 @@ export default function HomePageClient() {
           profiles:user_id (
             display_name,
             email,
-            avatar_url
+            avatar_url,
+            equipped_badge_id
           ),
           user_post_likes!left(user_id),
           user_post_bookmarks!left(user_id)
@@ -168,6 +170,7 @@ export default function HomePageClient() {
         console.error("Error fetching posts:", error);
       } else if (data) {
         const typedData = data as unknown as SupabasePostItem[];
+        // 🌟 3. 데이터 매핑 시 뱃지 ID 전달
         const postsWithState: PostType[] = typedData.map((item) => ({
           id: item.id,
           title: item.title || "",
@@ -192,6 +195,7 @@ export default function HomePageClient() {
                 display_name: item.profiles.display_name,
                 email: item.profiles.email,
                 avatar_url: item.profiles.avatar_url,
+                equipped_badge_id: item.profiles.equipped_badge_id, // 👈 뱃지 ID 전달
               }
             : undefined,
         }));
@@ -460,7 +464,9 @@ export default function HomePageClient() {
           ) : (
             // 아이템을 찾지 못한 경우
             <div className="flex flex-col items-center justify-center py-20 px-4">
-              <p className="text-gray-500 text-center">콘텐츠를 찾을 수 없습니다.</p>
+              <p className="text-gray-500 text-center">
+                콘텐츠를 찾을 수 없습니다.
+              </p>
               <button
                 onClick={handleBack}
                 className="mt-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"

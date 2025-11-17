@@ -5,8 +5,11 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import CommentForm from "./CommentForm";
-import Image from "next/image";
+import UserAvatar from "@/components/shop/UserAvatar";
+// 🌟 1. UserAvatar 임포트
+// 🌟 2. PostComment 타입 임포트 (PostDetail.tsx에서 가져옴)
 
+// 🌟 3. RawReply 타입에 뱃지 ID 추가
 type RawReply = {
   id: string;
   content: string | null;
@@ -18,7 +21,22 @@ type RawReply = {
     display_name: string | null;
     email: string | null;
     avatar_url: string | null;
+    equipped_badge_id: string | null; // 👈 뱃지 ID 추가
   } | null;
+};
+
+// 🌟 4. Reply 타입 (local)에도 뱃지 ID 추가
+type Reply = {
+  id: string;
+  content: string;
+  created_at: string;
+  updated_at: string | null;
+  like_count: number;
+  user_id: string;
+  display_name: string;
+  email: string;
+  avatar_url: string | null;
+  equipped_badge_id: string | null; // 👈 뱃지 ID 추가
 };
 
 export default function Comments({
@@ -49,7 +67,7 @@ export default function Comments({
     fetchUser();
   }, [supabase.auth]);
 
-  // ✅ 대댓글 조회
+  // 🌟 5. 대댓글 조회 쿼리 수정 (뱃지 ID 포함)
   const fetchReplies = async () => {
     const { data, error } = await supabase
       .from("comments")
@@ -64,7 +82,8 @@ export default function Comments({
         profiles:user_id (
           display_name,
           email,
-          avatar_url
+          avatar_url,
+          equipped_badge_id
         )
       `
       )
@@ -77,6 +96,7 @@ export default function Comments({
     }
 
     if (data) {
+      // 🌟 6. 대댓글 매핑 시 뱃지 ID 포함
       const formattedReplies: Reply[] = (data as RawReply[]).map((reply) => ({
         id: reply.id,
         content: reply.content ?? "",
@@ -87,6 +107,7 @@ export default function Comments({
         email: reply.profiles?.email ?? "user",
         avatar_url: reply.profiles?.avatar_url ?? null,
         user_id: reply.user_id,
+        equipped_badge_id: reply.profiles?.equipped_badge_id ?? null, // 👈 뱃지 ID 매핑
       }));
       setReplies(formattedReplies);
     }
@@ -241,7 +262,7 @@ export default function Comments({
         fetchReplies();
       } else {
         // 필요 시 상위 comments 리스트 새로고침 함수 호출
-        // fetchComments();
+        // fetchComments(); // PostDetail에서 이미 실시간 구독 중
       }
     } catch (err) {
       console.error("Error toggling like:", err);
@@ -282,21 +303,14 @@ export default function Comments({
         {/* 댓글 작성자 */}
         <div className="flex justify-between items-start gap-2 mb-1">
           <div className="flex gap-2">
-            {/* 프로필 이미지 */}
-            <div className="relative w-9 h-9 rounded-full bg-gray-300 shrink-0 overflow-hidden">
-              {comment.profiles?.avatar_url ? (
-                <Image
-                  src={comment.profiles?.avatar_url}
-                  alt={comment.profiles?.display_name || ""}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <span className="flex items-center justify-center h-full w-full text-gray-500 text-sm font-semibold">
-                  {comment.profiles?.display_name || "?"}
-                </span>
-              )}
-            </div>
+            {/* 🌟 7. 메인 댓글 아바타 UserAvatar로 교체 */}
+            <UserAvatar
+              src={comment.profiles?.avatar_url}
+              alt={comment.profiles?.display_name || "user"}
+              equippedBadgeId={comment.profiles?.equipped_badge_id}
+              className="w-9 h-9 shrink-0"
+            />
+
             {/* 이름 + 이메일 */}
             <div className="mb-1.5">
               <div className="text-sm font-medium">
@@ -363,7 +377,7 @@ export default function Comments({
               <div className="ml-1 text-[#717182] dark:text-white flex items-center gap-1.5 mt-2">
                 <button
                   onClick={() => handleLikeToggle(comment.id)}
-                  className="cursor-pointer flex items-center justify-center w-5 h-5 rounded-full bg-white border border-[#F0F0F0] hover:bg-gray-200 dark:bg-white/20 dark:border-[#F0F0F0]/40 dark:hover:bg-gray-300  dark:hover:text-[#6758FF]"
+                  className="cursor-pointer flex items-center justify-center w-5 h-5 rounded-full bg-white border border-[#F0F0F0] hover:bg-gray-200 dark:bg-white/20 dark:border-[#F0F0F0]/40 dark:hover:bg-gray-300  dark:hover:text-[#6758FF]"
                 >
                   <ThumbsUp size={10} />
                 </button>
@@ -372,7 +386,7 @@ export default function Comments({
                 </span>
                 <button
                   onClick={() => setShowReplyForm(!showReplyForm)}
-                  className="cursor-pointer flex items-center justify-center w-5 h-5 rounded-full bg-white border border-[#F0F0F0] hover:bg-gray-200 ml-1 dark:bg-white/20 dark:border-[#F0F0F0]/40 dark:hover:bg-gray-300  dark:hover:text-[#6758FF]"
+                  className="cursor-pointer flex items-center justify-center w-5 h-5 rounded-full bg-white border border-[#F0F0F0] hover:bg-gray-200 ml-1 dark:bg-white/20 dark:border-[#F0F0F0]/40 dark:hover:bg-gray-300  dark:hover:text-[#6758FF]"
                 >
                   <CornerDownRight size={10} />
                 </button>
@@ -391,6 +405,7 @@ export default function Comments({
                 parentId={comment.id}
                 onCancel={() => setShowReplyForm(false)}
                 placeholder="답글을 입력하세요..."
+                onCommentAdded={fetchReplies} // 👈 답글 작성 시 목록 새로고침
               />
             </div>
           )}
@@ -416,21 +431,14 @@ export default function Comments({
                       className="flex justify-between items-start gap-2"
                     >
                       <div className="flex gap-2 flex-1">
-                        {/* 프로필 이미지 */}
-                        <div className="relative w-8 h-8 rounded-full bg-gray-300 shrink-0 overflow-hidden">
-                          {reply.avatar_url ? (
-                            <Image
-                              src={reply.avatar_url}
-                              alt={reply.display_name}
-                              fill
-                              className="object-cover"
-                            />
-                          ) : (
-                            <span className="flex items-center justify-center h-full w-full text-gray-500 text-xs font-semibold">
-                              {reply.display_name[0]?.toUpperCase() || "?"}
-                            </span>
-                          )}
-                        </div>
+                        {/* 🌟 8. 대댓글 아바타 UserAvatar로 교체 */}
+                        <UserAvatar
+                          src={reply.avatar_url}
+                          alt={reply.display_name}
+                          equippedBadgeId={reply.equipped_badge_id}
+                          className="w-8 h-8 shrink-0" // 👈 크기 지정
+                        />
+
                         <div className="flex-1">
                           <div className="text-xs font-medium">
                             {reply.display_name}

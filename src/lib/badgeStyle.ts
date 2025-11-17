@@ -45,12 +45,16 @@ export const badgeGradient: Record<BadgeVariant, string> = {
 // 4. 🌟 [신규] 프로필 아바타용 링(Ring) 스타일
 // 프로필 사진 크기에 맞게 Tailwind의 'ring' 유틸리티를 사용합니다.
 export const avatarRingStyles: Record<BadgeVariant, string> = {
-  basic: "ring-1 ring-gray-200", // 기본
-  common: "ring-2 ring-slate-300",
-  uncommon: "ring-2 ring-emerald-400",
-  rare: "ring-2 ring-sky-400",
+  basic:
+    "ring-1 ring-white/30 backdrop-blur-sm bg-white/10 shadow-[0_0_4px_rgba(255,255,255,0.2)]",
+  common:
+    "ring-2 ring-white/35 backdrop-blur-sm bg-white/15 shadow-[0_0_6px_rgba(255,255,255,0.25)]",
+  uncommon:
+    "ring-2 ring-emerald-300/50 backdrop-blur-md bg-emerald-100/15 shadow-[0_0_8px_rgba(16,185,129,0.28)]",
+  rare: "ring-2 ring-sky-300/50 backdrop-blur-md bg-sky-100/15 shadow-[0_0_8px_rgba(56,189,248,0.30)]",
   "ultra-rare":
-    "ring-4 ring-fuchsia-400 shadow-[0_0_12px_rgba(232,121,249,0.5)]",
-  epic: "ring-4 ring-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.5)]",
-  legendary: "ring-4 ring-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.6)]", // 황금빛 발광
+    "ring-3 ring-violet-300/55 backdrop-blur-lg bg-violet-100/15 shadow-[0_0_12px_rgba(139,92,246,0.35)]",
+  epic: "ring-4 ring-indigo-300/60 backdrop-blur-lg bg-indigo-100/15 shadow-[0_0_14px_rgba(79,70,229,0.38)]",
+  legendary:
+    "ring-4 ring-amber-300/65 backdrop-blur-xl bg-amber-100/15 shadow-[0_0_18px_rgba(251,191,36,0.45)]",
 };

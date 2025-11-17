@@ -3,11 +3,11 @@
 import { Trophy } from "lucide-react";
 import Box from "./Box";
 import { createClient } from "@/utils/supabase/client";
-import Image from "next/image";
-import RankFollowButton from "./RankFollowButton";
 import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
 import { useFollow } from "@/context/FollowContext";
+import RankFollowButton from "./RankFollowButton";
+import UserAvatar from "@/components/shop/UserAvatar";
 
 const getOrdinalSuffix = (n: number) => {
   if (n % 100 >= 11 && n % 100 <= 13) {
@@ -29,28 +29,23 @@ type ProfileData = {
   display_name: string | null;
   email: string | null;
   avatar_url: string | null;
-};
+  equipped_badge_id: string | null;
+} | null;
 
 type RankData = {
   user_id: string;
-  profile: ProfileData | null;
+  profile: ProfileData; // 타입 업데이트
   like_count: number;
 };
 
 export default function Rank() {
   const [textTopUsers, setTextTopUsers] = useState<RankData[]>([]);
   const [imageTopUsers, setImageTopUsers] = useState<RankData[]>([]);
-  /* const [topUsers, setTopUsers] = useState<RankData[]>([]); */
   const [isLoading, setIsLoading] = useState(true);
-
-  // 현재 활성화된 주제 (텍스트 / 이미지)
   const [activeTopic, setActiveTopic] = useState<"text" | "image">("text");
 
   const topicLabel = activeTopic === "text" ? "텍스트 챌린지" : "이미지 챌린지";
-
   const supabase = createClient();
-
-  // ✅ Follow Context 사용
   const { isFollowing, toggleFollow, currentUserId } = useFollow();
 
   const fetchRankData = useCallback(async () => {
@@ -63,19 +58,20 @@ export default function Rank() {
         `
         user_id, 
         like_count,
-        profile:user_id ( 
+        profiles:user_id ( 
           display_name,
           email,
-          avatar_url
+          avatar_url,
+          equipped_badge_id
         )
       `
-      )
+      ) // 🌟 4. 쿼리 수정: profiles와 badges를 Join
       .eq("post_type", "weekly")
       .eq("result_mode", "Text")
       .order("like_count", { ascending: false });
 
     if (postTextError) {
-      console.error(postTextError);
+      console.error("Text Rank Error:", postTextError);
       setIsLoading(false);
       return;
     }
@@ -88,7 +84,7 @@ export default function Rank() {
 
     const uniqueTextMap = new Map<string, RankData>();
     for (const post of postTextData) {
-      const profile = post.profile as ProfileData | null;
+      const profile = post.profiles as ProfileData; // 타입 캐스팅
 
       if (!uniqueTextMap.has(post.user_id!)) {
         uniqueTextMap.set(post.user_id!, {
@@ -111,19 +107,20 @@ export default function Rank() {
         `
         user_id, 
         like_count,
-        profile:user_id ( 
+        profiles:user_id ( 
           display_name,
           email,
-          avatar_url
+          avatar_url,
+          equipped_badge_id
         )
       `
-      )
+      ) // 🌟 4. 쿼리 수정: profiles와 badges를 Join
       .eq("post_type", "weekly")
       .eq("result_mode", "Image")
       .order("like_count", { ascending: false });
 
     if (postImgError) {
-      console.error(postImgError);
+      console.error("Image Rank Error:", postImgError);
       setIsLoading(false);
       return;
     }
@@ -136,7 +133,7 @@ export default function Rank() {
 
     const uniqueImgMap = new Map<string, RankData>();
     for (const post of postImgData) {
-      const profile = post.profile as ProfileData | null;
+      const profile = post.profiles as ProfileData; // 타입 캐스팅
 
       if (!uniqueImgMap.has(post.user_id!)) {
         uniqueImgMap.set(post.user_id!, {
@@ -168,10 +165,10 @@ export default function Rank() {
           event: "UPDATE",
           schema: "public",
           table: "posts",
-          filter: "post_type=eq.prompt",
+          filter: "post_type=eq.weekly", // 'prompt'에서 'weekly'로 수정 (랭킹 집계 기준)
         },
         (payload) => {
-          console.log("Rank post updated, refetching rank data:", payload);
+          console.log("Weekly post updated, refetching rank data:", payload);
           fetchRankData();
         }
       )
@@ -193,8 +190,8 @@ export default function Rank() {
     };
   }, []);
 
-  // ✅ Follow Context의 toggleFollow 사용
   const handleFollowToggle = async (targetUserId: string) => {
+    // ... (기존 팔로우 로직 동일)
     if (!currentUserId) {
       alert("로그인이 필요합니다.");
       return;
@@ -204,8 +201,6 @@ export default function Rank() {
       await toggleFollow(targetUserId);
     } catch (error) {
       console.error("Follow toggle failed:", error);
-
-      // 사용자에게 에러 메시지 표시
       if (error instanceof Error) {
         alert(error.message);
       } else {
@@ -214,6 +209,7 @@ export default function Rank() {
     }
   };
 
+  // --- 로딩 및 에러 상태 UI (기존과 동일) ---
   if (isLoading) {
     return (
       <Box height="284px" icon={<Trophy />} title="이번 주 챌린지 순위">
@@ -224,7 +220,7 @@ export default function Rank() {
     );
   }
 
-  if (textTopUsers.length === 0) {
+  if (textTopUsers.length === 0 && imageTopUsers.length === 0) {
     return (
       <Box height="284px" icon={<Trophy />} title="이번 주 챌린지 순위">
         <p className="text-center text-sm text-gray-500 py-8">
@@ -257,14 +253,16 @@ export default function Rank() {
             {textTopUsers.map((item, index) => {
               const rankNumber = index + 1;
               const rankSuffix = getOrdinalSuffix(rankNumber);
+
+              // 🌟 5. 뱃지 등급(rarity) 데이터 추출
               const profile = item.profile;
               const displayName = profile?.display_name ?? "익명";
               const email = profile?.email ?? "이메일 없음";
               const avatar = profile?.avatar_url;
+              const equippedBadgeId = profile?.equipped_badge_id;
 
               const userIsFollowing = isFollowing(item.user_id);
               const isSelf = currentUserId === item.user_id;
-
               const rankColor =
                 rankNumber === 1
                   ? "#F7B500"
@@ -287,21 +285,16 @@ export default function Rank() {
                       {rankNumber}
                       {rankSuffix}.
                     </div>
-                    <div className="flex-1 flex gap-2">
-                      <div className="relative w-9 h-9 bg-gray-300 rounded-full overflow-hidden shrink-0">
-                        {avatar ? (
-                          <Image
-                            src={avatar}
-                            alt={displayName}
-                            fill
-                            className="object-cover w-full h-full"
-                          />
-                        ) : (
-                          <span className="flex items-center justify-center h-full w-full text-gray-500 text-lg font-semibold">
-                            {(displayName[0] || "?").toUpperCase()}
-                          </span>
-                        )}
-                      </div>
+                    <div className="flex-1 flex gap-2 items-center">
+                      {/* 🌟 6. 기존 <img> 블록을 UserAvatar 컴포넌트로 교체 */}
+                      <UserAvatar
+                        src={avatar}
+                        alt={displayName}
+                        equippedBadgeId={equippedBadgeId}
+                        size="sm"
+                        className="w-9 h-9 shrink-0" // 기존과 동일한 w-9 h-9 크기 적용
+                      />
+
                       <div className="min-w-0">
                         <p className="text-sm truncate">{displayName}</p>
                         <p className="text-xs text-[#717182] truncate dark:text-[#A6A6DB]">
@@ -331,14 +324,16 @@ export default function Rank() {
             {imageTopUsers.map((item, index) => {
               const rankNumber = index + 1;
               const rankSuffix = getOrdinalSuffix(rankNumber);
+
+              // 🌟 5. 뱃지 등급(rarity) 데이터 추출
               const profile = item.profile;
               const displayName = profile?.display_name ?? "익명";
               const email = profile?.email ?? "이메일 없음";
               const avatar = profile?.avatar_url;
+              const equippedBadgeId = profile?.equipped_badge_id;
 
               const userIsFollowing = isFollowing(item.user_id);
               const isSelf = currentUserId === item.user_id;
-
               const rankColor =
                 rankNumber === 1
                   ? "#F7B500"
@@ -361,21 +356,16 @@ export default function Rank() {
                       {rankNumber}
                       {rankSuffix}.
                     </div>
-                    <div className="flex-1 flex gap-2">
-                      <div className="relative w-9 h-9 bg-gray-300 rounded-full overflow-hidden shrink-0">
-                        {avatar ? (
-                          <Image
-                            src={avatar}
-                            alt={displayName}
-                            fill
-                            className="object-cover w-full h-full"
-                          />
-                        ) : (
-                          <span className="flex items-center justify-center h-full w-full text-gray-500 text-lg font-semibold">
-                            {(displayName[0] || "?").toUpperCase()}
-                          </span>
-                        )}
-                      </div>
+                    <div className="flex-1 flex gap-2 items-center">
+                      {/* 🌟 6. 기존 <img> 블록을 UserAvatar 컴포넌트로 교체 */}
+                      <UserAvatar
+                        src={avatar}
+                        alt={displayName}
+                        equippedBadgeId={equippedBadgeId}
+                        size="sm"
+                        className="w-9 h-9 shrink-0" // 기존과 동일한 w-9 h-9 크기 적용
+                      />
+
                       <div className="min-w-0">
                         <p className="text-sm truncate">{displayName}</p>
                         <p className="text-xs text-[#717182] truncate dark:text-[#A6A6DB]">
