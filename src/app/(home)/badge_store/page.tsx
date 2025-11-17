@@ -1,6 +1,9 @@
 import BadgeStore from "@/components/badge_store/BadgeStore";
 import { Database } from "@/types";
 import { createClient } from "@/utils/supabase/server";
+import { Suspense } from "react";
+
+export const dynamic = "force-dynamic";
 
 // Supabase Row 타입 추론을 활용해 타입을 안전하게 가져옵니다.
 export type BadgeRow = Database["public"]["Tables"]["badges"]["Row"];
@@ -26,5 +29,16 @@ export default async function Page() {
   }
 
   // 3. 클라이언트 컴포넌트에 데이터 주입 (Props Down)
-  return <BadgeStore initialBadges={badges ?? []} />;
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center text-slate-500">
+          상점 불러오는 중...
+        </div>
+      }
+    >
+      {" "}
+      <BadgeStore initialBadges={badges ?? []} />
+    </Suspense>
+  );
 }
