@@ -286,7 +286,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
       </div>
       {/* 페이지 루트 */}
       <div
-        className="relative z-10 flex min-h-[80vh] w-full items-center justify-center px-4 py-6 outline-none"
+        className="relative z-10 flex min-h-[80vh] w-full items-center justify-center px-4 py-6s outline-none"
         tabIndex={0}
         onKeyDown={handleKeyDown}
         onTouchStart={handleTouchStart}
