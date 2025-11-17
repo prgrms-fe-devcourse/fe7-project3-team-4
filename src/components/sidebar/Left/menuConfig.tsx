@@ -1,4 +1,5 @@
 import {
+  Award,
   Bell,
   History,
   House,
@@ -21,6 +22,7 @@ export const MENU_ITEMS: MenuItem[] = [
   { title: "채팅", icon: <MessageCircle />, url: "message" },
   { title: "프로필", icon: <User />, url: "profile" },
   { title: "조회 내역", icon: <History />, url: "views" },
+  { title: "뱃지 상점", icon: <Award />, url: "badge_store" },
   {
     title: "게시글 작성",
     icon: <Svg icon="write" display="lg" />,
