@@ -165,7 +165,7 @@ export function MobileHeader({
                   {/* TODO: 여기 다크모드 토글 아이콘/텍스트로 바꾸기 */}
                   <button
                     onClick={toggleTheme}
-                    className="py-2 px-2.5 flex flex-row items-center gap-2.5"
+                    className="cursor-pointer py-2 px-2.5 flex flex-row items-center gap-2.5"
                   >
                     {!isDark ? (
                       <>
