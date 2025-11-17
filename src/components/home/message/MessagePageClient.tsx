@@ -958,7 +958,7 @@ export default function MessagePageClient() {
                         />
                       ) : (
                         <div className="w-[50px] h-[50px] flex  items-center bg-white/70">
-                          <Logo />
+                          <Logo size="md" />
                         </div>
                       )}
                     </Link>

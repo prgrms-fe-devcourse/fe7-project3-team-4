@@ -46,7 +46,10 @@ export type Database = {
           id: string
           image_url: string | null
           name: string
+          perks: string[] | null
           price: number
+          rarity: Database["public"]["Enums"]["badge_type"] | null
+          tagline: string | null
         }
         Insert: {
           created_at?: string | null
@@ -54,7 +57,10 @@ export type Database = {
           id?: string
           image_url?: string | null
           name: string
+          perks?: string[] | null
           price: number
+          rarity?: Database["public"]["Enums"]["badge_type"] | null
+          tagline?: string | null
         }
         Update: {
           created_at?: string | null
@@ -62,7 +68,10 @@ export type Database = {
           id?: string
           image_url?: string | null
           name?: string
+          perks?: string[] | null
           price?: number
+          rarity?: Database["public"]["Enums"]["badge_type"] | null
+          tagline?: string | null
         }
         Relationships: []
       }
@@ -773,6 +782,7 @@ export type Database = {
       mark_room_read: { Args: { room_id: string }; Returns: undefined }
     }
     Enums: {
+      badge_type: "legendary" | "epic" | "rare" | "uncommon" | "common"
       comment_target_type: "posts" | "news"
       hashtag_type:
         | "education"
@@ -927,6 +937,7 @@ export const Constants = {
   },
   public: {
     Enums: {
+      badge_type: ["legendary", "epic", "rare", "uncommon", "common"],
       comment_target_type: ["posts", "news"],
       hashtag_type: [
         "education",

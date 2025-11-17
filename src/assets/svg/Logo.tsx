@@ -13,14 +13,14 @@ export default function Logo({ size }: { size: "lg" | "md" }) {
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <g opacity="0.2" clip-path="url(#clip0_605_380)">
+            <g opacity="0.2" clipPath="url(#clip0_605_380)">
               <path
                 d="M15.3806 19.7073C16.1575 20.6882 17.1486 21.4998 18.2867 22.0871C19.4248 22.6744 20.6834 23.0237 21.977 23.1112C23.2706 23.1987 24.569 23.0224 25.7841 22.5942C26.9992 22.1661 28.1027 21.4962 29.0196 20.6299L34.4462 15.5044C36.0937 13.8932 37.0053 11.7354 36.9847 9.49559C36.9641 7.25578 36.0129 5.11322 34.336 3.52938C32.6591 1.94553 30.3907 1.04713 28.0193 1.02767C25.6479 1.0082 23.3632 1.86924 21.6574 3.42532L18.5462 6.34684M22.6161 16.2903C21.8393 15.3094 20.8482 14.4978 19.7101 13.9104C18.572 13.3231 17.3134 12.9739 16.0198 12.8864C14.7262 12.7989 13.4278 12.9752 12.2127 13.4033C10.9975 13.8314 9.89411 14.5014 8.97721 15.3677L3.55058 20.4932C1.90308 22.1043 0.991454 24.2622 1.01206 26.502C1.03267 28.7418 1.98386 30.8843 3.66076 32.4682C5.33766 34.052 7.6061 34.9504 9.97751 34.9699C12.3489 34.9893 14.6335 34.1283 16.3393 32.5722L19.4325 29.6507"
                 stroke="url(#paint0_linear_605_380)"
-                stroke-opacity="0.8"
-                stroke-width="3"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+                strokeOpacity="0.8"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
             </g>
             <g filter="url(#filter0_d_605_380)">
@@ -55,9 +55,9 @@ export default function Logo({ size }: { size: "lg" | "md" }) {
                 width="12.6406"
                 height="19.668"
                 filterUnits="userSpaceOnUse"
-                color-interpolation-filters="sRGB"
+                colorInterpolationFilters="sRGB"
               >
-                <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                <feFlood floodOpacity="0" result="BackgroundImageFix" />
                 <feColorMatrix
                   in="SourceAlpha"
                   type="matrix"
@@ -90,9 +90,9 @@ export default function Logo({ size }: { size: "lg" | "md" }) {
                 width="14.1172"
                 height="23.3203"
                 filterUnits="userSpaceOnUse"
-                color-interpolation-filters="sRGB"
+                colorInterpolationFilters="sRGB"
               >
-                <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                <feFlood floodOpacity="0" result="BackgroundImageFix" />
                 <feColorMatrix
                   in="SourceAlpha"
                   type="matrix"
@@ -125,9 +125,9 @@ export default function Logo({ size }: { size: "lg" | "md" }) {
                 width="7.90625"
                 height="23.7773"
                 filterUnits="userSpaceOnUse"
-                color-interpolation-filters="sRGB"
+                colorInterpolationFilters="sRGB"
               >
-                <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                <feFlood floodOpacity="0" result="BackgroundImageFix" />
                 <feColorMatrix
                   in="SourceAlpha"
                   type="matrix"
@@ -160,9 +160,9 @@ export default function Logo({ size }: { size: "lg" | "md" }) {
                 width="12.5039"
                 height="19.6758"
                 filterUnits="userSpaceOnUse"
-                color-interpolation-filters="sRGB"
+                colorInterpolationFilters="sRGB"
               >
-                <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                <feFlood floodOpacity="0" result="BackgroundImageFix" />
                 <feColorMatrix
                   in="SourceAlpha"
                   type="matrix"
@@ -196,7 +196,7 @@ export default function Logo({ size }: { size: "lg" | "md" }) {
                 y2="34.9702"
                 gradientUnits="userSpaceOnUse"
               >
-                <stop stop-color="#007FFF" />
+                <stop stopColor="#007FFF" />
                 <stop offset="1" />
               </linearGradient>
               <clipPath id="clip0_605_380">
@@ -412,14 +412,14 @@ export default function Logo({ size }: { size: "lg" | "md" }) {
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <g opacity="0.2" clip-path="url(#clip0_605_380)">
+          <g opacity="0.2" clipPath="url(#clip0_605_380)">
             <path
               d="M15.3806 19.7073C16.1575 20.6882 17.1486 21.4998 18.2867 22.0871C19.4248 22.6744 20.6834 23.0237 21.977 23.1112C23.2706 23.1987 24.569 23.0224 25.7841 22.5942C26.9992 22.1661 28.1027 21.4962 29.0196 20.6299L34.4462 15.5044C36.0937 13.8932 37.0053 11.7354 36.9847 9.49559C36.9641 7.25578 36.0129 5.11322 34.336 3.52938C32.6591 1.94553 30.3907 1.04713 28.0193 1.02767C25.6479 1.0082 23.3632 1.86924 21.6574 3.42532L18.5462 6.34684M22.6161 16.2903C21.8393 15.3094 20.8482 14.4978 19.7101 13.9104C18.572 13.3231 17.3134 12.9739 16.0198 12.8864C14.7262 12.7989 13.4278 12.9752 12.2127 13.4033C10.9975 13.8314 9.89411 14.5014 8.97721 15.3677L3.55058 20.4932C1.90308 22.1043 0.991454 24.2622 1.01206 26.502C1.03267 28.7418 1.98386 30.8843 3.66076 32.4682C5.33766 34.052 7.6061 34.9504 9.97751 34.9699C12.3489 34.9893 14.6335 34.1283 16.3393 32.5722L19.4325 29.6507"
               stroke="url(#paint0_linear_605_380)"
-              stroke-opacity="0.8"
-              stroke-width="3"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+              strokeOpacity="0.8"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
           </g>
           <g filter="url(#filter0_d_605_380)">
@@ -454,9 +454,9 @@ export default function Logo({ size }: { size: "lg" | "md" }) {
               width="12.6406"
               height="19.668"
               filterUnits="userSpaceOnUse"
-              color-interpolation-filters="sRGB"
+              colorInterpolationFilters="sRGB"
             >
-              <feFlood flood-opacity="0" result="BackgroundImageFix" />
+              <feFlood floodOpacity="0" result="BackgroundImageFix" />
               <feColorMatrix
                 in="SourceAlpha"
                 type="matrix"
@@ -489,9 +489,9 @@ export default function Logo({ size }: { size: "lg" | "md" }) {
               width="14.1172"
               height="23.3203"
               filterUnits="userSpaceOnUse"
-              color-interpolation-filters="sRGB"
+              colorInterpolationFilters="sRGB"
             >
-              <feFlood flood-opacity="0" result="BackgroundImageFix" />
+              <feFlood floodOpacity="0" result="BackgroundImageFix" />
               <feColorMatrix
                 in="SourceAlpha"
                 type="matrix"
@@ -524,9 +524,9 @@ export default function Logo({ size }: { size: "lg" | "md" }) {
               width="7.90625"
               height="23.7773"
               filterUnits="userSpaceOnUse"
-              color-interpolation-filters="sRGB"
+              colorInterpolationFilters="sRGB"
             >
-              <feFlood flood-opacity="0" result="BackgroundImageFix" />
+              <feFlood floodOpacity="0" result="BackgroundImageFix" />
               <feColorMatrix
                 in="SourceAlpha"
                 type="matrix"
@@ -559,9 +559,9 @@ export default function Logo({ size }: { size: "lg" | "md" }) {
               width="12.5039"
               height="19.6758"
               filterUnits="userSpaceOnUse"
-              color-interpolation-filters="sRGB"
+              colorInterpolationFilters="sRGB"
             >
-              <feFlood flood-opacity="0" result="BackgroundImageFix" />
+              <feFlood floodOpacity="0" result="BackgroundImageFix" />
               <feColorMatrix
                 in="SourceAlpha"
                 type="matrix"
@@ -595,7 +595,7 @@ export default function Logo({ size }: { size: "lg" | "md" }) {
               y2="34.9702"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#007FFF" />
+              <stop stopColor="#007FFF" />
               <stop offset="1" />
             </linearGradient>
             <clipPath id="clip0_605_380">
