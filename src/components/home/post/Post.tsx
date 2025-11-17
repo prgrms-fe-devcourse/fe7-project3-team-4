@@ -91,7 +91,9 @@ export default function Post({
           )}
           {/* 부제목 (subtitle) - 존재할 경우에만 렌더링 */}
           {data.subtitle && (
-            <div className="line-clamp-3 text-gray-700">{data.subtitle}</div>
+            <div className="line-clamp-3 text-gray-700 dark:text-[#A6A6DB]">
+              {data.subtitle}
+            </div>
           )}
         </Link>
 

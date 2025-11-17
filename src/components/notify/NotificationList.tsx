@@ -115,7 +115,9 @@ export function NotificationList({
       </div>
       <div className="space-y-4">
         {notifications.length === 0 ? (
-          <p className="text-center text-gray-500">새 알림이 없습니다.</p>
+          <p className="text-center text-gray-500 dark:text-white">
+            새 알림이 없습니다.
+          </p>
         ) : (
           notifications.map((n) => (
             <NotificationItem

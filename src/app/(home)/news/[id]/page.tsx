@@ -141,7 +141,7 @@ export default async function NewsDetailPage({
 
   return (
     // [수정] PostDetail과 동일한 컨테이너 스타일 적용 (이전 단계에서 적용됨)
-    <main className="max-w-2xl mx-auto p-6 bg-white/40 box-border border-white/50 rounded-xl shadow-xl">
+    <main className="max-w-2xl mx-auto p-6 bg-white/40 box-border border-white/20 rounded-xl shadow-xl dark:bg-white/20 dark:shadow-white/10 dark:hover:shadow-white/20">
       {/* 수정하기 버튼 (기존 위치 유지) */}
       <div className="mb-4 text-right">
         <Link
@@ -164,7 +164,7 @@ export default async function NewsDetailPage({
           {/* 이름, 이메일, 작성 시간 */}
           <div className="space-y-1 leading-none">
             <p>{author}</p>
-            <p className="text-[#717182] text-sm">
+            <p className="text-[#717182] text-sm dark:text-[#A6A6DB]">
               {newsItem.site_name} · {displayDate}
             </p>
           </div>

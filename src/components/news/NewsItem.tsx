@@ -19,7 +19,9 @@ export default function NewsItem({
   onBookmarkToggle,
 }: NewsItemProps) {
   const [realtimeLiked, setRealtimeLiked] = useState(item.isLiked);
-  const [realtimeBookmarked, setRealtimeBookmarked] = useState(item.isBookmarked);
+  const [realtimeBookmarked, setRealtimeBookmarked] = useState(
+    item.isBookmarked
+  );
   const supabase = createClient();
 
   const siteName = item.site_name || "익명";
@@ -49,7 +51,9 @@ export default function NewsItem({
   // Realtime 구독 설정
   useEffect(() => {
     const setupRealtimeSubscriptions = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       // 좋아요 상태 구독
@@ -104,14 +108,16 @@ export default function NewsItem({
   }, [item.id]);
 
   return (
-    <article className="bg-white/40 border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl overflow-hidden">
+    <article className="bg-white/40 border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl overflow-hidden dark:bg-white/20 dark:shadow-white/10 dark:hover:shadow-white/20">
       <div className="p-6">
         <div className="flex justify-between">
           <div className="flex gap-3 items-center">
             <div className="w-11 h-11 bg-gray-300 rounded-full shrink-0"></div>
             <div className="space-y-1 leading-none">
               <p>{siteName}</p>
-              <p className="text-[#717182] text-sm">@user · {displayDate}</p>
+              <p className="text-[#717182] text-sm dark:text-[#A6A6DB]">
+                @user · {displayDate}
+              </p>
             </div>
           </div>
 
@@ -162,7 +168,7 @@ export default function NewsItem({
           </div>
         )}
       </div>
-      <div className="flex justify-center gap-30 text-[#717182] py-6">
+      <div className="flex justify-center gap-30 text-[#717182] py-6 dark:text-[#A6A6DB]">
         <button
           onClick={() => onLikeToggle(item.id)}
           className={`cursor-pointer py-1 px-2 rounded-md transition-colors ${
@@ -173,7 +179,7 @@ export default function NewsItem({
           aria-pressed={realtimeLiked}
           aria-label="좋아요"
         >
-          <div className="flex gap-2 text-sm items-center ">
+          <div className="flex gap-2 text-sm items-center">
             <Heart size={18} fill={"none"} />
             <span className="font-semibold">{likeCount}</span>
           </div>
