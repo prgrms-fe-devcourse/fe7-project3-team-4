@@ -264,51 +264,35 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
     "ease-[cubic-bezier(0.25,0.46,0.45,0.94)]";
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden">
-      {/* 배경 노이즈 */}
-      <div
-        className="pointer-events-none fixed inset-0 z-0 opacity-10 mix-blend-soft-light"
-        style={{
-          backgroundImage:
-            "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='4' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.8'/></svg>\")",
-          backgroundSize: "180px 180px",
-        }}
-      />
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg">
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-gray-900">algo 뱃지 상점</h1>
-                <p className="text-gray-600 text-sm">
-                  나만의 특별한 뱃지를 획득하세요
-                </p>
-              </div>
-            </div>
+    <div className="relative w-full overflow-hidden">
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-3">
+            <h1 className="font-semibold text-xl">algo 뱃지 상점</h1>
+            <p className="text-gray-600 text-sm">
+              나만의 특별한 뱃지를 획득하세요
+            </p>
+          </div>
 
-            {/* 포인트 표시 */}
-            <div className="bg-linear-to-r from-amber-400 to-orange-400 text-white px-6 py-3 rounded-2xl shadow-lg flex items-center gap-2">
-              <Coins className="w-5 h-5" />
-              <div>
-                <div className="text-xs opacity-90">내 포인트</div>
-                <div className="text-xl">{myPoints.toLocaleString()}P</div>
-              </div>
+          {/* 포인트 표시 */}
+          <div className="bg-linear-to-r from-[#8F84FF] to-[#6758FF] text-white px-5 py-3 rounded-2xl shadow-lg flex items-center gap-4">
+            <Coins className="w-5 h-5" />
+            <div>
+              <div className="text-xs opacity-90">내 포인트</div>
+              <div className="text-xl">{myPoints.toLocaleString()}P</div>
             </div>
           </div>
         </div>
       </div>
       {/* 페이지 루트 */}
       <div
-        className="relative z-10 flex min-h-[80vh] w-full items-center justify-center bg-[radial-gradient(circle_at_0%_0%,#e0f2fe_0,#eff6ff_30%,#fdf2ff_65%,#fdf2f8_100%)] px-4 py-6 md:px-6 md:py-10 outline-none"
+        className="relative z-10 flex min-h-[80vh] w-full items-center justify-center px-4 py-6 md:px-6 md:py-10 outline-none"
         tabIndex={0}
         onKeyDown={handleKeyDown}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <main className="flex w-full max-w-5xl flex-col gap-7 rounded-4xl border border-slate-300/60 bg-linear-to-br from-white/80 to-white/60 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.18),0_0_0_1px_rgba(255,255,255,0.8)] backdrop-blur-2xl md:flex-row md:gap-10 md:p-8">
+        <main className="flex w-full max-w-5xl flex-col gap-7 rounded-4xl border border-white/20 bg-white/40 p-6 shadow-xl md:flex-row md:gap-10 md:p-8">
           {/* 왼쪽: 뱃지 카드 캐러셀 */}
           <section className="flex flex-1 flex-col items-center justify-center gap-4 md:gap-5">
             <div className="relative h-[360px] w-full max-w-[420px] transform-gpu">
@@ -368,14 +352,14 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
             <div className="flex items-center justify-center gap-4">
               <button
                 type="button"
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl transition-all hover:bg-blue-50 hover:text-blue-600"
+                className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600"
                 onClick={() => updateCarousel(currentIndex - 1)}
               >
                 ↑
               </button>
               <button
                 type="button"
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl transition-all hover:bg-blue-50 hover:text-blue-600"
+                className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600"
                 onClick={() => updateCarousel(currentIndex + 1)}
               >
                 ↓
@@ -385,7 +369,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
 
           {/* 오른쪽: 뱃지 상세 / 가격 / 버튼 영역 */}
           <section className="flex flex-1 flex-col justify-center gap-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
               Badge shop
             </p>
 
@@ -415,22 +399,22 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                 </span>
               </div>
 
-              <p className="text-sm font-medium text-slate-700">
+              <p className=" font-medium text-slate-700">
                 {currentBadge.tagline}
               </p>
-              <p className="max-w-md text-sm leading-relaxed text-slate-600">
+              <p className="max-w-md leading-relaxed text-slate-600">
                 {currentBadge.description}
               </p>
 
               {currentBadge.perks && currentBadge.perks.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
                     Perks
                   </p>
-                  <ul className="space-y-1.5 text-sm text-slate-600">
+                  <ul className="space-y-1.5 text-slate-600">
                     {currentBadge.perks.map((perk) => (
-                      <li key={perk} className="flex gap-2">
-                        <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-linear-to-tr from-blue-500 to-indigo-500" />
+                      <li key={perk} className="flex items-center gap-2">
+                        <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-[#6758FF]" />
                         <span>{perk}</span>
                       </li>
                     ))}
@@ -460,7 +444,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                     </div>
                   ) : (
                     // 미보유 시 가격 표시
-                    <div>
+                    <div className="space-y-1">
                       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                         Price
                       </p>
@@ -468,7 +452,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                         <span className="text-2xl font-extrabold text-slate-900">
                           {currentBadge.price.toLocaleString()}
                         </span>
-                        <span className="text-xs font-semibold text-slate-500">
+                        <span className="text-sm font-semibold text-slate-500">
                           points
                         </span>
                       </div>
@@ -482,7 +466,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                   <button
                     type="button"
                     disabled={isProcessing}
-                    className={`inline-flex items-center justify-center rounded-xl bg-linear-to-r from-blue-500 via-indigo-500 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(79,70,229,0.45)] transition-all 
+                    className={`cursor-pointer inline-flex items-center justify-center rounded-xl bg-linear-to-r from-indigo-400 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(79,70,229,0.45)]
                       ${
                         isProcessing
                           ? "cursor-wait opacity-70"
@@ -500,7 +484,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                   <button
                     type="button"
                     disabled={isProcessing}
-                    className={`inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition-all
+                    className={`inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm
                       ${
                         isProcessing
                           ? "cursor-wait opacity-70"
@@ -515,7 +499,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                   <button
                     type="button"
                     disabled={isProcessing}
-                    className={`inline-flex items-center justify-center rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all
+                    className={`inline-flex items-center justify-center rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-lg
                       ${
                         isProcessing
                           ? "cursor-wait opacity-70"
@@ -528,7 +512,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                 )}
               </div>
 
-              <p className="text-[0.72rem] text-slate-500">
+              <p className="text-xs text-slate-500">
                 * 포인트는 활동 보상, 챌린지 참여, 이벤트 등을 통해 적립할 수
                 있어요.
               </p>
@@ -541,7 +525,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                   <button
                     key={badge.id}
                     type="button"
-                    className={`relative h-[9px] w-[9px] rounded-full bg-slate-400/70 transition-all ${
+                    className={`cursor-pointer relative h-[9px] w-[9px] rounded-full bg-slate-400/70 ${
                       index === currentIndex
                         ? "scale-[1.6] bg-linear-to-tr from-blue-500 to-indigo-500 shadow-[0_0_0_4px_rgba(129,140,248,0.18)]"
                         : ""
