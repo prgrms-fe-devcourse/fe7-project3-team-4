@@ -16,6 +16,7 @@ import MenuBtn from "./MenuBtn";
 import Svg from "@/assets/svg/Svg";
 import { Dispatch, SetStateAction } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import Logo from "@/assets/svg/Logo";
 
 type MobileHeaderProps = {
   isLogin: boolean;
@@ -45,7 +46,9 @@ export function MobileHeader({
           <div>
             <Link href={"/"} onClick={closeMenu}>
               {/* 로고 */}
-              <div className="w-9 h-9 bg-gray-500"></div>
+              <div className="w-9 h-9">
+                <Logo size="md" />
+              </div>
             </Link>
           </div>
           <div className="flex gap-2">
