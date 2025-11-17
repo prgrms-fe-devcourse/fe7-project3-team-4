@@ -1,4 +1,4 @@
-import BadgeStore from "@/components/badge_store/BadgeStore";
+import BadgeShop from "@/components/shop/BadgeShop";
 import { Database } from "@/types";
 import { createClient } from "@/utils/supabase/server";
 import { Suspense } from "react";
@@ -37,8 +37,7 @@ export default async function Page() {
         </div>
       }
     >
-      {" "}
-      <BadgeStore initialBadges={badges ?? []} />
+      <BadgeShop initialBadges={badges ?? []} />
     </Suspense>
   );
 }
