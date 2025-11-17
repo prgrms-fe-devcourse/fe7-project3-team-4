@@ -36,7 +36,7 @@ export async function GET(request: Request) {
 
     const { data: profileRows, error: profileError } = await supabase
       .from("profiles")
-      .select("bio")
+      .select("exist_id") // 컬럼명을 "id"가 아닌 "exist_id"로 가정합니다.
       .eq("id", user.id)
       .limit(1);
 
@@ -51,11 +51,22 @@ export async function GET(request: Request) {
     const profile = profileRows?.[0];
     let redirectPath: string = "";
 
-    if (!profile || !profile.bio || profile.bio.trim() === "") {
-      console.log("Redirecting to /usersetting");
+    if (!profile || !profile.exist_id) {
+      // usersetting으로 보내기 전에 exist_id를 true로 업데이트합니다.
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ exist_id: true })
+        .eq("id", user.id);
+
+      if (updateError) {
+        console.error(" Profile update error:", updateError.message);
+        return NextResponse.redirect(
+          `${origin}/auth/auth-code-error?step=profile_update`
+        );
+      }
+
       redirectPath = "/usersetting"; //로그인 성공시 이동하는 경로
     } else {
-      console.log("Redirecting to 'next':", next);
       redirectPath = next;
     }
 

@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       comment_likes: {
@@ -443,6 +468,7 @@ export type Database = {
           created_at: string | null
           display_name: string | null
           email: string | null
+          exist_id: boolean
           followed_count: number | null
           following_count: number | null
           id: string
@@ -453,6 +479,7 @@ export type Database = {
           created_at?: string | null
           display_name?: string | null
           email?: string | null
+          exist_id?: boolean
           followed_count?: number | null
           following_count?: number | null
           id: string
@@ -463,6 +490,7 @@ export type Database = {
           created_at?: string | null
           display_name?: string | null
           email?: string | null
+          exist_id?: boolean
           followed_count?: number | null
           following_count?: number | null
           id?: string
@@ -819,6 +847,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       comment_target_type: ["posts", "news"],
