@@ -1,6 +1,11 @@
+import { SVGProps } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
-export default function Logo({ size }: { size: "lg" | "md" }) {
+type LogoProps = SVGProps<SVGSVGElement> & {
+  size?: "lg" | "md";
+};
+
+export default function Logo({ size = "lg", ...props }: LogoProps) {
   const { isDark } = useTheme();
   return (
     <>
@@ -12,6 +17,7 @@ export default function Logo({ size }: { size: "lg" | "md" }) {
             viewBox="0 0 38 36"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
+            {...props}
           >
             <g opacity="0.2" clipPath="url(#clip0_605_380)">
               <path
@@ -211,6 +217,7 @@ export default function Logo({ size }: { size: "lg" | "md" }) {
             viewBox="0 0 75 70"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
+            {...props}
           >
             <g opacity="0.2" clipPath="url(#clip0_540_959)">
               <path
@@ -411,6 +418,7 @@ export default function Logo({ size }: { size: "lg" | "md" }) {
           viewBox="0 0 38 36"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
+          {...props}
         >
           <g opacity="0.2" clipPath="url(#clip0_605_380)">
             <path
@@ -610,6 +618,7 @@ export default function Logo({ size }: { size: "lg" | "md" }) {
           viewBox="0 0 75 70"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
+          {...props}
         >
           <g opacity="0.2" clipPath="url(#clip0_26_117)">
             <path
