@@ -5,12 +5,12 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="relative w-full max-w-md">
-        <div className="backdrop-blur-xl bg-white/50 rounded-2xl p-8 shadow-2xl border border-gray-200">
+        <div className="backdrop-blur-xl bg-white/40 rounded-2xl p-8 shadow-2xl border border-white/20 dark:bg-white/20 dark:border-white/20 dark:shadow-lg dark:shadow-white/20">
           <div className="text-center mb-8">
             <h1 className="text-[42px] font-semibold text-[#6758FF] mb-2">
               ALGO
             </h1>
-            <p className="text-gray-700 text-[14px]">
+            <p className="text-gray-700 text-sm dark:text-[#A6A6DB]">
               AI 프롬프트 커뮤니티에 오신 것을 환영합니다
             </p>
           </div>
@@ -18,7 +18,7 @@ export default function LoginPage() {
           <div className="space-y-3">
             <button
               onClick={googleLogin}
-              className="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-lg bg-white/60 backdrop-blur-sm border border-gray-200 text-gray-900 hover:bg-white/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02]"
+              className="cursor-pointer w-full flex items-center justify-center gap-3 px-6 py-3 rounded-lg bg-white/60 backdrop-blur-sm border border-gray-200 text-gray-900 hover:bg-white/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02]"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -38,20 +38,20 @@ export default function LoginPage() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              <span className="text-[14px]">Google로 계속하기</span>
+              <span className="text-sm">Google로 계속하기</span>
             </button>
 
             <button
               onClick={githubLogin}
-              className="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-lg bg-white/60 backdrop-blur-sm border border-gray-200 text-gray-900 hover:bg-white/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02]"
+              className="cursor-pointer w-full flex items-center justify-center gap-3 px-6 py-3 rounded-lg bg-white/60 backdrop-blur-sm border border-gray-200 text-gray-900 hover:bg-white/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02]"
             >
               <Github size={20} />
-              <span className="text-[14px]">GitHub로 계속하기</span>
+              <span className="text-sm">GitHub로 계속하기</span>
             </button>
 
             <button
               onClick={discordLogin}
-              className="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-lg bg-white/60 backdrop-blur-sm border border-gray-200 text-gray-900 hover:bg-white/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02]"
+              className="cursor-pointer w-full flex items-center justify-center gap-3 px-6 py-3 rounded-lg bg-white/60 backdrop-blur-sm border border-gray-200 text-gray-900 hover:bg-white/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02]"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -63,11 +63,11 @@ export default function LoginPage() {
                   d="M8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"
                 />
               </svg>
-              <span className="text-[14px]">Discord로 계속하기</span>
+              <span className="text-sm">Discord로 계속하기</span>
             </button>
           </div>
 
-          <p className="text-center text-gray-600 text-[12px] mt-6">
+          <p className="text-center text-gray-600 text-xs mt-6 dark:text-[#A6A6DB]">
             로그인 시 ALGO의 개인정보처리방침과 이용 약관에
             <br />
             동의하는 것으로 간주됩니다
