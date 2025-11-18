@@ -409,7 +409,7 @@ export default function PostDetail({
                   />
                 </div>
               )}
-              <p>{post.subtitle}</p>
+              <p className="whitespace-pre-wrap">{post.subtitle}</p>
             </div>
           </div>
 
