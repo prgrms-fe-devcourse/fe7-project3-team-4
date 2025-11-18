@@ -81,7 +81,13 @@ const nextConfig: NextConfig = {
         hostname: "asset.apidog.com",
         port: "",
         pathname: "/**",
-      }
+      },
+      {
+        protocol: "https",
+        hostname: "ufukozen.com",
+        port: "",
+        pathname: "/**",
+      },
     ],
     unoptimized: process.env.NODE_ENV === "development",
   },
