@@ -18,6 +18,7 @@ import { createClient } from "@/utils/supabase/client";
 import { Json } from "@/utils/supabase/supabase";
 import NewsItemSkeleton from "@/components/news/NewsItemSkeleton";
 import NewsDetail from "@/components/news/NewsDetail";
+import { useQuery, useQueryClient } from "@tanstack/react-query"; // 👈 React Query 추가
 
 type Tab = "전체" | "뉴스" | "프롬프트" | "자유" | "주간";
 
@@ -37,7 +38,6 @@ const tabToType: Record<Tab, string> = {
   주간: "weekly",
 };
 
-// 🌟 1. SupabasePostItem 타입에 뱃지 ID 추가
 type SupabasePostItem = {
   id: string;
   title: string | null;
@@ -60,7 +60,7 @@ type SupabasePostItem = {
     display_name: string;
     email: string;
     avatar_url: string | null;
-    equipped_badge_id: string | null; // 👈 뱃지 ID 타입 추가
+    equipped_badge_id: string | null;
   } | null;
 };
 
@@ -68,9 +68,8 @@ export default function HomePageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [supabase] = useState(() => createClient());
+  const queryClient = useQueryClient(); // 👈 쿼리 클라이언트 사용
 
-  const [posts, setPosts] = useState<PostType[]>([]);
-  const [postsLoading, setPostsLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
 
   const {
@@ -99,36 +98,15 @@ export default function HomePageClient() {
     return searchParams.get("sub_type");
   }, [searchParams]);
 
-  // [✅ 신규] ID만으로 뉴스와 게시글을 구분하는 통합 로직
-  const selectedItem = useMemo(() => {
-    const id = searchParams.get("id");
-    if (!id) return null;
-
-    // 1. 먼저 뉴스에서 찾기 (제일 빠르게 실패해야 함)
-    const newsItem = newsList.find((n) => n.id === id);
-    if (newsItem) {
-      return { type: "news" as const, data: newsItem };
-    }
-
-    // 2. 없으면 게시글에서 찾기
-    const postItem = posts.find((p) => p.id === id);
-    if (postItem) {
-      return { type: "post" as const, data: postItem };
-    }
-
-    return null;
-  }, [searchParams, newsList, posts]);
-
-  useEffect(() => {
-    const fetchPosts = async () => {
-      setPostsLoading(true);
-
+  // 🌟 [변경 1] useQuery로 데이터 가져오기 (자동 캐싱됨)
+  const { data: posts = [], isLoading: postsLoading } = useQuery({
+    queryKey: ["posts", sortBy], // 정렬 기준이 바뀌면 키가 바뀌어 새로 요청됨
+    queryFn: async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       const userId = user?.id;
 
-      // 🌟 2. 쿼리에 뱃지 ID 추가
       let query = supabase
         .from("posts")
         .select(
@@ -165,46 +143,43 @@ export default function HomePageClient() {
       }
 
       const { data, error } = await query;
+      if (error) throw error;
 
-      if (error) {
-        console.error("Error fetching posts:", error);
-      } else if (data) {
-        const typedData = data as unknown as SupabasePostItem[];
-        // 🌟 3. 데이터 매핑 시 뱃지 ID 전달
-        const postsWithState: PostType[] = typedData.map((item) => ({
-          id: item.id,
-          title: item.title || "",
-          content: item.content,
-          created_at: item.created_at || "",
-          post_type: item.post_type || "",
-          hashtags: item.hashtags || undefined,
-          like_count: item.like_count || 0,
-          comment_count: item.comment_count || 0,
-          view_count: item.view_count || 0,
-          user_id: item.user_id || "",
-          model: (item.model as "GPT" | "Gemini") || undefined,
-          result_mode: (item.result_mode as "text" | "image") || undefined,
-          thumbnail: item.thumbnail || "",
-          subtitle: item.subtitle || "",
-          isLiked: !!(item.user_post_likes && item.user_post_likes.length > 0),
-          isBookmarked: !!(
-            item.user_post_bookmarks && item.user_post_bookmarks.length > 0
-          ),
-          profiles: item.profiles
-            ? {
-                display_name: item.profiles.display_name,
-                email: item.profiles.email,
-                avatar_url: item.profiles.avatar_url,
-                equipped_badge_id: item.profiles.equipped_badge_id, // 👈 뱃지 ID 전달
-              }
-            : undefined,
-        }));
-        setPosts(postsWithState);
-      }
-      setPostsLoading(false);
-    };
+      const typedData = data as unknown as SupabasePostItem[];
+      return typedData.map((item) => ({
+        id: item.id,
+        title: item.title || "",
+        content: item.content,
+        created_at: item.created_at || "",
+        post_type: item.post_type || "",
+        hashtags: item.hashtags || undefined,
+        like_count: item.like_count || 0,
+        comment_count: item.comment_count || 0,
+        view_count: item.view_count || 0,
+        user_id: item.user_id || "",
+        model: (item.model as "GPT" | "Gemini") || undefined,
+        result_mode: (item.result_mode as "text" | "image") || undefined,
+        thumbnail: item.thumbnail || "",
+        subtitle: item.subtitle || "",
+        isLiked: !!(item.user_post_likes && item.user_post_likes.length > 0),
+        isBookmarked: !!(
+          item.user_post_bookmarks && item.user_post_bookmarks.length > 0
+        ),
+        profiles: item.profiles
+          ? {
+              display_name: item.profiles.display_name,
+              email: item.profiles.email,
+              avatar_url: item.profiles.avatar_url,
+              equipped_badge_id: item.profiles.equipped_badge_id,
+            }
+          : undefined,
+      }));
+    },
+    staleTime: 60 * 1000, // 1분간 재요청 안 함 (캐시 사용)
+  });
 
-    fetchPosts();
+  // 🌟 [변경 2] Realtime 구독이 캐시 데이터를 업데이트하도록 수정
+  useEffect(() => {
     const channel = supabase
       .channel("posts-changes")
       .on(
@@ -220,16 +195,22 @@ export default function HomePageClient() {
             comment_count: number;
             like_count?: number;
           };
-          setPosts((prev) =>
-            prev.map((post) =>
-              post.id === updatedPost.id
-                ? {
-                    ...post,
-                    comment_count: updatedPost.comment_count,
-                    like_count: updatedPost.like_count ?? post.like_count,
-                  }
-                : post
-            )
+          
+          // 캐시 데이터 직접 수정
+          queryClient.setQueryData(
+            ["posts", sortBy],
+            (oldPosts: PostType[] | undefined) => {
+              if (!oldPosts) return oldPosts;
+              return oldPosts.map((post) =>
+                post.id === updatedPost.id
+                  ? {
+                      ...post,
+                      comment_count: updatedPost.comment_count,
+                      like_count: updatedPost.like_count ?? post.like_count,
+                    }
+                  : post
+              );
+            }
           );
         }
       )
@@ -238,14 +219,31 @@ export default function HomePageClient() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, sortBy]);
+  }, [supabase, sortBy, queryClient]);
+
+  // [✅ 신규] ID만으로 뉴스와 게시글을 구분하는 통합 로직 (posts는 이제 useQuery 데이터)
+  const selectedItem = useMemo(() => {
+    const id = searchParams.get("id");
+    if (!id) return null;
+
+    const newsItem = newsList.find((n) => n.id === id);
+    if (newsItem) {
+      return { type: "news" as const, data: newsItem };
+    }
+
+    const postItem = posts.find((p) => p.id === id);
+    if (postItem) {
+      return { type: "post" as const, data: postItem };
+    }
+
+    return null;
+  }, [searchParams, newsList, posts]);
 
   // [✅ 수정] ID 기반 로딩 상태 관리
   useEffect(() => {
     const id = searchParams.get("id");
     if (id) {
       setDetailLoading(true);
-      // 실제로는 데이터 로딩이 빠르므로 짧은 딜레이 후 해제
       const timer = setTimeout(() => setDetailLoading(false), 100);
       return () => clearTimeout(timer);
     } else {
@@ -295,6 +293,7 @@ export default function HomePageClient() {
     router.push(`/?${params.toString()}`, { scroll: false });
   };
 
+  // 🌟 [변경 3] 좋아요 토글 시 캐시 업데이트 (Optimistic Update)
   const handlePostLikeToggle = useCallback(
     async (id: string) => {
       const {
@@ -305,25 +304,27 @@ export default function HomePageClient() {
         return;
       }
 
-      const currentItem = posts.find((item) => item.id === id);
+      // 현재 캐시 데이터 스냅샷
+      const previousPosts = queryClient.getQueryData<PostType[]>(["posts", sortBy]);
+      const currentItem = previousPosts?.find((item) => item.id === id);
       if (!currentItem) return;
 
       const isCurrentlyLiked = currentItem.isLiked;
       const currentLikes = currentItem.like_count ?? 0;
 
-      setPosts((prev) =>
-        prev.map((item) => {
-          if (item.id === id) {
-            return {
-              ...item,
-              isLiked: !isCurrentlyLiked,
-              like_count: !isCurrentlyLiked
-                ? currentLikes + 1
-                : Math.max(0, currentLikes - 1),
-            };
-          }
-          return item;
-        })
+      // 1. UI 즉시 업데이트
+      queryClient.setQueryData(["posts", sortBy], (old: PostType[] | undefined) =>
+        old?.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                isLiked: !isCurrentlyLiked,
+                like_count: !isCurrentlyLiked
+                  ? currentLikes + 1
+                  : Math.max(0, currentLikes - 1),
+              }
+            : item
+        )
       );
 
       try {
@@ -343,18 +344,16 @@ export default function HomePageClient() {
         }
       } catch (err) {
         console.error("Error toggling like:", err);
-        setPosts((prev) =>
-          prev.map((item) =>
-            item.id === id
-              ? { ...item, isLiked: isCurrentlyLiked, like_count: currentLikes }
-              : item
-          )
-        );
+        // 2. 에러 발생 시 롤백
+        if (previousPosts) {
+          queryClient.setQueryData(["posts", sortBy], previousPosts);
+        }
       }
     },
-    [supabase, posts]
+    [supabase, queryClient, sortBy]
   );
 
+  // 🌟 [변경 4] 북마크 토글 시 캐시 업데이트 (Optimistic Update)
   const handlePostBookmarkToggle = useCallback(
     async (id: string, type: "post" | "news") => {
       if (type === "news") {
@@ -370,21 +369,22 @@ export default function HomePageClient() {
         return;
       }
 
-      const currentItem = posts.find((item) => item.id === id);
+      const previousPosts = queryClient.getQueryData<PostType[]>(["posts", sortBy]);
+      const currentItem = previousPosts?.find((item) => item.id === id);
       if (!currentItem) return;
 
       const isCurrentlyBookmarked = currentItem.isBookmarked;
 
-      setPosts((prev) =>
-        prev.map((item) => {
-          if (item.id === id) {
-            return {
-              ...item,
-              isBookmarked: !isCurrentlyBookmarked,
-            };
-          }
-          return item;
-        })
+      // 1. UI 즉시 업데이트
+      queryClient.setQueryData(["posts", sortBy], (old: PostType[] | undefined) =>
+        old?.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                isBookmarked: !isCurrentlyBookmarked,
+              }
+            : item
+        )
       );
 
       try {
@@ -404,20 +404,13 @@ export default function HomePageClient() {
         }
       } catch (err) {
         console.log(err);
-        setPosts((prev) =>
-          prev.map((item) => {
-            if (item.id === id) {
-              return {
-                ...item,
-                isBookmarked: isCurrentlyBookmarked,
-              };
-            }
-            return item;
-          })
-        );
+        // 2. 에러 발생 시 롤백
+        if (previousPosts) {
+          queryClient.setQueryData(["posts", sortBy], previousPosts);
+        }
       }
     },
-    [supabase, posts, handleNewsBookmarkToggle]
+    [supabase, queryClient, sortBy, handleNewsBookmarkToggle]
   );
 
   return (
@@ -444,7 +437,7 @@ export default function HomePageClient() {
           />
         </div>
 
-        {/* [✅ 수정] ID 기반 통합 상세 페이지 렌더링 */}
+        {/* ID 기반 통합 상세 페이지 렌더링 */}
         {searchParams.get("id") ? (
           // 로딩 중이면 스켈레톤
           detailLoading || postsLoading || newsLoading ? (
