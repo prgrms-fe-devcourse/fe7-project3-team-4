@@ -1255,7 +1255,6 @@ export default function MessagePageClient() {
                 </div>
               </div>
             </div>
-            {/* ============ /오른쪽 스레드 ============ */}
           </div>
         </div>
       </div>
