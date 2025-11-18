@@ -246,7 +246,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
   return (
     <div className="relative w-full overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 py-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between">
           <div className="space-y-3">
             <h1 className="font-semibold text-xl">프로필 뱃지 상점</h1>
             <p className="text-gray-600 text-sm">
@@ -358,22 +358,24 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-4">
-              <button
-                type="button"
-                className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600 dark:bg-white/30 dark:border-slate-300/50 dark:hover:bg-blue-50/70"
-                onClick={() => updateCarousel(currentIndex - 1)}
-              >
-                ←
-              </button>
-              <button
-                type="button"
-                className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600 dark:bg-white/30 dark:border-slate-300/50 dark:hover:bg-blue-50/70"
-                onClick={() => updateCarousel(currentIndex + 1)}
-              >
-                →
-              </button>
-            </div>
+            {displayedBadges.length !== 1 ? (
+              <div className="flex items-center justify-center gap-4">
+                <button
+                  type="button"
+                  className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600 dark:bg-white/30 dark:border-slate-300/50 dark:hover:bg-blue-50/70"
+                  onClick={() => updateCarousel(currentIndex - 1)}
+                >
+                  ←
+                </button>
+                <button
+                  type="button"
+                  className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600 dark:bg-white/30 dark:border-slate-300/50 dark:hover:bg-blue-50/70"
+                  onClick={() => updateCarousel(currentIndex + 1)}
+                >
+                  →
+                </button>
+              </div>
+            ) : null}
           </section>
 
           {/* 데스크탑 전용 */}
@@ -426,22 +428,24 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
               })}
             </div>
 
-            <div className="flex items-center justify-center gap-4">
-              <button
-                type="button"
-                className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600 dark:bg-white/30 dark:border-slate-300/50 dark:hover:bg-blue-50/70"
-                onClick={() => updateCarousel(currentIndex - 1)}
-              >
-                ↑
-              </button>
-              <button
-                type="button"
-                className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600 dark:bg-white/30 dark:border-slate-300/50 dark:hover:bg-blue-50/70"
-                onClick={() => updateCarousel(currentIndex + 1)}
-              >
-                ↓
-              </button>
-            </div>
+            {displayedBadges.length !== 1 ? (
+              <div className="flex items-center justify-center gap-4">
+                <button
+                  type="button"
+                  className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600 dark:bg-white/30 dark:border-slate-300/50 dark:hover:bg-blue-50/70"
+                  onClick={() => updateCarousel(currentIndex - 1)}
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600 dark:bg-white/30 dark:border-slate-300/50 dark:hover:bg-blue-50/70"
+                  onClick={() => updateCarousel(currentIndex + 1)}
+                >
+                  ↓
+                </button>
+              </div>
+            ) : null}
           </section>
 
           {/* 오른쪽: 상세 영역 */}
