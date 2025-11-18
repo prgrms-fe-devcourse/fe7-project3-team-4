@@ -174,7 +174,10 @@ export default function WeeklyNotice({ active }: { active: WeeklyModel }) {
                 fill="#152E60"
               />
             </svg>
-            <p>사용한 AI 모델(GPT/Gemini), 프롬프트와 함께 결과물 업로드</p>
+            <p>
+              주제에 맞는 <span className="text-[#248AFF]">프롬프트</span>와
+              결과물을, 사용한 AI 모델(GPT/Gemini)과 함께 업로드
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <svg
@@ -191,8 +194,8 @@ export default function WeeklyNotice({ active }: { active: WeeklyModel }) {
               />
             </svg>
             <p>
-              좋아요 상위 5명에게 <span className="text-[#248AFF]">알고수</span>
-              (algo master) 뱃지 부여 및 게시물 상단 고정 1주일
+              차주 월요일 00시 기준, 좋아요 상위 3개의 게시물 작성자에게{" "}
+              <span className="text-[#248AFF]">포인트</span> 차등 지급
             </p>
           </div>
         </div>
