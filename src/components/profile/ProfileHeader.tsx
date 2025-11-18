@@ -2,12 +2,13 @@
 "use client";
 
 import { Profile } from "@/types";
-import { Calendar, Pencil, SquarePen, X } from "lucide-react";
+import { Calendar, MessageCircle, Pencil, SquarePen, X } from "lucide-react";
 import Image from "next/image"; // Image is still used as a fallback/placeholder conceptually, but UserAvatar will be primary
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import UserAvatar from "../shop/UserAvatar";
+import Link from "next/link";
 
 type ProfileHeaderProps = {
   profile: Profile;
@@ -228,16 +229,27 @@ export function ProfileHeader({
                   <span>프로필 편집</span>
                 </button>
               ) : (
-                <button
-                  onClick={onFollowToggle}
-                  className={`cursor-pointer leading-none px-4 py-3 rounded-xl text-white transition-colors ${
-                    isFollowing
-                      ? "bg-gray-400 hover:bg-gray-500"
-                      : "bg-[#6758FF] hover:bg-[#5648E5]"
-                  }`}
-                >
-                  {isFollowing ? "팔로잉" : "팔로우"}
-                </button>
+                <div className="flex gap-2">
+                  {/* 채팅 버튼 */}
+                  <Link
+                    href={`/message?peerId=${profile!.id}`}
+                    className="cursor-pointer leading-none px-4 py-3 flex items-center gap-1 rounded-xl border border-[#6758FF]/70 text-[#6758FF] bg-white/70 hover:bg-[#6758FF] hover:text-white dark:bg-white/10 dark:hover:bg-[#6758FF]"
+                    title="메시지 보내기"
+                  >
+                    <MessageCircle size={14} />
+                    <span>1:1 채팅</span>
+                  </Link>
+                  <button
+                    onClick={onFollowToggle}
+                    className={`cursor-pointer leading-none px-4 py-3 rounded-xl text-white transition-colors ${
+                      isFollowing
+                        ? "bg-gray-400 hover:bg-gray-500"
+                        : "bg-[#6758FF] hover:bg-[#5648E5]"
+                    }`}
+                  >
+                    {isFollowing ? "팔로잉" : "+ 팔로우"}
+                  </button>
+                </div>
               )}
             </div>
             <p className="text-[22px] mb-3">
