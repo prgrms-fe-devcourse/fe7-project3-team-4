@@ -81,7 +81,7 @@ export default function PromptDetail({ post }: { post: PostType }) {
             </button>
           </div>
           <div className="relative p-4 bg-[#6758FF]/10 border-2 border-white/60 rounded-lg">
-            <p className="text-sm">{promptText}</p>
+            <p className="text-sm whitespace-pre-wrap">{promptText}</p>
           </div>
         </div>
         {/* 결과 */}
@@ -111,7 +111,7 @@ export default function PromptDetail({ post }: { post: PostType }) {
                   />
                 </div>
               ) : (
-                <p className="text-sm">
+                <p className="text-sm whitespace-pre-wrap">
                   {getNthParagraphText(post.content, 4)}
                 </p>
               )}
