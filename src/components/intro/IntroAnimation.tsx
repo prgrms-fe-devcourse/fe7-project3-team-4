@@ -18,11 +18,11 @@ export default function IntroAnimation() {
   const [phase, setPhase] = useState<Phase>("macbook");
   const STORAGE_KEY = "algoIntroSeen";
 
-  // 처음부터 localStorage 보고 "이미 본 사람인지" 판단
-  const [isAnimationComplete, setIsAnimationComplete] = useState(false);
+  // [수정됨] 깜빡임 방지를 위해 기본값을 '이미 완료됨(true)'으로 설정
+  const [isAnimationComplete, setIsAnimationComplete] = useState(true);
 
-  // 처음부터 "보여야 하는지"도 localStorage로 결정
-  const [isVisible, setIsVisible] = useState(true);
+  // [수정됨] 기본값을 '안 보임(false)'으로 설정
+  const [isVisible, setIsVisible] = useState(false);
 
   const mainRef = useRef<HTMLDivElement>(null);
 
@@ -60,7 +60,6 @@ export default function IntroAnimation() {
 
     const tl = gsap.timeline({
       onComplete: () => {
-        // 맥북 줌인 끝나면 레이저 단계로만 넘김
         setPhase("laser");
       },
     });
@@ -74,7 +73,6 @@ export default function IntroAnimation() {
         opacity: 0,
       });
     } else {
-      // fallback: 맥북 못 찾으면 그냥 바로 레이저 단계로
       setPhase("laser");
     }
   };
@@ -83,23 +81,22 @@ export default function IntroAnimation() {
     try {
       const hasSeenIntro = localStorage.getItem(STORAGE_KEY);
 
-      if (hasSeenIntro === "true") {
-        // 이미 본 사람 -> 바로 종료
-        setIsAnimationComplete(true);
-        setIsVisible(false);
-        setPhase("done");
-      } else {
-        // 처음 보는 사람 -> 인트로 보여주면서 스크롤 막기
+      // [수정됨] "true"가 아닐 경우(처음 방문)에만 상태를 변경하여 애니메이션 실행
+      if (hasSeenIntro !== "true") {
         const scrollbarWidth =
           window.innerWidth - document.documentElement.clientWidth;
         document.body.style.overflow = "hidden";
         document.body.style.paddingRight = `${scrollbarWidth}px`;
+
+        // 이때 비로소 보이게 설정
         setIsAnimationComplete(false);
         setIsVisible(true);
       }
+      // 이미 본 사람(hasSeenIntro === "true")은
+      // 초기값이 hidden/complete 상태이므로 아무것도 하지 않음 (깜빡임 없음)
     } catch (error) {
       console.error("localStorage 접근 실패:", error);
-      // 에러 나면 그냥 인트로 보여주기
+      // 에러 시 안전하게 보여주려면 여기서 true로 전환 고려 가능
     }
 
     return () => {
@@ -205,6 +202,7 @@ export default function IntroAnimation() {
       ctx.revert();
     };
   }, [isVisible, phase]);
+
   useEffect(() => {
     if (!isVisible || isAnimationComplete) return;
 
