@@ -29,9 +29,10 @@ export const rarityClass: Record<BadgeVariant, string> = {
 
 // 3. 상점 카드 원형 아이콘 그라디언트 (기존)
 export const badgeGradient: Record<BadgeVariant, string> = {
-  basic: "from-gray-200 via-gray-300 to-gray-400 shadow-none",
+  basic:
+    "from-gray-100 via-gray-200 to-gray-300 shadow-[0_4px_10px_rgba(0,0,0,0.05)] border border-white/50",
   common:
-    "from-slate-300 via-slate-400 to-slate-500 shadow-[0_8px_20px_rgba(148,163,184,0.25)]",
+    "from-orange-100 via-stone-300 to-orange-200 shadow-[0_8px_20px_rgba(251,146,60,0.25)]",
   uncommon:
     "from-emerald-300 via-lime-300 to-amber-300 shadow-[0_18px_40px_rgba(34,197,94,0.35)]",
   rare: "from-sky-400 via-cyan-400 to-emerald-400 shadow-[0_18px_40px_rgba(56,189,248,0.45)]",
@@ -42,19 +43,17 @@ export const badgeGradient: Record<BadgeVariant, string> = {
     "from-amber-300 via-rose-400 to-fuchsia-500 shadow-[0_18px_40px_rgba(236,72,153,0.6)]",
 };
 
-// 4. 🌟 [신규] 프로필 아바타용 링(Ring) 스타일
 // 프로필 사진 크기에 맞게 Tailwind의 'ring' 유틸리티를 사용합니다.
 export const avatarRingStyles: Record<BadgeVariant, string> = {
-  basic:
-    "ring-1 ring-white/30 backdrop-blur-sm bg-white/10 shadow-[0_0_4px_rgba(255,255,255,0.2)]",
+  basic: "bg-slate-200 p-[3px] shadow-sm",
   common:
-    "ring-2 ring-white/35 backdrop-blur-sm bg-white/15 shadow-[0_0_6px_rgba(255,255,255,0.25)]",
+    "bg-gradient-to-br from-amber-100 to-stone-300 p-[3px] shadow-[0_0_8px_rgba(251,191,36,0.2)]",
   uncommon:
-    "ring-2 ring-emerald-300/50 backdrop-blur-md bg-emerald-100/15 shadow-[0_0_8px_rgba(16,185,129,0.28)]",
-  rare: "ring-2 ring-sky-300/50 backdrop-blur-md bg-sky-100/15 shadow-[0_0_8px_rgba(56,189,248,0.30)]",
+    "bg-gradient-to-br from-lime-400 to-yellow-400 p-[3px] shadow-[0_0_15px_rgba(163,230,53,0.6)]",
+  rare: "bg-gradient-to-b from-cyan-400 to-teal-400 p-[3px] shadow-[0_0_15px_rgba(45,212,191,0.6)]",
   "ultra-rare":
-    "ring-3 ring-violet-300/55 backdrop-blur-lg bg-violet-100/15 shadow-[0_0_12px_rgba(139,92,246,0.35)]",
-  epic: "ring-4 ring-indigo-300/60 backdrop-blur-lg bg-indigo-100/15 shadow-[0_0_14px_rgba(79,70,229,0.38)]",
+    "bg-gradient-to-b from-[#FF99D6] to-[#D946EF] p-[3px] shadow-[0_0_20px_rgba(217,70,239,0.6)]",
+  epic: "bg-gradient-to-r from-[#00D4FF] to-[#A020F0] p-[3px] shadow-[0_0_20px_rgba(160,32,240,0.6)]",
   legendary:
-    "ring-4 ring-amber-300/65 backdrop-blur-xl bg-amber-100/15 shadow-[0_0_18px_rgba(251,191,36,0.45)]",
+    "bg-gradient-to-b from-[#FFCC4D] via-[#FF9554] to-[#FF5294] p-[3px] shadow-[0_0_20px_rgba(255,82,148,0.6)]",
 };

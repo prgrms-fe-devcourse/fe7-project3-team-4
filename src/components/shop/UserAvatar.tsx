@@ -1,4 +1,4 @@
-"use client"; // `useEffect`와 `useState`를 사용하므로 "use client" 필수
+"use client";
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
@@ -8,7 +8,6 @@ import { getBadgeRarityMap } from "@/lib/badgeCache";
 interface UserAvatarProps {
   src: string | null | undefined;
   alt?: string;
-  // 3. 'rarity' 대신 'equippedBadgeId'를 prop으로 받습니다.
   equippedBadgeId?: string | null;
   size?: "sm" | "md" | "lg";
   className?: string;
@@ -23,48 +22,51 @@ const sizeClasses = {
 export default function UserAvatar({
   src,
   alt = "User Avatar",
-  equippedBadgeId, // 4. 새 prop 사용
+  equippedBadgeId,
   size = "md",
   className = "",
 }: UserAvatarProps) {
-  // 5. DB에서 조회한 rarity를 저장할 state
   const [rarity, setRarity] = useState<BadgeVariant | null>(null);
 
-  // 6. `equippedBadgeId`가 바뀔 때마다 캐시 맵에서 조회
   useEffect(() => {
     if (!equippedBadgeId) {
-      setRarity(null); // ID 없으면 기본
+      setRarity(null);
       return;
     }
 
     let isMounted = true;
 
-    // 7. DB 조회가 아닌 캐시 맵 조회
     getBadgeRarityMap().then((map) => {
       if (isMounted) {
-        // 맵에서 ID로 rarity를 찾아 state에 설정
         setRarity(map.get(equippedBadgeId) || null);
       }
     });
 
     return () => {
-      isMounted = false; // 컴포넌트 언마운트 시 state 설정 방지
+      isMounted = false;
     };
-  }, [equippedBadgeId]); // ID가 바뀔 때마다 다시 실행
+  }, [equippedBadgeId]);
 
-  // 8. state에 저장된 rarity(또는 기본값 'basic')를 사용
+  // rarity가 없으면 기본값 처리
   const ringClass = avatarRingStyles[rarity || "basic"];
 
   return (
     <div
-      className={`relative rounded-full transition-all duration-300 ${sizeClasses[size]} ${ringClass} ${className}`}
+      className={`relative flex items-center justify-center rounded-full transition-all duration-300 ${sizeClasses[size]} ${ringClass} ${className}`}
     >
-      <Image
-        src={src || "/default-avatar.png"} // 이미지가 없으면 기본 프사
-        alt={alt}
-        fill // 9. `fill` 속성 추가 (중요!)
-        className="h-full w-full rounded-full object-cover"
-      />
+      {/* [중요] 내부 래퍼 추가 
+        - 바깥 div는 그라디언트와 패딩(테두리 두께)을 담당합니다.
+        - 이 내부 div는 실제 이미지 영역을 잡아주며, 패딩 안쪽으로 컨텐츠를 제한합니다.
+        - bg-white는 투명 PNG일 경우 배경이 그라디언트로 비치는 것을 방지합니다.
+      */}
+      <div className="relative h-full w-full overflow-hidden rounded-full bg-white">
+        <Image
+          src={src || "/default-avatar.png"}
+          alt={alt}
+          fill
+          className="object-cover"
+        />
+      </div>
     </div>
   );
 }
