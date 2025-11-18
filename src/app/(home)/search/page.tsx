@@ -23,7 +23,7 @@ export default async function Page({
 
   return (
     <>
-      <section className="relative max-w-2xl mx-auto">
+      <section className="relative max-w-2xl mx-auto px-6">
         {/* 4. SearchPostForm을 Suspense로 감싸기 */}
         <Suspense fallback={SearchFormSkeleton}>
           <SearchPostForm searchTerm={searchTerm} tagTerm={tagTerm} />

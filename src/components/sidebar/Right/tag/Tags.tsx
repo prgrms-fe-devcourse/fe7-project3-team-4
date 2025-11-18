@@ -48,12 +48,12 @@ export default async function Tags() {
   const sortedTags = Array.from(tagViewCounts.entries());
   // 조회수(b[1]) 기준으로 내림차순 정렬
   sortedTags.sort((a, b) => b[1] - a[1]);
-  // 상위 8개만 선택
-  const topTags = sortedTags.slice(0, 8);
+  // 상위 6개만 선택
+  const topTags = sortedTags.slice(0, 6);
 
   return (
     <>
-      <Box height="372px" icon={<Sparkles />} title="인기 태그들">
+      <Box icon={<Sparkles />} title="인기 태그들">
         {/* 에러 처리 및 로딩 상태 (간단히) */}
         {error && <p className="text-red-500">태그 로딩 실패</p>}
         {!error && topTags.length === 0 && <p>태그 없음</p>}

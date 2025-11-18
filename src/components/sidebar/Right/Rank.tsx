@@ -212,7 +212,7 @@ export default function Rank() {
   // --- 로딩 및 에러 상태 UI (기존과 동일) ---
   if (isLoading) {
     return (
-      <Box height="284px" icon={<Trophy />} title="이번 주 챌린지 순위">
+      <Box icon={<Trophy />} title="이번 주 챌린지 순위">
         <p className="text-center text-sm text-gray-500 py-8">
           랭킹을 불러오는 중...
         </p>
@@ -222,7 +222,7 @@ export default function Rank() {
 
   if (textTopUsers.length === 0 && imageTopUsers.length === 0) {
     return (
-      <Box height="284px" icon={<Trophy />} title="이번 주 챌린지 순위">
+      <Box icon={<Trophy />} title="이번 주 챌린지 순위">
         <p className="text-center text-sm text-gray-500 py-8">
           아직 랭킹이 없습니다.
         </p>
@@ -231,7 +231,7 @@ export default function Rank() {
   }
 
   return (
-    <Box height="284px" icon={<Trophy />} title="이번 주 챌린지 순위">
+    <Box icon={<Trophy />} title="이번 주 챌린지 순위">
       {/* 주제 라벨 */}
       <div className="mb-2 flex items-center justify-center">
         <p className="text-sm font-semibold text-[#717182] dark:text-[#A6A6DB]">

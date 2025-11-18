@@ -76,7 +76,7 @@ export default async function WritePageClient({ searchParams }: PageProps) {
 
   return (
     <>
-      <section className="relative max-w-2xl mx-auto">
+      <section className="relative max-w-2xl mx-auto px-6">
         <WritePostForm
           hashtags={hashtags}
           // 생성/수정 모드
