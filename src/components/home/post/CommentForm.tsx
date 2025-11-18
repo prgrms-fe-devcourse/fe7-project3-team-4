@@ -156,7 +156,7 @@ export default function CommentForm({
           <input
             type="text"
             placeholder={user ? placeholder : "로그인이 필요합니다."}
-            className="flex-1 outline-none text-sm"
+            className="outline-none text-sm"
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
             disabled={!user || isSubmitting}

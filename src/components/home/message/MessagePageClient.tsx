@@ -815,7 +815,7 @@ export default function MessagePageClient() {
    * ========================= */
   return (
     <>
-      <section className="w-full h-full pt-20 lg:pt-10">
+      <section className="w-full h-full lg:pt-10">
         <div className="lg:max-w-250 mx-auto px-6">
           <div className="bg-white/40 rounded-xl border border-white/10 lg:shadow-xl h-200 lg:min-w-50 flex flex-row dark:bg-white/20 dark:shadow-white/20">
             {/* ============ 왼쪽 패널 ============ */}

@@ -137,7 +137,7 @@ export default function PostActions({
   };
 
   return (
-    <div className="flex justify-center gap-30 text-[#717182] py-6 dark:text-[#A6A6DB]">
+    <div className="flex justify-center gap-10 lg:gap-30 text-[#717182] py-6 dark:text-[#A6A6DB]">
       <button
         className={`cursor-pointer py-1 px-2 rounded-md transition-colors ${
           realtimeLiked
