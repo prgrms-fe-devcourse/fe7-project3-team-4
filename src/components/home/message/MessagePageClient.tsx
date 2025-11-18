@@ -815,14 +815,14 @@ export default function MessagePageClient() {
    * ========================= */
   return (
     <>
-      <div className="w-full h-full pt-20 lg:pt-10 lg:p-18">
-        <div className="lg:max-w-250 mx-auto">
+      <section className="w-full h-full pt-20 lg:pt-10">
+        <div className="lg:max-w-250 mx-auto px-6">
           <div className="bg-white/40 rounded-xl border border-white/10 lg:shadow-xl h-200 lg:min-w-50 flex flex-row dark:bg-white/20 dark:shadow-white/20">
             {/* ============ 왼쪽 패널 ============ */}
             <div
-              className={`flex-none h-full w-full lg:w-auto ${
+              className={`flex-1 flex-col h-full w-full lg:w-auto ${
                 isThreadOpen ? "hidden" : "block"
-              } lg:block`}
+              } lg:flex `}
             >
               {/* 검색 바 */}
               <div className="p-4 bg-white/40 rounded-tl-xl border-b border-b-[#E5E5E5] dark:bg-white/15 dark:border-b-[#E5E5E5]/50">
@@ -854,7 +854,7 @@ export default function MessagePageClient() {
               </div>
 
               {/* 목록 */}
-              <div>
+              <div className="h-full lg:border-r lg:border-[#E5E5E5]">
                 <div className="divide-y divide-black/5">
                   {isSearching ? (
                     <>
@@ -965,7 +965,7 @@ export default function MessagePageClient() {
 
             {/* ============ 오른쪽 스레드 ============ */}
             <div
-              className={`${
+              className={` ${
                 isThreadOpen ? "flex" : "hidden"
               } lg:flex flex-1 flex-col justify-between h-full`}
             >
@@ -1257,7 +1257,7 @@ export default function MessagePageClient() {
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* 이모지 피커 모달 */}
       {isEmojiOpen && (
