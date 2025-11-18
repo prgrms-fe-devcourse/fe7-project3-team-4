@@ -1,9 +1,12 @@
-export default function Logo() {
+import { SVGProps } from "react";
+
+export default function Logo(props?: SVGProps<SVGSVGElement>) {
   return (
     <svg
       width="75"
       height="70"
       viewBox="0 0 75 70"
+      {...props}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >

@@ -1,4 +1,3 @@
-import "@/assets/css/index.css";
 import DragScrollMain from "@/components/DragScrollMain";
 import LeftSidebar from "@/components/sidebar/Left/LeftSidebar";
 import RightSidebar from "@/components/sidebar/Right/RightSidebar";
