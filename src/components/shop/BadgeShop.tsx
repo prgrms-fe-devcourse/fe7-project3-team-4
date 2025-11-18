@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Coins } from "lucide-react";
@@ -9,30 +9,27 @@ import { BadgeRow } from "@/app/(home)/shop/page";
 // 👇 1. 스타일 정의를 외부 파일에서 가져옵니다.
 import { rarityLabel, rarityClass, badgeGradient } from "@/lib/badgeStyle"; // (경로는 실제 위치에 맞게 수정)
 
-// Props 타입 정의
 interface BadgeShopProps {
   initialBadges: BadgeRow[];
 }
-
-// ❌ 2. 여기에 있던 모든 스타일 매핑 객체들 (rarityLabel 등)을 삭제합니다.
 
 export default function BadgeShop({ initialBadges }: BadgeShopProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [infoFading, setInfoFading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false); // 로딩 상태 통합 (구매/장착/해제)
+  const [activeTab, setActiveTab] = useState<"all" | "owned">("all"); // 👈 탭 상태
   const animatingRef = useRef(false);
   const touchStartYRef = useRef<number | null>(null);
 
   // 유저 상태 관리
   const [user, setUser] = useState<User | null>(null);
   const [myPoints, setMyPoints] = useState<number>(0);
-  const [ownedBadgeIds, setOwnedBadgeIds] = useState<Set<string>>(new Set()); // 빠른 조회를 위해 Set 사용
+  const [ownedBadgeIds, setOwnedBadgeIds] = useState<Set<string>>(new Set());
   const [equippedBadgeId, setEquippedBadgeId] = useState<string | null>(null);
 
   const supabase = createClient();
-  const total = initialBadges.length;
 
-  // 1. 초기 데이터 로드 (유저 정보, 포인트, 보유 뱃지, 장착 뱃지)
+  // 1. 초기 데이터 로드
   useEffect(() => {
     const fetchUserData = async () => {
       const {
@@ -41,7 +38,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
       if (!user) return;
       setUser(user);
 
-      // 1-1. 프로필 정보 (포인트, 장착 뱃지) 가져오기
+      // 1-1. 프로필 정보
       const { data: profile } = await supabase
         .from("profiles")
         .select("points, equipped_badge_id")
@@ -53,7 +50,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
         setEquippedBadgeId(profile.equipped_badge_id);
       }
 
-      // 1-2. 보유한 뱃지 목록 가져오기
+      // 1-2. 보유 뱃지 목록
       const { data: userBadges } = await supabase
         .from("user_badges")
         .select("badge_id")
@@ -68,9 +65,27 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
     fetchUserData();
   }, [supabase]);
 
+  // 🔹 보유 뱃지 목록 / 표시 대상 뱃지 목록
+  const ownedBadges = useMemo(
+    () => initialBadges.filter((badge) => ownedBadgeIds.has(badge.id)),
+    [initialBadges, ownedBadgeIds]
+  );
+
+  const displayedBadges = useMemo(
+    () => (activeTab === "owned" ? ownedBadges : initialBadges),
+    [activeTab, ownedBadges, initialBadges]
+  );
+
+  const total = displayedBadges.length;
+
+  // 탭이 바뀌거나 목록 길이가 바뀌면 인덱스 초기화
+  useEffect(() => {
+    setCurrentIndex(0);
+  }, [activeTab, total]);
+
   const updateCarousel = useCallback(
     (nextIndex: number) => {
-      if (animatingRef.current) return;
+      if (animatingRef.current || total === 0) return;
       animatingRef.current = true;
 
       setInfoFading(true);
@@ -91,22 +106,14 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
     [total]
   );
 
-  if (total === 0) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        판매 중인 뱃지가 없습니다.
-      </div>
-    );
-  }
+  const currentBadge: BadgeRow | null =
+    total > 0 ? displayedBadges[currentIndex] : null;
 
-  const currentBadge = initialBadges[currentIndex];
-  // 현재 보고 있는 뱃지의 상태 확인
-  const isOwned = ownedBadgeIds.has(currentBadge.id);
-  const isEquipped = equippedBadgeId === currentBadge.id;
+  const isOwned = currentBadge ? ownedBadgeIds.has(currentBadge.id) : false;
+  const isEquipped = currentBadge && equippedBadgeId === currentBadge.id;
 
   // --- 핸들러 로직 ---
 
-  // 1. 구매 핸들러
   const handleBuy = async (badge: BadgeRow) => {
     if (isProcessing || !user) return;
 
@@ -127,7 +134,6 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
         alert(`구매 실패: ${error.message}`);
       } else {
         alert(`구매 성공! '${badge.name}' 뱃지를 획득했습니다.`);
-        // UI 즉시 갱신
         setMyPoints((prev) => prev - badge.price);
         setOwnedBadgeIds((prev) => new Set(prev).add(badge.id));
       }
@@ -138,13 +144,11 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
     }
   };
 
-  // 2. 장착 핸들러 (DB 업데이트 로직)
   const handleEquip = async (badgeId: string) => {
     if (isProcessing || !user) return;
     setIsProcessing(true);
 
     try {
-      // DB: profiles 테이블의 equipped_badge_id 컬럼을 해당 뱃지 ID로 업데이트
       const { error } = await supabase
         .from("profiles")
         .update({ equipped_badge_id: badgeId })
@@ -152,7 +156,6 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
 
       if (error) throw error;
 
-      // 성공 시 UI 상태 업데이트
       setEquippedBadgeId(badgeId);
       alert("뱃지를 장착했습니다!");
     } catch (error) {
@@ -163,13 +166,11 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
     }
   };
 
-  // 3. 해제 핸들러 (DB 업데이트 로직)
   const handleUnequip = async () => {
     if (isProcessing || !user) return;
     setIsProcessing(true);
 
     try {
-      // DB: profiles 테이블의 equipped_badge_id 컬럼을 null로 설정하여 해제
       const { error } = await supabase
         .from("profiles")
         .update({ equipped_badge_id: null })
@@ -177,7 +178,6 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
 
       if (error) throw error;
 
-      // 성공 시 UI 상태 업데이트
       setEquippedBadgeId(null);
       alert("뱃지를 해제했습니다.");
     } catch (error) {
@@ -188,7 +188,6 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
     }
   };
 
-  // 기존 캐러셀 UI 핸들러들
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "ArrowUp") {
       e.preventDefault();
@@ -235,15 +234,50 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
     "transform-gpu transition-transform transition-opacity duration-700 " +
     "ease-[cubic-bezier(0.25,0.46,0.45,0.94)]";
 
+  // 판매 중인 뱃지가 아예 없을 때 (DB 자체가 비어있음)
+  if (initialBadges.length === 0) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        판매 중인 뱃지가 없습니다.
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 py-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between">
           <div className="space-y-3">
-            <h1 className="font-semibold text-xl">algo 뱃지 상점</h1>
+            <h1 className="font-semibold text-xl">프로필 뱃지 상점</h1>
             <p className="text-gray-600 text-sm">
-              나만의 특별한 뱃지를 획득하세요
+              프로필을 나답게 보여줄 뱃지를 골라보세요
             </p>
+
+            {/* 🔹 전체 / 보유 뱃지 탭 */}
+            <div className="inline-flex rounded-full bg-slate-100/80 p-1 text-sm text-slate-600">
+              <button
+                type="button"
+                onClick={() => setActiveTab("all")}
+                className={`cursor-pointer px-4 py-2 rounded-full transition ${
+                  activeTab === "all"
+                    ? "bg-white shadow-sm text-slate-900"
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                전체 뱃지
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("owned")}
+                className={`cursor-pointer px-4 py-2 rounded-full transition ${
+                  activeTab === "owned"
+                    ? "bg-white shadow-sm text-slate-900"
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                보유 뱃지
+              </button>
+            </div>
           </div>
 
           {/* 포인트 표시 */}
@@ -256,6 +290,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
           </div>
         </div>
       </div>
+
       {/* 페이지 루트 */}
       <div
         className="relative z-10 flex min-h-[80vh] w-full items-center justify-center px-4 py-6s outline-none"
@@ -266,14 +301,16 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
       >
         <main className="flex w-full max-w-5xl flex-col gap-7 rounded-4xl border border-white/20 bg-white/40 p-6 shadow-xl lg:flex-row lg:gap-10 lg:p-8 dark:bg-white/20 dark:shadow-white/10">
           {/* 왼쪽: 뱃지 카드 캐러셀 */}
-          {/* ====== 모바일 전용: 좌우 슬라이더 ====== */}
+          {/* 모바일 전용 */}
           <section className="flex flex-1 flex-col items-center justify-center gap-4 lg:hidden">
             <div className="relative w-full max-w-[420px] overflow-hidden">
               <div
                 className="flex transition-transform duration-500 ease-out"
-                style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+                style={{
+                  transform: `translateX(-${currentIndex * 100}%)`,
+                }}
               >
-                {initialBadges.map((badge) => {
+                {displayedBadges.map((badge, index) => {
                   const rarity = badge.rarity ?? "common";
                   const cardIsOwned = ownedBadgeIds.has(badge.id);
                   const cardIsEquipped = equippedBadgeId === badge.id;
@@ -282,14 +319,9 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                     <div
                       key={badge.id}
                       className="shrink-0 w-full h-[260px] rounded-3xl overflow-hidden cursor-pointer bg-slate-900/90 flex items-center justify-center"
-                      onClick={() =>
-                        updateCarousel(
-                          initialBadges.findIndex((b) => b.id === badge.id)
-                        )
-                      }
+                      onClick={() => updateCarousel(index)}
                     >
                       <div className="relative h-full w-full flex flex-col items-center justify-center gap-4">
-                        {/* 장착 / 보유 뱃지 상태 라벨 */}
                         {cardIsEquipped && (
                           <div className="absolute left-0 top-6 z-10 w-full -rotate-3 bg-blue-500/90 py-1 text-center text-[10px] font-bold uppercase tracking-widest text-white shadow-sm backdrop-blur-sm">
                             Equipped
@@ -302,7 +334,6 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                           </div>
                         )}
 
-                        {/* 원형 뱃지 아이콘 */}
                         <div
                           className={`relative flex h-40 w-40 items-center justify-center rounded-full bg-linear-to-br ${badgeGradient[rarity]}`}
                         >
@@ -317,7 +348,6 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                           </div>
                         </div>
 
-                        {/* 카드 하단 라벨 */}
                         <div className="px-4 text-center text-xs text-slate-200/80">
                           {badge.tagline}
                         </div>
@@ -328,29 +358,30 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
               </div>
             </div>
 
-            {/* 모바일 네비게이션 버튼 (좌우) */}
-            <div className="flex items-center justify-center gap-4">
-              <button
-                type="button"
-                className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600 dark:bg-white/30 dark:border-slate-300/50 dark:hover:bg-blue-50/70"
-                onClick={() => updateCarousel(currentIndex - 1)}
-              >
-                ←
-              </button>
-              <button
-                type="button"
-                className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600 dark:bg-white/30 dark:border-slate-300/50 dark:hover:bg-blue-50/70"
-                onClick={() => updateCarousel(currentIndex + 1)}
-              >
-                →
-              </button>
-            </div>
+            {displayedBadges.length !== 1 ? (
+              <div className="flex items-center justify-center gap-4">
+                <button
+                  type="button"
+                  className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600 dark:bg-white/30 dark:border-slate-300/50 dark:hover:bg-blue-50/70"
+                  onClick={() => updateCarousel(currentIndex - 1)}
+                >
+                  ←
+                </button>
+                <button
+                  type="button"
+                  className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600 dark:bg-white/30 dark:border-slate-300/50 dark:hover:bg-blue-50/70"
+                  onClick={() => updateCarousel(currentIndex + 1)}
+                >
+                  →
+                </button>
+              </div>
+            ) : null}
           </section>
 
-          {/* ====== 데스크탑 전용: 기존 위/아래 스택 캐러셀 ====== */}
+          {/* 데스크탑 전용 */}
           <section className="hidden lg:flex flex-1 flex-col items-center justify-center gap-5">
             <div className="relative h-[360px] w-full max-w-[420px] transform-gpu">
-              {initialBadges.map((badge, index) => {
+              {displayedBadges.map((badge, index) => {
                 const rarity = badge.rarity ?? "common";
                 const cardIsOwned = ownedBadgeIds.has(badge.id);
                 const cardIsEquipped = equippedBadgeId === badge.id;
@@ -397,191 +428,222 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
               })}
             </div>
 
-            {/* 데스크탑 네비게이션 버튼 (위/아래) */}
-            <div className="flex items-center justify-center gap-4">
-              <button
-                type="button"
-                className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600 dark:bg-white/30 dark:border-slate-300/50 dark:hover:bg-blue-50/70"
-                onClick={() => updateCarousel(currentIndex - 1)}
-              >
-                ↑
-              </button>
-              <button
-                type="button"
-                className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600 dark:bg-white/30 dark:border-slate-300/50 dark:hover:bg-blue-50/70"
-                onClick={() => updateCarousel(currentIndex + 1)}
-              >
-                ↓
-              </button>
-            </div>
+            {displayedBadges.length !== 1 ? (
+              <div className="flex items-center justify-center gap-4">
+                <button
+                  type="button"
+                  className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600 dark:bg-white/30 dark:border-slate-300/50 dark:hover:bg-blue-50/70"
+                  onClick={() => updateCarousel(currentIndex - 1)}
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full border border-slate-300/70 bg-white/90 shadow-sm backdrop-blur-xl hover:bg-blue-50 hover:text-blue-600 dark:bg-white/30 dark:border-slate-300/50 dark:hover:bg-blue-50/70"
+                  onClick={() => updateCarousel(currentIndex + 1)}
+                >
+                  ↓
+                </button>
+              </div>
+            ) : null}
           </section>
 
-          {/* 오른쪽: 뱃지 상세 / 가격 / 버튼 영역 */}
+          {/* 오른쪽: 상세 영역 */}
           <section className="flex flex-1 flex-col justify-center gap-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-[#A6A6DB]">
-              Badge shop
-            </p>
+            {currentBadge ? (
+              <>
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-[#A6A6DB]">
+                  Badge shop
+                </p>
 
-            <div
-              className={`space-y-4 transition-opacity duration-300 ${
-                infoFading ? "opacity-0" : "opacity-100"
-              }`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="inline-block text-3xl font-extrabold leading-tight tracking-[-0.02em] text-[#0b1f4a] lg:text-[2.1rem]">
-                    <span className="relative inline-block pb-1 dark:text-[#80a8ff]">
-                      {currentBadge.name}
-                      <span className="absolute bottom-0 left-0 h-[3px] w-[72px] rounded-full bg-linear-to-r from-blue-500 via-indigo-500 to-pink-500" />
-                    </span>
-                  </h2>
-                  <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-300">
-                    {rarityLabel[currentBadge.rarity ?? "common"]} badge
-                  </p>
-                </div>
-                <span
-                  className={`inline-flex items-center rounded-full border px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.14em] ${
-                    rarityClass[currentBadge.rarity ?? "common"]
+                <div
+                  className={`space-y-4 transition-opacity duration-300 ${
+                    infoFading ? "opacity-0" : "opacity-100"
                   }`}
                 >
-                  {rarityLabel[currentBadge.rarity ?? "common"]}
-                </span>
-              </div>
-
-              <p className=" font-medium">{currentBadge.tagline}</p>
-              <p className="max-w-md leading-relaxed text-slate-600 dark:text-[#A6A6DB]">
-                {currentBadge.description}
-              </p>
-
-              {currentBadge.perks && currentBadge.perks.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-300">
-                    Perks
-                  </p>
-                  <ul className="space-y-1.5 text-slate-600 dark:text-[#A6A6DB]">
-                    {currentBadge.perks.map((perk) => (
-                      <li key={perk} className="flex items-center gap-2">
-                        <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-[#6758FF]" />
-                        <span>{perk}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-
-            {/* 🌟 [New] 버튼 영역: 상태에 따른 분기 처리 */}
-            <div className="mt-2 flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 shadow-lg backdrop-blur-xl dark:bg-white/10 dark:border-white/40">
-              <div className="flex items-end justify-between gap-3">
-                <div>
-                  {isOwned ? (
-                    // 보유 중일 때 메시지
+                  <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-[#A6A6DB]">
-                        Status
+                      <h2 className="inline-block text-3xl font-extrabold leading-tight tracking-[-0.02em] text-[#0b1f4a] lg:text-[2.1rem]">
+                        <span className="relative inline-block pb-1 dark:text-[#80a8ff]">
+                          {currentBadge.name}
+                          <span className="absolute bottom-0 left-0 h-[3px] w-[72px] rounded-full bg-linear-to-r from-blue-500 via-indigo-500 to-pink-500" />
+                        </span>
+                      </h2>
+                      <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-300">
+                        {rarityLabel[currentBadge.rarity ?? "common"]} badge
                       </p>
-                      <div className="flex items-center gap-2 pt-1">
-                        <span className="text-lg font-bold text-indigo-600">
-                          보유 중인 뱃지
-                        </span>
-                        <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold uppercase text-indigo-600">
-                          Owned
-                        </span>
-                      </div>
                     </div>
-                  ) : (
-                    // 미보유 시 가격 표시
-                    <div className="space-y-1">
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-[#A6A6DB]">
-                        Price
+                    <span
+                      className={`inline-flex items-center rounded-full border px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.14em] ${
+                        rarityClass[currentBadge.rarity ?? "common"]
+                      }`}
+                    >
+                      {rarityLabel[currentBadge.rarity ?? "common"]}
+                    </span>
+                  </div>
+
+                  <p className="font-medium">{currentBadge.tagline}</p>
+                  <p className="max-w-md leading-relaxed text-slate-600 dark:text-[#A6A6DB]">
+                    {currentBadge.description}
+                  </p>
+
+                  {currentBadge.perks && currentBadge.perks.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-300">
+                        Perks
                       </p>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-extrabold">
-                          {currentBadge.price.toLocaleString()}
-                        </span>
-                        <span className="text-sm font-semibold text-slate-500 dark:text-[#A6A6DB]">
-                          points
-                        </span>
-                      </div>
+                      <ul className="space-y-1.5 text-slate-600 dark:text-[#A6A6DB]">
+                        {currentBadge.perks.map((perk) => (
+                          <li key={perk} className="flex items-center gap-2">
+                            <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-[#6758FF]" />
+                            <span>{perk}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   )}
                 </div>
 
-                {/* 버튼 로직 분기 */}
-                {!isOwned ? (
-                  // Case 1: 미보유 -> 구매하기 버튼
-                  <button
-                    type="button"
-                    disabled={isProcessing}
-                    className={`cursor-pointer inline-flex items-center justify-center rounded-xl bg-linear-to-r from-indigo-400 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_4px_10px_rgba(79,70,229,0.45)]
-                      ${
-                        isProcessing
-                          ? "cursor-wait opacity-70"
-                          : "hover:-translate-y-px hover:shadow-[0_8px_16px_rgba(79,70,229,0.65)] active:translate-y-0"
-                      }`}
-                    onClick={() => handleBuy(currentBadge)}
-                  >
-                    {isProcessing ? "처리 중..." : "구매하기"}
-                    {!isProcessing && (
-                      <span className="ml-2 text-xs opacity-90">→</span>
+                {/* 버튼 / 상태 영역 */}
+                <div className="mt-2 flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 shadow-lg backdrop-blur-xl dark:bg-white/10 dark:border-white/40">
+                  <div className="flex items-end justify-between gap-3">
+                    <div>
+                      {isOwned ? (
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-[#A6A6DB]">
+                            Status
+                          </p>
+                          <div className="flex items-center gap-2 pt-1">
+                            <span className="text-lg font-bold text-indigo-600">
+                              보유 중인 뱃지
+                            </span>
+                            <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold uppercase text-indigo-600">
+                              Owned
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-[#A6A6DB]">
+                            Price
+                          </p>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-2xl font-extrabold">
+                              {currentBadge.price.toLocaleString()}
+                            </span>
+                            <span className="text-sm font-semibold text-slate-500 dark:text-[#A6A6DB]">
+                              points
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {activeTab === "owned" ? (
+                      isOwned && isEquipped ? (
+                        <button
+                          type="button"
+                          disabled={isProcessing}
+                          className={`cursor-pointer inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm
+                        ${
+                          isProcessing
+                            ? "cursor-wait opacity-70"
+                            : "hover:bg-slate-50"
+                        }`}
+                          onClick={handleUnequip}
+                        >
+                          {isProcessing ? "..." : "해제하기"}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={isProcessing}
+                          className={`cursor-pointer inline-flex items-center justify-center rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-lg
+                        ${
+                          isProcessing
+                            ? "cursor-wait opacity-70"
+                            : "hover:-translate-y-px hover:bg-slate-900 active:translate-y-0 active:scale-[0.98]"
+                        }`}
+                          onClick={() => handleEquip(currentBadge.id)}
+                        >
+                          {isProcessing ? "..." : "장착하기"}
+                        </button>
+                      )
+                    ) : !isOwned ? (
+                      <button
+                        type="button"
+                        disabled={isProcessing}
+                        className={`cursor-pointer inline-flex items-center justify-center rounded-xl bg-linear-to-r from-indigo-400 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_4px_10px_rgba(79,70,229,0.45)]
+                        ${
+                          isProcessing
+                            ? "cursor-wait opacity-70"
+                            : "hover:-translate-y-px hover:shadow-[0_8px_16px_rgba(79,70,229,0.65)] active:translate-y-0"
+                        }`}
+                        onClick={() => handleBuy(currentBadge)}
+                      >
+                        {isProcessing ? "처리 중..." : "구매하기"}
+                        {!isProcessing && (
+                          <span className="ml-2 text-xs opacity-90">→</span>
+                        )}
+                      </button>
+                    ) : (
+                      <div
+                        className={`inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm`}
+                      >
+                        구매완료
+                      </div>
                     )}
-                  </button>
-                ) : isEquipped ? (
-                  // Case 2: 보유 중 & 장착 중 -> 해제하기 버튼
+                  </div>
+
+                  <p className="text-xs text-slate-500 dark:text-[#A6A6DB]">
+                    * 포인트는 활동 보상, 챌린지 참여, 이벤트 등을 통해 적립할
+                    수 있어요.
+                  </p>
+                </div>
+
+                {/* 인덱스 도트 네비게이션 */}
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    {displayedBadges.map((badge, index) => (
+                      <button
+                        key={badge.id}
+                        type="button"
+                        className={`cursor-pointer relative h-[9px] w-[9px] rounded-full bg-slate-400/70 ${
+                          index === currentIndex
+                            ? "scale-[1.6] bg-linear-to-tr from-blue-500 to-indigo-500 shadow-[0_0_0_4px_rgba(129,140,248,0.18)]"
+                            : ""
+                        }`}
+                        onClick={() => updateCarousel(index)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : (
+              // 🔹 보유 뱃지 탭인데 아무것도 없을 때 등
+              <div className="space-y-4">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-[#A6A6DB]">
+                  Badge shop
+                </p>
+                <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                  아직 표시할 뱃지가 없어요
+                </h2>
+                <p className="text-sm text-slate-600 dark:text-[#A6A6DB]">
+                  {activeTab === "owned"
+                    ? "보유한 뱃지가 아직 없어요. 상점에서 뱃지를 구매하면 여기에서 한 번에 모아볼 수 있어요."
+                    : "판매 중인 뱃지가 없습니다."}
+                </p>
+                {activeTab === "owned" && (
                   <button
                     type="button"
-                    disabled={isProcessing}
-                    className={`inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm
-                      ${
-                        isProcessing
-                          ? "cursor-wait opacity-70"
-                          : "hover:bg-slate-50"
-                      }`}
-                    onClick={handleUnequip}
+                    onClick={() => setActiveTab("all")}
+                    className="inline-flex items-center justify-center rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:bg-slate-900"
                   >
-                    {isProcessing ? "..." : "해제하기"}
-                  </button>
-                ) : (
-                  // Case 3: 보유 중 & 미장착 -> 장착하기 버튼
-                  <button
-                    type="button"
-                    disabled={isProcessing}
-                    className={`inline-flex items-center justify-center rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-lg
-                      ${
-                        isProcessing
-                          ? "cursor-wait opacity-70"
-                          : "hover:-translate-y-px hover:bg-slate-900 active:translate-y-0 active:scale-[0.98]"
-                      }`}
-                    onClick={() => handleEquip(currentBadge.id)}
-                  >
-                    {isProcessing ? "..." : "장착하기"}
+                    전체 뱃지 보러가기
                   </button>
                 )}
               </div>
-
-              <p className="text-xs text-slate-500 dark:text-[#A6A6DB]">
-                * 포인트는 활동 보상, 챌린지 참여, 이벤트 등을 통해 적립할 수
-                있어요.
-              </p>
-            </div>
-
-            {/* 인덱스 도트 네비게이션 */}
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                {initialBadges.map((badge, index) => (
-                  <button
-                    key={badge.id}
-                    type="button"
-                    className={`cursor-pointer relative h-[9px] w-[9px] rounded-full bg-slate-400/70 ${
-                      index === currentIndex
-                        ? "scale-[1.6] bg-linear-to-tr from-blue-500 to-indigo-500 shadow-[0_0_0_4px_rgba(129,140,248,0.18)]"
-                        : ""
-                    }`}
-                    onClick={() => updateCarousel(index)}
-                  />
-                ))}
-              </div>
-            </div>
+            )}
           </section>
         </main>
       </div>
