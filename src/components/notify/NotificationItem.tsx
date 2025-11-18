@@ -130,7 +130,7 @@ export function NotificationItem({
       <div
         className={`cursor-pointer rounded-xl transition-colors hover:${
           data.is_read ? "bg-[#DADADA]" : "bg-gray-50"
-        } ${data.is_read ? "bg-gray-200" : "bg-white"}`}
+        } ${data.is_read ? "bg-gray-200 dark:bg-white/40" : "bg-white"}`}
         onClick={handleClick}
       >
         <div className="p-6 flex gap-5">

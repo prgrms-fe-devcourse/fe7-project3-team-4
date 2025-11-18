@@ -37,7 +37,7 @@ export default async function Page() {
         </div>
       }
     >
-      <section className="relative max-w-4xl mx-auto">
+      <section className="relative max-w-4xl mx-auto px-6">
         <BadgeShop initialBadges={badges ?? []} />
       </section>
     </Suspense>

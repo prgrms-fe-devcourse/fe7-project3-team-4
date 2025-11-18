@@ -1,4 +1,3 @@
-
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import type { NotificationWithDetails } from "@/types/notification";
@@ -30,7 +29,7 @@ export default async function NotifyHomeClient() {
 
   return (
     <>
-      <section className="relative max-w-2xl mx-auto">
+      <section className="relative max-w-2xl mx-auto px-6">
         <div className="mt-6 space-y-6">
           <NotificationList
             initialNotifications={initialNotifications}
