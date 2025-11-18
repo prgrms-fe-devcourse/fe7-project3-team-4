@@ -43,6 +43,7 @@ export type NewsRow = {
   like_count?: number | null;
   view_count?: number | null;
   tags: string[] | null; // [신규] 태그 배열 추가
+  content: string | null;
 };
 
 /**

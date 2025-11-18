@@ -26,21 +26,10 @@ export default function UserSettingForm({
   }, [state.success, state.error, url, router]);
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-4"
-      style={{
-        background:
-          "linear-gradient(126.44deg, #EFF5FE 18.41%, #FBF3FB 81.59%)",
-      }}
-    >
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-64 h-64 bg-purple-300/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-10 w-80 h-80 bg-teal-300/10 rounded-full blur-3xl"></div>
-      </div>
-
+    <div className="min-h-screen flex items-center justify-center">
       <div className="relative z-10 w-full max-w-[600px]">
-        <div className="bg-white rounded-xl px-6 py-5 shadow-xl shadow-gray-300/50">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4 text-center">
+        <div className="bg-white/40 border border-white/20 rounded-xl p-6 shadow-xl dark:bg-white/20 dark:shadow-xl dark:shadow-white/20">
+          <h1 className="text-2xl font-bold mb-4 text-center">
             내 프로필 생성하기
           </h1>
 
@@ -51,10 +40,7 @@ export default function UserSettingForm({
               </p>
             )}
             <div className="mb-1">
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-500 mb-1"
-              >
+              <label htmlFor="name" className="block text-sm font-medium mb-1">
                 닉네임
               </label>
               <input
@@ -70,11 +56,17 @@ export default function UserSettingForm({
             <div className="text-center pt-3 mb-2">
               <span className="text-[12px] text-gray-400 leading-snug">
                 {"이 스페이스에 접속하면, "}
-                <a href="#" className="text-purple-600 hover:text-purple-700">
+                <a
+                  href="#"
+                  className="text-purple-600 hover:text-purple-700 dark:text-purple-300 dark:hover:text-purple-400"
+                >
                   이용 약관
                 </a>
                 {" 및 "}
-                <a href="#" className="text-purple-600 hover:text-purple-700">
+                <a
+                  href="#"
+                  className="text-purple-600 hover:text-purple-700 dark:text-purple-300 dark:hover:text-purple-400"
+                >
                   개인정보처리방침
                 </a>
                 {" 에 동의하고 14세 이상임을 확인하게 됩니다."}
@@ -83,7 +75,7 @@ export default function UserSettingForm({
             <button
               type="submit"
               disabled={isPending}
-              className="w-full flex items-center justify-center px-4 py-3 rounded-lg text-white font-bold text-base bg-linear-to-r from-[#6D28D9] to-[#9333EA] hover:from-[#7C3AED] hover:to-[#9F48EB] transition-all duration-200 shadow-lg shadow-purple-400/50 hover:shadow-xl hover:scale-[1.005] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="cursor-pointer w-full flex items-center justify-center px-4 py-3 rounded-lg text-white font-bold text-base bg-linear-to-r from-[#6D28D9] to-[#9333EA] hover:from-[#7C3AED] hover:to-[#9F48EB] transition-all duration-200 shadow-lg shadow-purple-400/50 hover:shadow-xl hover:scale-[1.005] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isPending ? "입장하는 중..." : "입장하기"}
             </button>

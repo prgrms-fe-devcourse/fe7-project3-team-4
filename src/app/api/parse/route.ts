@@ -14,14 +14,6 @@ import { createRequire } from "module";
 
 export const runtime = "nodejs"; // JSDOM, metascraper 등 Node.js API 사용
 
-// [리뷰] (중요/보안) Service Key 사용
-// 데이터 '쓰기'는 반드시 Service Key를 사용하는 API 라우트를 통해서만 수행
-// [수정] Service Key를 사용하도록 별도 클라이언트 생성
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY! // 보안 키
-);
-
 // CommonJS 모듈(metascraper)을 ESM 환경(Next.js API)에서 로드
 const require = createRequire(import.meta.url);
 const metascraper = require("metascraper");
@@ -92,6 +84,14 @@ interface JsonLdArticle {
 
 // POST /api/parse
 export async function POST(req: Request) {
+  // [리뷰] (중요/보안) Service Key 사용
+  // 데이터 '쓰기'는 반드시 Service Key를 사용하는 API 라우트를 통해서만 수행
+  // [수정] Service Key를 사용하도록 별도 클라이언트 생성
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY! // 보안 키
+  );
+
   try {
     const body = (await req.json()) as ParsePayload; // [수정]
     const { html, url } = body;
@@ -139,7 +139,7 @@ export async function POST(req: Request) {
       }
       return false;
     };
-    
+
     // [수정 3] ldArticle 선언부 (이제 jsonLdBlobs가 채워진 상태)
     const ldArticle = jsonLdBlobs.find(isJsonLdArticle) || undefined;
 
@@ -195,9 +195,9 @@ export async function POST(req: Request) {
       });
 
     document
-      .querySelectorAll<HTMLVideoElement | HTMLSourceElement | HTMLIFrameElement>(
-        "video[src], video source[src], iframe[src]"
-      )
+      .querySelectorAll<
+        HTMLVideoElement | HTMLSourceElement | HTMLIFrameElement
+      >("video[src], video source[src], iframe[src]")
       .forEach((n) => {
         const s = n.getAttribute("src")!;
         if (s) videoSet.add(toAbs(s));
@@ -214,16 +214,16 @@ export async function POST(req: Request) {
     // Metascraper/JSON-LD 보강 (any 제거)
     if (meta.image) imageSet.add(toAbs(meta.image));
     if (meta.video) videoSet.add(toAbs(meta.video)); // [수정] (meta as any) 제거
-    if (meta.iframe) { // [수정] (meta as any) 제거
+    if (meta.iframe) {
+      // [수정] (meta as any) 제거
       try {
         const tmp = new JSDOM(String(meta.iframe));
-        const ifr = tmp.window.document.querySelector<HTMLIFrameElement>(
-          "iframe[src]"
-        ); // [수정]
+        const ifr =
+          tmp.window.document.querySelector<HTMLIFrameElement>("iframe[src]"); // [수정]
         if (ifr) videoSet.add(toAbs(ifr.getAttribute("src")!));
       } catch {}
     }
-    
+
     // [수정] pushAll (any -> unknown)
     const pushAll = (v: unknown, to: unknown[]) => {
       if (!v) return;
@@ -255,7 +255,7 @@ export async function POST(req: Request) {
         }
       }
     }
-    
+
     // [수정] ldImages/ldVideos (any[] -> unknown[]) 순회 시 타입 가드
     ldImages.forEach((u) => typeof u === "string" && imageSet.add(toAbs(u)));
     ldVideos.forEach((u) => typeof u === "string" && videoSet.add(toAbs(u)));
@@ -333,7 +333,8 @@ export async function POST(req: Request) {
         audios: audios.length,
       },
     });
-  } catch (e: unknown) { // [수정] any -> unknown
+  } catch (e: unknown) {
+    // [수정] any -> unknown
     console.error("API Parse Error:", e);
     // [수정] 타입 가드
     const message = e instanceof Error ? e.message : "서버 에러";
