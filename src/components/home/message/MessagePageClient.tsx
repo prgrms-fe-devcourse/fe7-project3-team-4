@@ -2,7 +2,14 @@
 "use client";
 
 import { createClient } from "@/utils/supabase/client";
-import { ArrowLeft, Image as ImageIcon, Search, Send, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Image as ImageIcon,
+  Search,
+  Send,
+  Smile,
+  X,
+} from "lucide-react";
 // 🌟 1. UserAvatar 임포트 (Logo는 헤더에서만 사용)
 import Logo from "../../../assets/svg/Logo";
 import Image from "next/image";
@@ -12,6 +19,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { JSX } from "react";
 import uploadImageMessage from "@/utils/supabase/storage/messages";
 import UserAvatar from "@/components/shop/UserAvatar";
+import { EmojiPicker } from "@ferrucc-io/emoji-picker";
 
 /* =========================
  * 타입
@@ -101,6 +109,8 @@ export default function MessagePageClient() {
   const [roomsLoading, setRoomsLoading] = useState(false);
   const [myLastReadAt, setMyLastReadAt] = useState<string | null>(null);
   const [peerLastReadAt, setPeerLastReadAt] = useState<string | null>(null);
+
+  const [isEmojiOpen, setIsEmojiOpen] = useState(false); // 이모지 모달 상태
 
   /* 모바일: 우측 스레드 열림 여부 */
   const isThreadOpen = !!(roomId || peerId);
@@ -788,6 +798,18 @@ export default function MessagePageClient() {
     }
   }, [msgs.length, roomId, isThreadOpen]);
 
+  // 이모지 선택했을 때 텍스트에 붙이고 모달 닫기
+  const handleSelectEmoji = (emoji: any) => {
+    // 라이브러리 구현에 따라 string 또는 객체일 수 있으니 방어적으로 처리
+    const char =
+      typeof emoji === "string" ? emoji : emoji?.emoji ?? emoji?.native ?? "";
+
+    if (!char) return;
+
+    setDraft((prev) => prev + char);
+    setIsEmojiOpen(false);
+  };
+
   /* =========================
    * 렌더
    * ========================= */
@@ -1187,18 +1209,32 @@ export default function MessagePageClient() {
                     aria-busy={sending || undefined}
                     className="w-full focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed bg-transparent"
                   />
+                  {/* 이모지 버튼 */}
+                  <button
+                    type="button"
+                    className="cursor-pointer text-[#A6A6DB] hover:text-[#6758FF] disabled:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed"
+                    disabled={!roomId && !peerId}
+                    onClick={() => {
+                      setIsEmojiOpen(true);
+                    }}
+                  >
+                    <Smile size={20} />
+                  </button>
                   <input
                     ref={fileInputRef}
+                    disabled={!roomId && !peerId}
                     type="file"
                     accept="image/*"
                     className="hidden"
                     onChange={handleImageSelected}
                   />
-                  <ImageIcon
-                    className="text-[#717182] w-6 h-6 cursor-pointer"
-                    strokeWidth={1}
+                  <button
+                    className="text-[#717182] w-6 h-6 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                    disabled={!roomId && !peerId}
                     onClick={() => fileInputRef.current?.click()}
-                  />
+                  >
+                    <ImageIcon strokeWidth={1} />
+                  </button>
 
                   {/* ✅ 보내기 버튼 (마우스다운으로 포커스 뺏기 방지) */}
                   <button
@@ -1214,7 +1250,7 @@ export default function MessagePageClient() {
                     aria-label="메시지 전송"
                     title="메시지 전송"
                   >
-                    <Send className="text-white w-3 h-3" />
+                    <Send size={12} className="text-white" />
                   </button>
                 </div>
               </div>
@@ -1223,6 +1259,47 @@ export default function MessagePageClient() {
           </div>
         </div>
       </div>
+
+      {/* 이모지 피커 모달 */}
+      {isEmojiOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+          onClick={() => setIsEmojiOpen(false)} // 바깥 클릭 시 닫힘
+        >
+          <div
+            className="rounded-xl bg-white dark:bg-slate-900 border border-white/70 dark:border-white/10 shadow-2xl p-3 max-w-xl w-full"
+            onClick={(e) => e.stopPropagation()} // 안쪽 클릭은 유지
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-medium text-slate-500 dark:text-slate-300">
+                이모지 선택
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsEmojiOpen(false)}
+                className="cursor-pointer p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-100"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <EmojiPicker onEmojiSelect={handleSelectEmoji}>
+              {/* 상단 검색바 */}
+              <EmojiPicker.Header className="p-2">
+                <EmojiPicker.Input
+                  placeholder="."
+                  className="w-full pl-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-2 py-1 text-xs"
+                />
+              </EmojiPicker.Header>
+
+              {/* 이모지 리스트 */}
+              <EmojiPicker.Group className="max-h-64 overflow-y-auto">
+                <EmojiPicker.List />
+              </EmojiPicker.Group>
+            </EmojiPicker>
+          </div>
+        </div>
+      )}
     </>
   );
 }

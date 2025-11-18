@@ -6,8 +6,9 @@ import { CircleArrowUp, Smile, X } from "lucide-react";
 import { useState, FormEvent, useEffect } from "react";
 import type { User } from "@supabase/supabase-js";
 import { Database } from "@/utils/supabase/supabase";
-import UserAvatar from "@/components/shop/UserAvatar";
-// 🌟 1. UserAvatar 임포트
+import UserAvatar from "@/components/shop/UserAvatar"; // 🌟 1. UserAvatar 임포트
+// 새 이모지 피커 라이브러리
+import { EmojiPicker } from "@ferrucc-io/emoji-picker";
 
 type CommentInsert = Database["public"]["Tables"]["comments"]["Insert"];
 
@@ -39,6 +40,7 @@ export default function CommentForm({
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEmojiOpen, setIsEmojiOpen] = useState(false); // 이모지 모달 상태
   const supabase = createClient(); // ✅ 컴포넌트 레벨에서 단 한 번만 생성
 
   useEffect(() => {
@@ -124,54 +126,114 @@ export default function CommentForm({
     setIsSubmitting(false);
   };
 
-  return (
-    <div className="flex items-start gap-2 my-6">
-      {/* 🌟 4. <img> 태그를 UserAvatar 컴포넌트로 교체 */}
-      <UserAvatar
-        src={userProfile?.avatar_url}
-        alt={userProfile?.display_name || "User"}
-        equippedBadgeId={userProfile?.equipped_badge_id}
-        className="w-8 h-8 shrink-0" // 👈 크기 지정
-      />
+  // 이모지 선택했을 때 텍스트에 붙이고 모달 닫기
+  const handleSelectEmoji = (emoji: any) => {
+    // 라이브러리 구현에 따라 string 또는 객체일 수 있으니 방어적으로 처리
+    const char =
+      typeof emoji === "string" ? emoji : emoji?.emoji ?? emoji?.native ?? "";
 
-      <form
-        className="flex-1 flex items-center justify-between px-3 py-2 bg-white border border-black/10 self-center rounded-lg gap-2 dark:bg-white/30"
-        onSubmit={handleSubmit}
-      >
-        <input
-          type="text"
-          placeholder={user ? placeholder : "로그인이 필요합니다."}
-          className="flex-1 outline-none text-sm"
-          value={commentText}
-          onChange={(e) => setCommentText(e.target.value)}
-          disabled={!user || isSubmitting}
+    if (!char) return;
+
+    setCommentText((prev) => prev + char);
+    setIsEmojiOpen(false);
+  };
+
+  return (
+    <>
+      <div className="flex items-start gap-2 my-6">
+        {/* 🌟 4. <img> 태그를 UserAvatar 컴포넌트로 교체 */}
+        <UserAvatar
+          src={userProfile?.avatar_url}
+          alt={userProfile?.display_name || "User"}
+          equippedBadgeId={userProfile?.equipped_badge_id}
+          className="w-8 h-8 shrink-0" // 👈 크기 지정
         />
-        <div className="flex items-center gap-2">
-          {parentId && onCancel && (
+
+        <form
+          className="flex-1 flex items-center justify-between px-3 py-2 bg-white border border-black/10 self-center rounded-lg gap-2 dark:bg-white/30"
+          onSubmit={handleSubmit}
+        >
+          <input
+            type="text"
+            placeholder={user ? placeholder : "로그인이 필요합니다."}
+            className="flex-1 outline-none text-sm"
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            disabled={!user || isSubmitting}
+          />
+          <div className="flex items-center gap-2">
+            {parentId && onCancel && (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="block cursor-pointer text-gray-400 hover:text-gray-600"
+              >
+                <X size={20} />
+              </button>
+            )}
+            {/* 이모지 버튼 */}
             <button
               type="button"
-              onClick={onCancel}
-              className="block cursor-pointer text-gray-400 hover:text-gray-600"
+              className="block cursor-pointer text-[#A6A6DB] hover:text-[#6758FF] disabled:text-gray-400"
+              disabled={!user || isSubmitting}
+              onClick={() => {
+                if (!user || isSubmitting) return;
+                setIsEmojiOpen(true);
+              }}
             >
-              <X size={20} />
+              <Smile size={20} />
             </button>
-          )}
-          <button
-            type="button"
-            className="block cursor-pointer text-[#A6A6DB] hover:text-[#6758FF] disabled:text-gray-400"
-            disabled={!user || isSubmitting}
+            <button
+              type="submit"
+              className="block cursor-pointer text-[#6758FF] disabled:text-gray-400 dark:disabled:text-gray-500"
+              disabled={!user || !commentText.trim() || isSubmitting}
+            >
+              <CircleArrowUp size={20} />
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* 이모지 피커 모달 */}
+      {isEmojiOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+          onClick={() => setIsEmojiOpen(false)} // 바깥 클릭 시 닫힘
+        >
+          <div
+            className="rounded-xl bg-white dark:bg-slate-900 border border-white/70 dark:border-white/10 shadow-2xl p-3 max-w-xl w-full"
+            onClick={(e) => e.stopPropagation()} // 안쪽 클릭은 유지
           >
-            <Smile size={20} />
-          </button>
-          <button
-            type="submit"
-            className="block cursor-pointer text-[#6758FF] disabled:text-gray-400 dark:disabled:text-gray-500"
-            disabled={!user || !commentText.trim() || isSubmitting}
-          >
-            <CircleArrowUp size={20} />
-          </button>
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-medium text-slate-500 dark:text-slate-300">
+                이모지 선택
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsEmojiOpen(false)}
+                className="cursor-pointer p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-100"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <EmojiPicker onEmojiSelect={handleSelectEmoji}>
+              {/* 상단 검색바 */}
+              <EmojiPicker.Header className="p-2">
+                <EmojiPicker.Input
+                  placeholder="."
+                  className="w-full pl-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-2 py-1 text-xs"
+                />
+              </EmojiPicker.Header>
+
+              {/* 이모지 리스트 */}
+              <EmojiPicker.Group className="max-h-64 overflow-y-auto">
+                <EmojiPicker.List />
+              </EmojiPicker.Group>
+            </EmojiPicker>
+          </div>
         </div>
-      </form>
-    </div>
+      )}
+    </>
   );
 }
