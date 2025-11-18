@@ -159,10 +159,10 @@ export function PromptResultSection({
                   </>
                 ) : (
                   <>
-                    <p className="absolute top-4 left-4 text-[#7D7E80] mb-2">
+                    <p className="absolute top-4 left-4 text-[#7D7E80]">
                       프롬프트의 결과
                     </p>
-                    <p className="text-[#404040] mb-4">Upload image</p>
+                    <p className="text-[#404040] my-4 lg:mb-4">Upload image</p>
                     <label
                       htmlFor={inputId}
                       className="px-5 py-3 rounded-xl text-[#404040] bg-[#D0D0D0] cursor-pointer"

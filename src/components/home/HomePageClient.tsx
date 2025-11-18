@@ -195,7 +195,7 @@ export default function HomePageClient() {
             comment_count: number;
             like_count?: number;
           };
-          
+
           // 캐시 데이터 직접 수정
           queryClient.setQueryData(
             ["posts", sortBy],
@@ -305,7 +305,10 @@ export default function HomePageClient() {
       }
 
       // 현재 캐시 데이터 스냅샷
-      const previousPosts = queryClient.getQueryData<PostType[]>(["posts", sortBy]);
+      const previousPosts = queryClient.getQueryData<PostType[]>([
+        "posts",
+        sortBy,
+      ]);
       const currentItem = previousPosts?.find((item) => item.id === id);
       if (!currentItem) return;
 
@@ -313,18 +316,20 @@ export default function HomePageClient() {
       const currentLikes = currentItem.like_count ?? 0;
 
       // 1. UI 즉시 업데이트
-      queryClient.setQueryData(["posts", sortBy], (old: PostType[] | undefined) =>
-        old?.map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                isLiked: !isCurrentlyLiked,
-                like_count: !isCurrentlyLiked
-                  ? currentLikes + 1
-                  : Math.max(0, currentLikes - 1),
-              }
-            : item
-        )
+      queryClient.setQueryData(
+        ["posts", sortBy],
+        (old: PostType[] | undefined) =>
+          old?.map((item) =>
+            item.id === id
+              ? {
+                  ...item,
+                  isLiked: !isCurrentlyLiked,
+                  like_count: !isCurrentlyLiked
+                    ? currentLikes + 1
+                    : Math.max(0, currentLikes - 1),
+                }
+              : item
+          )
       );
 
       try {
@@ -369,22 +374,27 @@ export default function HomePageClient() {
         return;
       }
 
-      const previousPosts = queryClient.getQueryData<PostType[]>(["posts", sortBy]);
+      const previousPosts = queryClient.getQueryData<PostType[]>([
+        "posts",
+        sortBy,
+      ]);
       const currentItem = previousPosts?.find((item) => item.id === id);
       if (!currentItem) return;
 
       const isCurrentlyBookmarked = currentItem.isBookmarked;
 
       // 1. UI 즉시 업데이트
-      queryClient.setQueryData(["posts", sortBy], (old: PostType[] | undefined) =>
-        old?.map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                isBookmarked: !isCurrentlyBookmarked,
-              }
-            : item
-        )
+      queryClient.setQueryData(
+        ["posts", sortBy],
+        (old: PostType[] | undefined) =>
+          old?.map((item) =>
+            item.id === id
+              ? {
+                  ...item,
+                  isBookmarked: !isCurrentlyBookmarked,
+                }
+              : item
+          )
       );
 
       try {
@@ -415,7 +425,7 @@ export default function HomePageClient() {
 
   return (
     <>
-      <section className="relative max-w-2xl mx-auto">
+      <section className="relative max-w-2xl mx-auto px-2 lg:p-6">
         <IntroAnimation />
         <input
           type="file"

@@ -118,7 +118,7 @@ export default function HistoryPost({ data }: { data: ViewHistoryType }) {
           <X size={18} />
         </button>
 
-        <div className="text-xl font-semibold mb-3">{boardTitle}</div>
+        <div className="lg:text-xl font-semibold mb-3">{boardTitle}</div>
 
         <div className="flex gap-3 items-start">
           <div className="relative w-10 h-10 bg-gray-300 rounded-full shrink-0 overflow-hidden">
@@ -149,10 +149,10 @@ export default function HistoryPost({ data }: { data: ViewHistoryType }) {
               <h3 className="text-lg truncate">{post.title}</h3>
 
               <div className="flex justify-between items-center mt-1.5">
-                <p className="text-sm text-gray-700 truncate mr-30 dark:text-gray-300">
+                <p className="text-sm text-gray-700 truncate dark:text-gray-300">
                   {post.subtitle}
                 </p>
-                <p className="text-xs text-gray-500 whitespace-nowrap shrink-0 mr-3 dark:text-[#A6A6DB]">
+                <p className="text-xs text-gray-500 whitespace-nowrap shrink-0 dark:text-[#A6A6DB]">
                   {displayTime}에 마지막으로 봄
                 </p>
               </div>

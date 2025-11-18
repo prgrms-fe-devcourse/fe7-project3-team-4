@@ -223,7 +223,7 @@ export function ProfileHeader({
                 <button
                   type="button"
                   onClick={onEditClick}
-                  className="cursor-pointer leading-none px-4 py-3 flex items-center gap-2 bg-white rounded-xl hover:-translate-y-0.5 hover:shadow-xl dark:bg-white/20"
+                  className="cursor-pointer leading-none px-2 py-1 text-xs rounded-md lg:text-base lg:px-4 lg:py-3 flex items-center gap-2 bg-white lg:rounded-xl hover:-translate-y-0.5 hover:shadow-xl dark:bg-white/20"
                 >
                   <SquarePen size={20} />
                   <span>프로필 편집</span>
@@ -233,7 +233,7 @@ export function ProfileHeader({
                   {/* 채팅 버튼 */}
                   <Link
                     href={`/message?peerId=${profile!.id}`}
-                    className="cursor-pointer leading-none px-4 py-3 flex items-center gap-1 rounded-xl border border-[#6758FF]/70 text-[#6758FF] bg-white/70 hover:bg-[#6758FF] hover:text-white dark:bg-white/10 dark:hover:bg-[#6758FF]"
+                    className="cursor-pointer leading-none px-2 py-1 text-xs rounded-md lg:text-base lg:px-4 lg:py-3 flex items-center gap-1 lg:rounded-xl border border-[#6758FF]/70 text-[#6758FF] bg-white/70 hover:bg-[#6758FF] hover:text-white dark:bg-white/10 dark:hover:bg-[#6758FF]"
                     title="메시지 보내기"
                   >
                     <MessageCircle size={14} />
@@ -241,7 +241,7 @@ export function ProfileHeader({
                   </Link>
                   <button
                     onClick={onFollowToggle}
-                    className={`cursor-pointer leading-none px-4 py-3 rounded-xl text-white transition-colors ${
+                    className={`cursor-pointer leading-none px-2 py-1 text-xs rounded-md lg:text-base lg:px-4 lg:py-3 lg:rounded-xl text-white transition-colors ${
                       isFollowing
                         ? "bg-gray-400 hover:bg-gray-500"
                         : "bg-[#6758FF] hover:bg-[#5648E5]"

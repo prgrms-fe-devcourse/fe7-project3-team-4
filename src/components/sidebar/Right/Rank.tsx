@@ -231,11 +231,11 @@ export default function Rank() {
   }
 
   return (
-    <Box icon={<Trophy />} title="이번 주 챌린지 순위">
+    <Box icon={<Trophy />} title="지난 주 챌린지 순위">
       {/* 주제 라벨 */}
       <div className="mb-2 flex items-center justify-center">
         <p className="text-sm font-semibold text-[#717182] dark:text-[#A6A6DB]">
-          {topicLabel} TOP 3
+          {topicLabel} TOP
         </p>
       </div>
 

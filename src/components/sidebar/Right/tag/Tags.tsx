@@ -58,7 +58,7 @@ export default async function Tags() {
         {error && <p className="text-red-500">태그 로딩 실패</p>}
         {!error && topTags.length === 0 && <p>태그 없음</p>}
 
-        <div className="grid grid-cols-2 grid-rows-4 gap-1">
+        <div className="grid grid-cols-2 grid-rows-3 gap-1">
           {topTags.map(([tagKey, views], index) => {
             // 7-1. DB의 영문 key(tagKey)를 한글 label로 변환
             const label = TAG_LABEL_MAP[tagKey] ?? tagKey;

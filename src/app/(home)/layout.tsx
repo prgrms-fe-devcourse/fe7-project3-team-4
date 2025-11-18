@@ -16,7 +16,7 @@ export default function RootLayout({
         <div className="z-5">
           <FollowProvider>
             <NewsFeedProvider>
-              <div className="relative px-2 pb-2 lg:p-6 grid lg:grid-cols-[208px_minmax(0,1fr)_332px] h-screen">
+              <div className="relative pt-[89px] px-2 pb-2 lg:p-6 grid lg:grid-cols-[208px_minmax(0,1fr)_332px] h-screen">
                 <LeftSidebar />
                 <DragScrollMain>{children}</DragScrollMain>
                 <RightSidebar />
