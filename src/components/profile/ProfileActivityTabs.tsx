@@ -1,7 +1,5 @@
 "use client";
 
-import { useSearchParams, usePathname } from "next/navigation";
-import Link from "next/link";
 import MyPosts from "@/components/profile/MyPosts";
 import MyComments from "@/components/profile/MyComments";
 import MyBookMark from "@/components/profile/MyBookMark";
@@ -30,7 +28,8 @@ type BookmarkedItem =
   | (NewsItemWithState & { type: "news" });
 
 type ProfileActivityTabsProps = {
-  initialTab: TabKey;
+  activeTab: TabKey; 
+  onTabChange: (tab: TabKey) => void; 
   myPosts: PostType[];
   myComments: DbCommentRow[];
   myBookmarks: BookmarkedItem[];
@@ -42,7 +41,8 @@ type ProfileActivityTabsProps = {
 };
 
 export function ProfileActivityTabs({
-  initialTab,
+  activeTab,
+  onTabChange, 
   myPosts,
   myComments,
   myBookmarks,
@@ -50,18 +50,8 @@ export function ProfileActivityTabs({
   onBookmarkToggle,
   onPostLikeToggle,
   onCommentLikeToggle,
-}: // onPostBookmarkToggle,
-ProfileActivityTabsProps) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const activeTab = (searchParams.get("tab") as TabKey) || initialTab;
-
-  const createTabHref = (tab: TabKey) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("tab", tab);
-    return `${pathname}?${params.toString()}`;
-  };
+  // onPostBookmarkToggle,
+}: ProfileActivityTabsProps) {
 
   const baseBtn =
     "cursor-pointer flex-1 py-4 rounded-xl text-sm transition-colors text-center";
@@ -73,33 +63,18 @@ ProfileActivityTabsProps) {
     <>
       <div className="bg-white/40 border border-white/20 rounded-xl shadow-xl mt-6 dark:bg-white/20 dark:shadow-white/20">
         <div className="p-1 w-full flex gap-1 leading-none">
-          <Link
-            href={createTabHref("posts")}
-            scroll={false}
-            className={`${baseBtn} ${
-              activeTab === "posts" ? activeClass : inactiveClass
-            }`}
-          >
-            {TAB_LABEL.posts}
-          </Link>
-          <Link
-            href={createTabHref("comments")}
-            scroll={false}
-            className={`${baseBtn} ${
-              activeTab === "comments" ? activeClass : inactiveClass
-            }`}
-          >
-            {TAB_LABEL.comments}
-          </Link>
-          <Link
-            href={createTabHref("bookmarks")}
-            scroll={false}
-            className={`${baseBtn} ${
-              activeTab === "bookmarks" ? activeClass : inactiveClass
-            }`}
-          >
-            {TAB_LABEL.bookmarks}
-          </Link>
+          {(Object.keys(TAB_LABEL) as TabKey[]).map((tabKey) => (
+            <button
+              key={tabKey}
+              type="button"
+              onClick={() => onTabChange(tabKey)}
+              className={`${baseBtn} ${
+                activeTab === tabKey ? activeClass : inactiveClass
+              }`}
+            >
+              {TAB_LABEL[tabKey]}
+            </button>
+          ))}
         </div>
       </div>
 
