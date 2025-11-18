@@ -244,62 +244,60 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
   }
 
   return (
-    <div className="relative w-full overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6 py-6">
-        <div className="flex items-start justify-between">
-          <div className="space-y-3">
-            <h1 className="font-semibold text-xl">프로필 뱃지 상점</h1>
-            <p className="text-gray-600 text-sm">
-              프로필을 나답게 보여줄 뱃지를 골라보세요
-            </p>
+    <div className="relative w-full overflow-hidden max-w-4xl mx-auto px-2 lg:px-6 lg:pt-6">
+      <div className="flex items-start justify-between">
+        <div className="space-y-3">
+          <h1 className="font-semibold text-xl">프로필 뱃지 상점</h1>
+          <p className="text-gray-600 text-sm">
+            프로필을 나답게 보여줄 뱃지를 골라보세요
+          </p>
 
-            {/* 🔹 전체 / 보유 뱃지 탭 */}
-            <div className="inline-flex rounded-full bg-slate-100/80 p-1 text-sm text-slate-600">
-              <button
-                type="button"
-                onClick={() => setActiveTab("all")}
-                className={`cursor-pointer px-4 py-2 rounded-full transition ${
-                  activeTab === "all"
-                    ? "bg-white shadow-sm text-slate-900"
-                    : "text-slate-500 hover:text-slate-900"
-                }`}
-              >
-                전체 뱃지
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("owned")}
-                className={`cursor-pointer px-4 py-2 rounded-full transition ${
-                  activeTab === "owned"
-                    ? "bg-white shadow-sm text-slate-900"
-                    : "text-slate-500 hover:text-slate-900"
-                }`}
-              >
-                보유 뱃지
-              </button>
-            </div>
+          {/* 🔹 전체 / 보유 뱃지 탭 */}
+          <div className="inline-flex rounded-full bg-slate-100/80 p-1 text-sm text-slate-600">
+            <button
+              type="button"
+              onClick={() => setActiveTab("all")}
+              className={`cursor-pointer px-4 py-2 rounded-full transition ${
+                activeTab === "all"
+                  ? "bg-white shadow-sm text-slate-900"
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              전체 뱃지
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("owned")}
+              className={`cursor-pointer px-4 py-2 rounded-full transition ${
+                activeTab === "owned"
+                  ? "bg-white shadow-sm text-slate-900"
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              보유 뱃지
+            </button>
           </div>
+        </div>
 
-          {/* 포인트 표시 */}
-          <div className="bg-linear-to-r from-[#8F84FF] to-[#6758FF] text-white px-5 py-3 rounded-2xl shadow-lg flex items-center gap-4">
-            <Coins className="w-5 h-5" />
-            <div>
-              <div className="text-xs opacity-90">내 포인트</div>
-              <div className="text-xl">{myPoints.toLocaleString()}P</div>
-            </div>
+        {/* 포인트 표시 */}
+        <div className="bg-linear-to-r from-[#8F84FF] to-[#6758FF] text-white px-5 py-3 rounded-2xl shadow-lg flex items-center gap-4">
+          <Coins className="w-5 h-5" />
+          <div>
+            <div className="text-xs opacity-90">내 포인트</div>
+            <div className="text-xl">{myPoints.toLocaleString()}P</div>
           </div>
         </div>
       </div>
 
       {/* 페이지 루트 */}
       <div
-        className="relative z-10 flex min-h-[80vh] w-full items-center justify-center px-4 py-6s outline-none"
+        className="relative z-10 flex items-center justify-center outline-none py-8 lg:py-15"
         tabIndex={0}
         onKeyDown={handleKeyDown}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <main className="flex w-full max-w-5xl flex-col gap-7 rounded-4xl border border-white/20 bg-white/40 p-6 shadow-xl lg:flex-row lg:gap-10 lg:p-8 dark:bg-white/20 dark:shadow-white/10">
+        <main className="flex min-w-full flex-col gap-7 rounded-4xl border border-white/20 bg-white/40 p-6 shadow-xl lg:flex-row lg:gap-10 lg:p-8 dark:bg-white/20 dark:shadow-white/10">
           {/* 왼쪽: 뱃지 카드 캐러셀 */}
           {/* 모바일 전용 */}
           <section className="flex flex-1 flex-col items-center justify-center gap-4 lg:hidden">
