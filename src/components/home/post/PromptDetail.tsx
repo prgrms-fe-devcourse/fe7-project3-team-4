@@ -80,7 +80,7 @@ export default function PromptDetail({ post }: { post: PostType }) {
               <Copy size={14} />
             </button>
           </div>
-          <div className="relative p-4 bg-[#6758FF]/10 border-2 border-white/60 rounded-lg">
+          <div className="relative min-h-40 max-h-120 p-4 bg-[#6758FF]/10 border-2 border-white/60 rounded-lg overflow-y-scroll">
             <p className="text-sm whitespace-pre-wrap">{promptText}</p>
           </div>
         </div>
@@ -99,8 +99,8 @@ export default function PromptDetail({ post }: { post: PostType }) {
             )}
           </div>
           <div className="p-4 bg-[#6758FF]/10 border-2 border-white/60 rounded-lg overflow-x-hidden">
-            <div className="relative rounded-lg">
-              {post.result_mode === "Image" ? (
+            {post.result_mode === "Image" ? (
+              <div className="relative rounded-lg">
                 <div className="flex justify-center items-center ">
                   <Image
                     src={extractImageSrcArr(post.content)[1]}
@@ -110,12 +110,14 @@ export default function PromptDetail({ post }: { post: PostType }) {
                     className="object-cover"
                   />
                 </div>
-              ) : (
+              </div>
+            ) : (
+              <div className="relative rounded-lg min-h-40 max-h-120 overflow-y-scroll">
                 <p className="text-sm whitespace-pre-wrap">
                   {getNthParagraphText(post.content, 4)}
                 </p>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
