@@ -70,6 +70,14 @@ export async function GET(request: Request) {
       redirectPath = next;
     }
 
+    // 로그인 성공 플래그를 쿼리 파라미터로 전달 (클라이언트에서 토스트용으로 사용)
+    const loginSuccessParam = "login=success";
+    if (redirectPath.includes("?")) {
+      redirectPath = `${redirectPath}&${loginSuccessParam}`;
+    } else {
+      redirectPath = `${redirectPath}?${loginSuccessParam}`;
+    }
+
     const forwardedHost = request.headers.get("x-forwarded-host");
     const isLocalEnv = process.env.NODE_ENV === "development";
     if (isLocalEnv) {
