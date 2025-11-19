@@ -99,10 +99,6 @@ export default function ProfileClient({
   // 프로필은 실시간 업데이트 빈도가 낮고 로컬 state로도 충분하지만 일관성을 위해 state 유지
   const [localProfile, setLocalProfile] = useState<Profile>(profile);
 
-  useEffect(() => {
-    setLocalProfile(profile);
-  }, [profile, targetUserId]);
-
   // [✅ React Query 적용] 2. 내 게시글 (My Posts)
   const { data: myPosts = [] } = useQuery({
     queryKey: ["profile", "posts", targetUserId],
