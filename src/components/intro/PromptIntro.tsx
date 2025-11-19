@@ -8,13 +8,13 @@ export default function PromptIntro({ onStartApp }: PromptIntroProps) {
   return (
     <div className="z-50 flex flex-col items-center justify-center text-center p-4">
       <div className="relative min-h-[180px] w-full">
-        <p className="dialog-text dialog-1 absolute left-0 right-0 top-1/2 -translate-y-1/2 text-xl font-medium text-neutral-400 opacity-0 md:text-2xl">
+        <p className="dialog-text dialog-1 absolute left-0 right-0 top-1/2 -translate-y-1/2 text-xl font-medium text-neutral-400 opacity-0 md:text-2xl bg-black/70 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none px-3 py-2 md:px-0 md:py-0 rounded-xl md:rounded-none">
           &nbsp;
         </p>
-        <p className="dialog-text dialog-2 absolute left-0 right-0 top-1/2 -translate-y-1/2 text-xl font-medium text-neutral-400 opacity-0 md:text-2xl">
+        <p className="dialog-text dialog-2 absolute left-0 right-0 top-1/2 -translate-y-1/2 text-xl font-medium text-neutral-400 opacity-0 md:text-2xl bg-black/70 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none px-3 py-2 md:px-0 md:py-0 rounded-xl md:rounded-none">
           &nbsp;
         </p>
-        <p className="dialog-text dialog-3 absolute left-0 right-0 top-1/2 -translate-y-1/2 text-xl font-medium text-neutral-400 opacity-0 md:text-2xl">
+        <p className="dialog-text dialog-3 absolute left-0 right-0 top-1/2 -translate-y-1/2 text-xl font-medium text-neutral-400 opacity-0 md:text-2xl bg-black/70 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none px-3 py-2 md:px-0 md:py-0 rounded-xl md:rounded-none">
           &nbsp;
         </p>
         <div className="final-icon absolute left-1/2 -top-1/5 -translate-x-1/2 -translate-y-1/2 opacity-0">
