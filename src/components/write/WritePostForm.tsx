@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { PostTypeSelect } from "./PostTypeSelect";
 import { MainEditorSection } from "./MainEditorSection";
 import { PromptResultSection } from "./PromptResultSection";
@@ -13,16 +15,13 @@ import {
   uploadPromptResultImage,
 } from "@/utils/supabase/storage/posts";
 import { Database, Hashtag, Post } from "@/types";
+import { useToast } from "../common/toast/ToastContext";
 
 type WritePostFormProps = {
   hashtags: Hashtag[];
-  // 생성/수정 모드
   mode?: "create" | "edit";
-  // 수정 대상 게시글 id
   postId?: string;
-  // 타입 잠그기용 (URL + 실제 post 기록 중 우선순위는 아래 컴포넌트에서 처리)
   initialPostType?: PostType;
-  // 미리 채울 값들
   initialTitle?: string;
   initialSubtitle?: string;
   initialContentJson?: any;
@@ -31,7 +30,6 @@ type WritePostFormProps = {
   initialPromptResult?: string;
   initialResultLink?: string;
   initialHashtags?: Hashtag["name"][];
-  // 프롬프트에 들어갈 정보
   initialModel?: ModelType;
   initialResultMode?: ResultMode;
 };
@@ -52,15 +50,15 @@ export function WritePostForm({
   initialModel = "GPT",
   initialResultMode = "Text",
 }: WritePostFormProps) {
-  // 수정 모드인지 여부
+  const { showToast } = useToast();
+  const queryClient = useQueryClient(); 
+
   const isEdit = mode === "edit" && !!postId;
 
-  // postType 초기값을 props에서 받아오고, 없으면 "prompt"
   const [postType, setPostType] = useState<PostType>(
     initialPostType ?? "prompt"
   );
 
-  // 수정 모드일 때는 타입을 변경 못 하게 잠그는 플래그
   const isPostTypeLocked = isEdit;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -89,19 +87,15 @@ export function WritePostForm({
       } = await supabase.auth.getUser();
 
       if (!user) {
-        alert("로그인 후 이용 가능합니다.");
-        router.push("/auth/login");
         return;
       }
 
-      // select가 disabled면 null 이라서 state fallback 사용
       const type =
         ((formData.get("postType") as PostType) || postType) ?? "prompt";
       const title = ((formData.get("title") as string) ?? initialTitle).trim();
       const rawContent = formData.get("content_raw") as string | null;
       let baseDoc: any = null;
 
-      // 1) form에서 넘어온 값이 있으면 먼저 시도
       if (rawContent && rawContent.trim() !== "") {
         try {
           baseDoc = JSON.parse(rawContent);
@@ -111,23 +105,23 @@ export function WritePostForm({
         }
       }
 
-      // 2) baseDoc이 비었거나 content 배열이 없으면 (특히 수정모드)
       if (
         (!baseDoc || !Array.isArray(baseDoc.content)) &&
         mode === "edit" &&
         initialContentJson
       ) {
-        // 수정 페이지에서 아무 것도 안 건드린 경우: 기존 내용 사용
         baseDoc = initialContentJson;
       }
 
-      // 3) 그래도 없으면 진짜로 '내용 없음' 처리
       if (!baseDoc || !Array.isArray(baseDoc.content)) {
-        alert("내용을 입력해주세요.");
+        showToast({
+          title: "작성 실패",
+          message: "내용을 입력해주세요.",
+          variant: "warning",
+        });
         return;
       }
 
-      // subtitle 비어 있으면 기존 subtitle
       const rawSubtitle = (formData.get("content_text") as string | null) ?? "";
       const contentText = rawSubtitle.trim() || initialSubtitle || "";
 
@@ -140,18 +134,25 @@ export function WritePostForm({
         initialHashtags;
 
       if (!title) {
-        alert("제목을 입력해주세요.");
+        showToast({
+          title: "작성 실패",
+          message: "제목을 입력해주세요.",
+          variant: "warning",
+        });
         return;
       }
 
       if (!baseDoc || !Array.isArray(baseDoc.content)) {
-        alert("내용을 입력해주세요.");
+        showToast({
+          title: "작성 실패",
+          message: "내용을 입력해주세요.",
+          variant: "warning",
+        });
         return;
       }
 
       const isPromptLikePost = type === "prompt" || type === "weekly";
 
-      // ----- 이미지 업로드 (대표 + 결과이미지) -----
       let mainImageUrl: string = initialThumbnail ?? "";
 
       const mainImageFile = formData.get("mainImage") as File | null;
@@ -178,25 +179,25 @@ export function WritePostForm({
           null;
         model = (formData.get("model") as ModelType) || initialModel || null;
 
-        // 프롬프트 입력
         promptInput =
           ((formData.get("promptInput") as string) || "").trim() || null;
 
         if (isEdit && !promptInput && initialPromptInput) {
-          // 수정에서 안 고치면 이전 값 유지
           promptInput = initialPromptInput;
         }
 
-        // 결과 링크
         resultLink =
           ((formData.get("resultLink") as string) || "").trim() || null;
-        // 수정에서 안 고치면 이전 값 유지
         if (isEdit && !resultLink && initialResultLink) {
           resultLink = initialResultLink;
         }
 
         if (!promptInput) {
-          alert("사용한 프롬프트를 작성해주세요.");
+          showToast({
+            title: "작성 실패",
+            message: "사용한 프롬프트를 작성해주세요.",
+            variant: "warning",
+          });
           return;
         }
 
@@ -211,19 +212,22 @@ export function WritePostForm({
           }
 
           if (!promptResultText) {
-            alert("프롬프트의 결과 값을 작성해주세요.");
+            showToast({
+              title: "작성 실패",
+              message: "프롬프트의 결과 값을 작성해주세요.",
+              variant: "warning",
+            });
             return;
           }
         }
 
-        // 프롬프트 입력한 결과 (이미지)
         if (resultMode === "Image") {
           const resultImgFile = formData.get(
             "promptResultImage"
           ) as File | null;
 
           if (resultImgFile && resultImgFile.size > 0) {
-            // 새 이미지 업로드
+
             promptResultImageUrl = await uploadPromptResultImage(
               supabase,
               user.id,
@@ -234,27 +238,31 @@ export function WritePostForm({
             initialResultMode === "Image" &&
             initialPromptResult
           ) {
-            // 수정 모드 + 새 파일 없음 → 기존 이미지 URL 유지
             promptResultImageUrl = initialPromptResult;
           } else {
-            alert("프롬프트의 결과 값의 이미지를 첨부해주세요.");
+            showToast({
+              title: "작성 실패",
+              message: "프롬프트의 결과 값의 이미지를 첨부해주세요.",
+              variant: "warning",
+            });
             return;
           }
         }
 
-        // 오타 수정: isPromptLike → isPromptLikePost
         if (isPromptLikePost && !isAllChecked) {
-          alert(
-            "프롬프트 관련 게시글 등록을 위해 자가진단 문항을 모두 체크해주세요."
-          );
+          showToast({
+            title: "작성 실패",
+            message:
+              "프롬프트 관련 게시글 등록을 위해 자가진단 문항을 모두 체크해주세요.",
+            variant: "warning",
+          });
           return;
         }
       }
 
-      // ----- 최종 content 구성 (이미지 → 본문) -----
       const extendedContent: any[] = [];
 
-      // 1) 대표 이미지
+
       extendedContent.push({
         type: "image",
         attrs: {
@@ -263,12 +271,10 @@ export function WritePostForm({
         },
       });
 
-      // 2) 에디터 내용
       extendedContent.push(
         ...(Array.isArray(baseDoc.content) ? baseDoc.content : [])
       );
 
-      // 3) 프롬프트 블럭들
       if (isPromptLikePost) {
         if (promptInput) {
           extendedContent.push(
@@ -337,21 +343,19 @@ export function WritePostForm({
         }
       }
 
-      // 항상 Doc 래퍼 유지
       const finalDoc = {
         type: "doc",
         content: extendedContent,
       };
 
-      // insert vs update 분기
       let savedPost: Post | null = null;
       if (isEdit && postId) {
-        // 수정(update)
+
         const { data, error } = await supabase
           .from("posts")
           .update({
-            // user_id는 바꾸지 않음
-            post_type: type, // 타입은 고정 상태지만, 안전하게 다시 써줌
+            
+            post_type: type, 
             title,
             content: finalDoc,
             hashtags: selectedHashtags,
@@ -362,18 +366,26 @@ export function WritePostForm({
             subtitle: contentText,
           })
           .eq("id", postId)
-          .eq("user_id", user.id) // 본인 글만 수정 가능
+          .eq("user_id", user.id) 
           .select()
           .single();
 
         if (error) {
           console.error("[WritePostForm] update error", error);
-          alert("게시글 수정에 실패했습니다.");
+          showToast({
+            title: "수정 실패",
+            message: "게시글 수정에 실패했습니다.",
+            variant: "error",
+          });
           return;
         }
 
         savedPost = data;
-        alert("게시글이 수정되었습니다.");
+        showToast({
+          title: "수정 완료",
+          message: "게시글이 수정되었습니다.",
+          variant: "success",
+        });
       } else {
         // 새 글 작성(insert)
         const { data, error } = await supabase
@@ -395,21 +407,35 @@ export function WritePostForm({
 
         if (error) {
           console.error("[WritePostForm] insert error", error);
-          alert("게시글 등록에 실패했습니다.");
+          showToast({
+            title: "등록 실패",
+            message: "게시글 등록에 실패했습니다.",
+            variant: "error",
+          });
           return;
         }
 
         savedPost = data;
-        alert("게시글이 등록되었습니다.");
+        showToast({
+          title: "등록 완료",
+          message: "게시글이 등록되었습니다.",
+          variant: "success",
+        });
       }
 
-      // 공통 리다이렉트 (수정/등록 모두)
+      await queryClient.invalidateQueries({ queryKey: ["posts"] });
+
+
       if (savedPost) {
         router.push(`/?type=${savedPost.post_type}&id=${savedPost.id}`);
       }
     } catch (err) {
       console.error("[WritePostForm] catch error", err);
-      alert("알 수 없는 오류가 발생했습니다.");
+      showToast({
+        title: "오류",
+        message: "알 수 없는 오류가 발생했습니다.",
+        variant: "error",
+      });
     } finally {
       setIsSubmitting(false);
     }
