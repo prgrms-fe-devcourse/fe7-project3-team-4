@@ -17,6 +17,7 @@ import {
   RealtimeChannel,
   RealtimePostgresChangesPayload,
 } from "@supabase/supabase-js";
+import { useToast } from "@/components/common/toast/ToastContext";
 
 export const PAGE_SIZE = 10;
 
@@ -121,6 +122,7 @@ const handleBookmarkUpdate = (
 
 export function useNewsFeed(initialSortBy: SortKey = "published_at") {
   const [supabase] = useState(() => createClient());
+  const { showToast } = useToast();
 
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -659,7 +661,11 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        alert("로그인이 필요합니다.");
+        showToast({
+          title: "좋아요 실패",
+          message: "로그인 후 이용 가능합니다.",
+          variant: "warning",
+        });
         return;
       }
 
@@ -725,7 +731,7 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
         );
       }
     },
-    [newsList, supabase]
+    [newsList, supabase, showToast]
   );
 
   const handleBookmarkToggle = useCallback(
@@ -735,7 +741,11 @@ export function useNewsFeed(initialSortBy: SortKey = "published_at") {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        alert("로그인이 필요합니다.");
+        showToast({
+          title: "북마크 실패",
+          message: "로그인 후 이용 가능합니다.",
+          variant: "warning",
+        });
         return;
       }
 

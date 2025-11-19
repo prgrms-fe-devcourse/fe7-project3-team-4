@@ -9,6 +9,7 @@ import { Database } from "@/utils/supabase/supabase";
 import UserAvatar from "@/components/shop/UserAvatar"; // 🌟 1. UserAvatar 임포트
 // 새 이모지 피커 라이브러리
 import { EmojiPicker } from "@ferrucc-io/emoji-picker";
+import { useToast } from "@/components/common/toast/ToastContext";
 
 type CommentInsert = Database["public"]["Tables"]["comments"]["Insert"];
 
@@ -42,6 +43,8 @@ export default function CommentForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEmojiOpen, setIsEmojiOpen] = useState(false); // 이모지 모달 상태
   const supabase = createClient(); // ✅ 컴포넌트 레벨에서 단 한 번만 생성
+
+  const { showToast } = useToast();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -89,7 +92,11 @@ export default function CommentForm({
 
     if (error) {
       console.error("Error inserting comment:", error);
-      alert(`댓글 작성 실패: ${error.message || "알 수 없는 오류"}`);
+      showToast({
+        title: "댓글 작성 실패",
+        message: "오류가 발생했습니다.",
+        variant: "error",
+      });
     } else {
       setCommentText("");
 

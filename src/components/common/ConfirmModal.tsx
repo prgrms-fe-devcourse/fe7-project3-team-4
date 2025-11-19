@@ -21,7 +21,7 @@ export default function ConfirmModal({
       role="dialog"
       aria-modal="true"
     >
-      <div className="w-full max-w-2xs rounded-2xl bg-white/80 p-6 shadow-xl backdrop-blur-xs dark:bg-white/20 dark:backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-2xl bg-white/80 p-6 shadow-xl backdrop-blur-xs dark:bg-white/20 dark:backdrop-blur-sm">
         <h2 className="text-2xl font-semibold flex justify-center">{title}</h2>
         <p className="mt-4 text-lg flex justify-center dark:text-[#A6A6DB]">
           {description}

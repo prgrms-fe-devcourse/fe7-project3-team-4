@@ -8,6 +8,8 @@ import { BadgeRow } from "@/app/(home)/shop/page";
 
 // 👇 1. 스타일 정의를 외부 파일에서 가져옵니다.
 import { rarityLabel, rarityClass, badgeGradient } from "@/lib/badgeStyle"; // (경로는 실제 위치에 맞게 수정)
+import { useToast } from "../common/toast/ToastContext";
+import ConfirmModal from "../common/ConfirmModal";
 
 interface BadgeShopProps {
   initialBadges: BadgeRow[];
@@ -26,6 +28,9 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
   const [myPoints, setMyPoints] = useState<number>(0);
   const [ownedBadgeIds, setOwnedBadgeIds] = useState<Set<string>>(new Set());
   const [equippedBadgeId, setEquippedBadgeId] = useState<string | null>(null);
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [selectedBadge, setSelectedBadge] = useState<BadgeRow | null>(null);
 
   const supabase = createClient();
 
@@ -113,34 +118,56 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
   const isEquipped = currentBadge && equippedBadgeId === currentBadge.id;
 
   // --- 핸들러 로직 ---
+  const { showToast } = useToast();
+  const handleBuy = (badge: BadgeRow) => {
+    if (!user) {
+      showToast({
+        title: "이펙트 구매 실패",
+        message: "로그인이 필요합니다.",
+        variant: "warning",
+      });
+      return;
+    }
 
-  const handleBuy = async (badge: BadgeRow) => {
-    if (isProcessing || !user) return;
-
-    const confirmBuy = confirm(
-      `${badge.price}포인트를 사용하여 '${badge.name}' 이펙트를 구매하시겠습니까?`
-    );
-    if (!confirmBuy) return;
+    setSelectedBadge(badge);
+    setConfirmOpen(true);
+  };
+  const handleConfirmBuy = async () => {
+    if (!selectedBadge || !user) return;
+    if (isProcessing) return;
 
     setIsProcessing(true);
 
     try {
       const { error } = await supabase.rpc("buy_badge", {
-        badge_id_to_buy: badge.id,
+        badge_id_to_buy: selectedBadge.id,
       });
 
       if (error) {
-        console.error(error);
-        alert(`구매 실패: ${error.message}`);
+        showToast({
+          title: "이펙트 구매 실패",
+          message: "포인트가 부족합니다.",
+          variant: "warning",
+        });
       } else {
-        alert(`구매 성공! '${badge.name}' 이펙트를 획득했습니다.`);
-        setMyPoints((prev) => prev - badge.price);
-        setOwnedBadgeIds((prev) => new Set(prev).add(badge.id));
+        showToast({
+          title: "이펙트 구매 성공!",
+          message: `${selectedBadge.name} 이펙트를 획득했습니다.`,
+          variant: "success",
+        });
+        setMyPoints((prev) => prev - selectedBadge.price);
+        setOwnedBadgeIds((prev) => new Set(prev).add(selectedBadge.id));
       }
     } catch (err) {
-      alert(`알 수 없는 오류가 발생했습니다. (원인: ${err})`);
+      showToast({
+        title: "이펙트 구매 오류",
+        message: `이펙트 구매 중 오류가 발생했습니다.`,
+        variant: "error",
+      });
+      console.error(err);
     } finally {
       setIsProcessing(false);
+      setConfirmOpen(false);
     }
   };
 
@@ -157,10 +184,18 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
       if (error) throw error;
 
       setEquippedBadgeId(badgeId);
-      alert("이펙트를 장착했습니다!");
+      showToast({
+        title: "이펙트 장착 완료!",
+        message: "이펙트를 장착했습니다.",
+        variant: "success",
+      });
     } catch (error) {
       console.error("장착 에러:", error);
-      alert("이펙트 장착에 실패했습니다.");
+      showToast({
+        title: "이펙트 장착 오류",
+        message: "이펙트 장착 중 오류가 발생했습니다.",
+        variant: "error",
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -179,10 +214,18 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
       if (error) throw error;
 
       setEquippedBadgeId(null);
-      alert("이펙트를 해제했습니다.");
+      showToast({
+        title: "이펙트 해제 완료",
+        message: "이펙트를 해제했습니다.",
+        variant: "success",
+      });
     } catch (error) {
       console.error("해제 에러:", error);
-      alert("이펙트 해제에 실패했습니다.");
+      showToast({
+        title: "이펙트 해제 오류",
+        message: "이펙트 해제 중 오류가 발생했습니다.",
+        variant: "error",
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -287,11 +330,20 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
             <div className="text-xl">{myPoints.toLocaleString()}P</div>
           </div>
         </div>
+        {selectedBadge && (
+          <ConfirmModal
+            title="구매 확인"
+            description={`${selectedBadge.price}포인트를 사용하여 ${selectedBadge.name} 이펙트를 구매하시겠습니까?`}
+            onConfirm={handleConfirmBuy}
+            onCancel={() => setConfirmOpen(false)}
+            open={confirmOpen}
+          />
+        )}
       </div>
 
       {/* 페이지 루트 */}
       <div
-        className="relative z-10 flex items-center justify-center outline-none py-8 lg:py-15"
+        className="relative z-10 flex items-center justify-center outline-none py-8 lg:pt-12"
         tabIndex={0}
         onKeyDown={handleKeyDown}
         onTouchStart={handleTouchStart}
@@ -463,7 +515,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h2 className="inline-block text-3xl font-extrabold leading-tight tracking-[-0.02em] text-[#0b1f4a] lg:text-[2.1rem]">
-                        <span className="relative inline-block pb-1 dark:text-[#80a8ff]">
+                        <span className="relative inline-block pb-1 dark:text-[#6998ff]">
                           {currentBadge.name}
                           <span className="absolute bottom-0 left-0 h-[3px] w-[72px] rounded-full bg-linear-to-r from-blue-500 via-indigo-500 to-pink-500" />
                         </span>
@@ -504,7 +556,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                 </div>
 
                 {/* 버튼 / 상태 영역 */}
-                <div className="mt-2 flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 shadow-lg backdrop-blur-xl dark:bg-white/10 dark:border-white/40">
+                <div className="mt-2 flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 shadow-lg backdrop-blur-xl dark:bg-white/20 dark:border-white/40">
                   <div className="flex items-end justify-between gap-3">
                     <div>
                       {isOwned ? (
@@ -513,10 +565,10 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                             Status
                           </p>
                           <div className="flex items-center gap-2 pt-1">
-                            <span className="text-lg font-bold text-indigo-600">
+                            <span className="text-lg font-bold text-[#6758FF] dark:text-[#2e258f]">
                               보유 중인 이펙트
                             </span>
-                            <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold uppercase text-indigo-600">
+                            <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold uppercase text-[#6758FF]">
                               Owned
                             </span>
                           </div>

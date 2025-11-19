@@ -16,6 +16,8 @@ import { getTranslatedTag } from "@/utils/tagTranslator";
 import { useRouter } from "next/navigation";
 import UserAvatar from "@/components/shop/UserAvatar";
 import { Json } from "@/utils/supabase/supabase"; // 🌟 1. Json 타입 임포트
+import { useToast } from "@/components/common/toast/ToastContext";
+import ConfirmModal from "@/components/common/ConfirmModal";
 
 // ... (RawComment, PostComment 타입 정의는 동일) ...
 type RawComment = {
@@ -102,6 +104,7 @@ export default function PostDetail({
   const [sortOrder, setSortOrder] = useState<"latest" | "popular">("latest");
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const supabase = createClient();
   const router = useRouter();
@@ -113,7 +116,7 @@ export default function PostDetail({
   const authorAvatar = post.profiles?.avatar_url || null;
   const authorUserId = post.user_id;
   const authorEquippedBadgeId = post.profiles?.equipped_badge_id || null;
-
+  const { showToast } = useToast();
   const isAuthorFollowing = isFollowing(authorUserId);
 
   // 🌟 3. 게시글의 최신 정보를 가져오는 useEffect 수정
@@ -354,11 +357,20 @@ export default function PostDetail({
   // ... (handleFollowToggle, handleCommentAdded, handleDeletePost 로직은 동일) ...
   const handleFollowToggle = async () => {
     if (!currentUserId || !authorUserId) {
-      alert("로그인이 필요합니다.");
+      showToast({
+        title: "팔로우 실패",
+        message: "로그인 후 이용 가능합니다.",
+        variant: "warning",
+      });
+
       return;
     }
     if (currentUserId === authorUserId) {
-      alert("자기 자신을 팔로우할 수 없습니다.");
+      showToast({
+        title: "팔로우 실패",
+        message: "자기 자신을 팔로우 할 수 없습니다.",
+        variant: "warning",
+      });
       return;
     }
 
@@ -373,7 +385,11 @@ export default function PostDetail({
       if (error instanceof Error) {
         alert(error.message);
       } else {
-        alert("팔로우 처리 중 오류가 발생했습니다.");
+        showToast({
+          title: "팔로우 오류",
+          message: "팔로우 처리 중 오류가 발생했습니다.",
+          variant: "error",
+        });
       }
     } finally {
       setIsFollowLoading(false);
@@ -385,22 +401,38 @@ export default function PostDetail({
   };
 
   /* 게시글 삭제시 댓글까지 모두 삭제 */
-  const handleDeletePost = async () => {
+  const handleDeletePost = () => {
     if (!currentUserId) {
-      alert("로그인이 필요합니다.");
+      showToast({
+        title: "게시물 삭제 실패",
+        message: "로그인 후 이용 가능합니다.",
+        variant: "warning",
+      });
       return;
     }
 
     if (currentUserId !== post.user_id) {
-      alert("본인만 삭제할 수 있습니다.");
+      showToast({
+        title: "게시물 삭제 실패",
+        message: "게시물 작성자만 삭제할 수 있습니다.",
+        variant: "warning",
+      });
       return;
     }
 
-    const confirmed = window.confirm(
-      "이 게시글과 이 게시글에 달린 모든 댓글이 삭제됩니다.\n정말 삭제하시겠어요?"
-    );
-    if (!confirmed) return;
+    setIsDeleteConfirmOpen(true);
+  };
 
+  const handleConfirmDeletePost = async () => {
+    if (!currentUserId) {
+      showToast({
+        title: "게시글 삭제 오류",
+        message: "로그인 정보가 유효하지 않습니다.",
+        variant: "error",
+      });
+      setIsDeleteConfirmOpen(false);
+      return;
+    }
     try {
       setIsDeleting(true);
 
@@ -412,8 +444,14 @@ export default function PostDetail({
 
       if (commentsError) {
         console.error("Error deleting comments:", commentsError);
-        alert("댓글 삭제 중 오류가 발생했습니다.");
+        showToast({
+          title: "댓글 삭제 오류",
+          message: "댓글 삭제 중 오류가 발생했습니다.",
+          variant: "error",
+        });
+
         setIsDeleting(false);
+        setIsDeleteConfirmOpen(false);
         return;
       }
 
@@ -426,17 +464,32 @@ export default function PostDetail({
 
       if (postError) {
         console.error("Error deleting post:", postError);
-        alert("게시글 삭제 중 오류가 발생했습니다.");
+        showToast({
+          title: "게시글 삭제 오류",
+          message: "게시글 삭제 중 오류가 발생했습니다.",
+          variant: "error",
+        });
         setIsDeleting(false);
+        setIsDeleteConfirmOpen(false);
         return;
       }
 
-      alert("게시글이 삭제되었습니다.");
+      showToast({
+        title: "게시글 삭제 성공",
+        message: "게시글 삭제되었습니다.",
+        variant: "success",
+      });
+      setIsDeleteConfirmOpen(false);
       window.location.href = `/?type=${post.post_type}`;
     } catch (error) {
       console.error("Unexpected error while deleting post:", error);
-      alert("삭제 처리 중 알 수 없는 오류가 발생했습니다.");
+      showToast({
+        title: "게시글 삭제 오류",
+        message: "게시글 삭제 중 오류가 발생했습니다.",
+        variant: "error",
+      });
       setIsDeleting(false);
+      setIsDeleteConfirmOpen(false);
     }
   };
 
@@ -654,6 +707,15 @@ export default function PostDetail({
           </div>
         </div>
       </div>
+      <ConfirmModal
+        title="게시글 삭제 확인"
+        description={
+          "이 게시글과 이 게시글에 달린 모든 댓글이 삭제됩니다.\n정말 삭제하시겠어요?"
+        }
+        onConfirm={handleConfirmDeletePost}
+        onCancel={() => setIsDeleteConfirmOpen(false)}
+        open={isDeleteConfirmOpen}
+      />
     </div>
   );
 }

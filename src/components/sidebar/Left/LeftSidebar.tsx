@@ -67,7 +67,7 @@ export default function LeftSidebar() {
     });
   };
 
-  // 사이드바/헤더에서 호출하는 함수: "로그아웃 요청" → 모달만 열기
+  // 사이드바/헤더에서 호출하는 함수: "로그아웃 요청" -> 모달만 열기
   const handleLogoutRequest = () => {
     setLogoutModalOpen(true);
   };
@@ -86,25 +86,25 @@ export default function LeftSidebar() {
   return (
     <>
       <DesktopSidebar
-        menuItems={ MENU_ITEMS }
-        pathname={ pathname }
-        currentUserId={ currentUserId }
-        profileUserId={ profileUserId }
-        unreadCount={ unreadCount }
-        unreadMessageCount={ unreadMessageCount }
-        isLogin={ isLogin }
-        onLogout={ handleLogoutRequest }   // ← 여기!
-        isActivePath={ isActivePath }
+        menuItems={MENU_ITEMS}
+        pathname={pathname}
+        currentUserId={currentUserId}
+        profileUserId={profileUserId}
+        unreadCount={unreadCount}
+        unreadMessageCount={unreadMessageCount}
+        isLogin={isLogin}
+        onLogout={handleLogoutRequest}
+        isActivePath={isActivePath}
       />
 
       <MobileHeader
-        isLogin={ isLogin }
-        clickMenu={ clickMenu }
-        setClickMenu={ setClickMenu }
-        unreadCount={ unreadCount }
-        unreadMessageCount={ unreadMessageCount }
-        onToggleMenu={ handleMenu }
-        onLogout={ handleLogoutRequest }   // ← 여기도!
+        isLogin={isLogin}
+        clickMenu={clickMenu}
+        setClickMenu={setClickMenu}
+        unreadCount={unreadCount}
+        unreadMessageCount={unreadMessageCount}
+        onToggleMenu={handleMenu}
+        onLogout={handleLogoutRequest}
       />
 
       {logoutModalOpen && (

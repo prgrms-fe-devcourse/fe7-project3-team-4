@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import CommentForm from "./CommentForm";
 import UserAvatar from "@/components/shop/UserAvatar";
+import { useToast } from "@/components/common/toast/ToastContext";
 // 🌟 1. UserAvatar 임포트
 // 🌟 2. PostComment 타입 임포트 (PostDetail.tsx에서 가져옴)
 
@@ -57,6 +58,8 @@ export default function Comments({
   const [editContent, setEditContent] = useState(comment.content);
   const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
   const [editReplyContent, setEditReplyContent] = useState("");
+  const { showToast } = useToast();
+
   const supabase = createClient();
 
   useEffect(() => {
@@ -124,7 +127,11 @@ export default function Comments({
   // 댓글 수정
   const handleEdit = async () => {
     if (!editContent.trim()) {
-      alert("내용을 입력해주세요.");
+      showToast({
+        title: "댓글 수정 실패",
+        message: "내용을 입력해주세요.",
+        variant: "warning",
+      });
       return;
     }
 
@@ -138,7 +145,11 @@ export default function Comments({
 
     if (error) {
       console.error("Error updating comment:", error);
-      alert("댓글 수정에 실패했습니다.");
+      showToast({
+        title: "댓글 수정 오류",
+        message: "댓글 수정 중 오류가 발생했습니다.",
+        variant: "error",
+      });
     } else {
       setIsEditing(false);
       if (onCommentDeleted) {
@@ -150,7 +161,11 @@ export default function Comments({
   // 대댓글 수정
   const handleReplyEdit = async (replyId: string) => {
     if (!editReplyContent.trim()) {
-      alert("내용을 입력해주세요.");
+      showToast({
+        title: "답글 수정 실패",
+        message: "내용을 입력해주세요.",
+        variant: "warning",
+      });
       return;
     }
 
@@ -164,7 +179,11 @@ export default function Comments({
 
     if (error) {
       console.error("Error updating reply:", error);
-      alert("답글 수정에 실패했습니다.");
+      showToast({
+        title: "답글 수정 오류",
+        message: "답글 수정 중 오류가 발생했습니다.",
+        variant: "error",
+      });
     } else {
       setEditingReplyId(null);
       setEditReplyContent("");
@@ -184,7 +203,11 @@ export default function Comments({
 
     if (error) {
       console.error("Error deleting comment:", error);
-      alert("댓글 삭제에 실패했습니다.");
+      showToast({
+        title: "답글 삭제 오류",
+        message: "답글 삭제 중 오류가 발생했습니다.",
+        variant: "error",
+      });
     } else {
       if (isReply) {
         // 대댓글 삭제 시 부모 댓글의 reply_count 감소
@@ -221,7 +244,11 @@ export default function Comments({
 
   const handleLikeToggle = async (commentId: string) => {
     if (!user) {
-      alert("로그인이 필요합니다.");
+      showToast({
+        title: "댓글 좋아요 실패",
+        message: "로그인 후 이용 가능합니다.",
+        variant: "warning",
+      });
       return;
     }
 

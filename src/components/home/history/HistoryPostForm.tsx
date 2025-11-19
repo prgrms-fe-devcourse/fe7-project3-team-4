@@ -4,6 +4,7 @@
 import { createClient } from "@/utils/supabase/client";
 import { ViewHistoryType } from "@/types/Post";
 import HistoryClientView from "./HistoryPostHeader";
+import { redirect } from "next/navigation";
 import { useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
@@ -11,6 +12,9 @@ interface HistoryPostFormProps {
   userId: string;
 }
 
+  if (!user) {
+    redirect("/auth/login?from=history");
+  }
 // 실시간 페이로드 타입 정의
 type ProfilesRealtimePayload = {
   new?: {

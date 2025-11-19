@@ -21,7 +21,7 @@ export default async function WritePageClient({ searchParams }: PageProps) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/auth/login");
+    redirect("/auth/login?from=write");
   }
 
   const { data: hashtags } = await supabase.from("hashtags").select("*");
