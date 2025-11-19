@@ -970,7 +970,7 @@ export default function MessagePageClient() {
               } lg:flex flex-1 flex-col justify-between h-full`}
             >
               {/* 상단 바 */}
-              <div className="flex justify-between p-4 bg-white/40 rounded-xl lg:rounded-tr-xl border-b border-b-[#E5E5E5] dark:bg-white/15 dark:border-b-[#E5E5E5]/50">
+              <div className="flex justify-between p-4 bg-white/40 rounded-t-xl lg:rounded-tr-xl border-b border-b-[#E5E5E5] dark:bg-white/15 dark:border-b-[#E5E5E5]/50">
                 {/* 모바일 전용 뒤로가기 */}
                 <button
                   type="button"
