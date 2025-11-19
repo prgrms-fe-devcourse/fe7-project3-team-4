@@ -20,6 +20,18 @@ export function PromptResultSection({
   initialResultLink,
 }: PromptResultSectionProps) {
   const inputId = useId();
+
+  // 최대 길이 상수
+  const MAX_TEXT_LENGTH = 3000;
+
+  // 프롬프트 / 결과 텍스트를 state로 관리
+  const [promptInput, setPromptInput] = useState<string>(
+    (initialPromptInput ?? "").slice(0, MAX_TEXT_LENGTH)
+  );
+  const [promptResult, setPromptResult] = useState<string>(
+    (initialPromptResult ?? "").slice(0, MAX_TEXT_LENGTH)
+  );
+
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     initialResultMode === "Image" ? initialPromptResult ?? null : null
   );
@@ -42,6 +54,40 @@ export function PromptResultSection({
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // 프롬프트 입력 핸들러 (3000자 제한)
+  const handleChangePromptInput = (
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
+    const value = e.target.value;
+    if (value.length > MAX_TEXT_LENGTH) {
+      if (typeof window !== "undefined") {
+        window.alert(
+          `프롬프트는 최대 ${MAX_TEXT_LENGTH}자까지 입력할 수 있어요.`
+        );
+      }
+      setPromptInput(value.slice(0, MAX_TEXT_LENGTH));
+      return;
+    }
+    setPromptInput(value);
+  };
+
+  // 결과 텍스트 입력 핸들러 (3000자 제한)
+  const handleChangePromptResult = (
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
+    const value = e.target.value;
+    if (value.length > MAX_TEXT_LENGTH) {
+      if (typeof window !== "undefined") {
+        window.alert(
+          `결과 텍스트는 최대 ${MAX_TEXT_LENGTH}자까지 입력할 수 있어요.`
+        );
+      }
+      setPromptResult(value.slice(0, MAX_TEXT_LENGTH));
+      return;
+    }
+    setPromptResult(value);
   };
 
   return (
@@ -84,9 +130,14 @@ export function PromptResultSection({
         <textarea
           name="promptInput"
           placeholder="입력한 프롬프트"
-          defaultValue={initialPromptInput ?? ""}
-          className="border border-[#D9D9D9] rounded-lg h-40 p-4 outline-none mb-8 dark:border-[#D9D9D9]/70"
+          value={promptInput}
+          onChange={handleChangePromptInput}
+          className="border border-[#D9D9D9] rounded-lg h-40 p-4 outline-none mb-2 dark:border-[#D9D9D9]/70"
         />
+        {/* 프롬프트 글자 수 카운터 */}
+        <div className="mb-6 text-xs text-right text-[#6B7280] dark:text-[#9CA3AF]">
+          {promptInput.length} / {MAX_TEXT_LENGTH}자
+        </div>
 
         <div className="flex flex-col gap-4">
           <div className="flex justify-center items-center">
@@ -120,12 +171,19 @@ export function PromptResultSection({
 
           {/* 결과: 텍스트 or 이미지 */}
           {resultMode === "Text" ? (
-            <textarea
-              name="promptResult"
-              placeholder="프롬프트의 결과"
-              defaultValue={initialPromptResult ?? ""}
-              className="bg-[#D9D9D9]/30 rounded-lg h-40 p-4 outline-none border border-[#D9D9D9] mb-8 dark:border-[#D9D9D9]/70 dark:bg-[#D9D9D9]/15"
-            />
+            <>
+              <textarea
+                name="promptResult"
+                placeholder="프롬프트의 결과"
+                value={promptResult}
+                onChange={handleChangePromptResult}
+                className="bg-[#D9D9D9]/30 rounded-lg h-40 p-4 outline-none border border-[#D9D9D9] mb-2 dark:border-[#D9D9D9]/70 dark:bg-[#D9D9D9]/15"
+              />
+              {/* 결과 글자 수 카운터 */}
+              <div className="mb-8 text-xs text-right text-[#6B7280] dark:text-[#9CA3AF]">
+                {promptResult.length} / {MAX_TEXT_LENGTH}자
+              </div>
+            </>
           ) : (
             <>
               <input
@@ -176,7 +234,7 @@ export function PromptResultSection({
           )}
         </div>
 
-        {/* ✅ 결과 링크 공유 (form에 포함) */}
+        {/* 결과 링크 공유 (form에 포함) */}
         <input
           type="url"
           name="resultLink"

@@ -30,6 +30,9 @@ export function MainEditorSection({
   initialSelectedHashtags = [],
   initialThumbnail,
 }: MainEditorSectionProps) {
+  // 최대 글자 수
+  const MAX_CONTENT_LENGTH = 3000;
+
   // 1. initialContentJson에 유효한 content가 있는지 체크
   const hasValidInitialContent =
     initialContentJson &&
@@ -66,8 +69,11 @@ export function MainEditorSection({
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [contentJson, setContentJson] = useState<any>(initialDoc);
-
   const [contentText, setContentText] = useState<string>(initialSubtitle || "");
+
+  // 마지막으로 유효했던 상태 (되돌리기용)
+  const lastValidDocRef = useRef<any>(initialDoc);
+  const lastValidTextRef = useRef<string>(initialSubtitle || "");
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -85,8 +91,32 @@ export function MainEditorSection({
       },
     },
     onUpdate: ({ editor }) => {
-      setContentJson(editor.getJSON());
-      setContentText(editor.getText());
+      const json = editor.getJSON();
+      const text = editor.getText();
+
+      // 3000자 초과 시 이전 유효 상태로 되돌리기
+      if (text.length > MAX_CONTENT_LENGTH) {
+        // 이전 상태로 롤백
+        editor.commands.setContent(lastValidDocRef.current);
+        // 커서를 문서 끝으로 이동
+        const endPos = editor.state.doc.content.size;
+        editor.commands.setTextSelection(endPos);
+
+        // 간단 안내 (원하면 Toast로 교체 가능)
+        if (typeof window !== "undefined") {
+          window.alert(
+            `본문은 최대 ${MAX_CONTENT_LENGTH}자까지 입력할 수 있어요.`
+          );
+        }
+        return;
+      }
+
+      // 유효 상태 업데이트
+      lastValidDocRef.current = json;
+      lastValidTextRef.current = text;
+
+      setContentJson(json);
+      setContentText(text);
     },
     immediatelyRender: false,
   });
@@ -171,6 +201,12 @@ export function MainEditorSection({
       {/* Tiptap Editor */}
       <div className="w-full">
         {editor && <EditorContent editor={editor} />}
+
+        {/* 글자 수 카운터 */}
+        <div className="mt-1 text-xs text-right text-[#6B7280] dark:text-[#9CA3AF]">
+          {contentText.length} / {MAX_CONTENT_LENGTH}자
+        </div>
+
         <input
           type="hidden"
           name="content_raw"

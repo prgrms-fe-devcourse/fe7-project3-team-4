@@ -25,8 +25,8 @@ export function SelfCheckList({ values, onChange }: Props) {
     <div className="grid bg-white/40 shadow-lg rounded-xl p-6 gap-3 dark:bg-white/20">
       <p className="font-semibold text-xl mb-2">자가진단 문항</p>
 
-      <div className="w-4/5 mx-auto">
-        <div className="space-y-4">
+      <div className="w-6/7 mx-auto">
+        <div className="space-y-4 lg:space-y-0">
           <M3Checkbox
             label="프롬프트를 올리기 전에 프롬프트의 성능을 충분히 검증하였나요?"
             checked={values.q1}
