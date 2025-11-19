@@ -38,6 +38,7 @@ export interface WeeklyPostType extends PostType {
     email: string | null;
     avatar_url?: string | null;
     bio?: string | null;
+    equipped_badge_id?: string | null;
   };
 }
 
