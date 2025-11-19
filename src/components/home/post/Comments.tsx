@@ -7,6 +7,8 @@ import type { User } from "@supabase/supabase-js";
 import CommentForm from "./CommentForm";
 import UserAvatar from "@/components/shop/UserAvatar";
 import { useToast } from "@/components/common/toast/ToastContext";
+import ConfirmModal from "@/components/common/ConfirmModal";
+
 // 🌟 1. UserAvatar 임포트
 // 🌟 2. PostComment 타입 임포트 (PostDetail.tsx에서 가져옴)
 
@@ -54,6 +56,9 @@ export default function Comments({
   const [showReplies, setShowReplies] = useState(false);
   const [replies, setReplies] = useState<Reply[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [pendingDeleteIsReply, setPendingDeleteIsReply] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content);
   const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
@@ -193,8 +198,6 @@ export default function Comments({
 
   // 댓글 삭제
   const handleDelete = async (commentId: string, isReply: boolean = false) => {
-    if (!confirm("정말 삭제하시겠습니까?")) return;
-
     setIsDeleting(true);
     const { error } = await supabase
       .from("comments")
@@ -232,16 +235,32 @@ export default function Comments({
         }
 
         fetchReplies();
+
+        showToast({
+          title: "답글 삭제 완료",
+          message: "답글이 삭제되었습니다.",
+          variant: "success",
+        });
       } else {
         // 부모 댓글 삭제 시 전체 목록 새로고침
         if (onCommentDeleted) {
           onCommentDeleted();
         }
+
+        showToast({
+          title: "댓글 삭제 완료",
+          message: "댓글이 삭제되었습니다.",
+          variant: "success",
+        });
       }
     }
     setIsDeleting(false);
   };
-
+  const openDeleteConfirm = (commentId: string, isReply: boolean = false) => {
+    setPendingDeleteId(commentId);
+    setPendingDeleteIsReply(isReply);
+    setDeleteConfirmOpen(true);
+  };
   const handleLikeToggle = async (commentId: string) => {
     if (!user) {
       showToast({
@@ -358,7 +377,7 @@ export default function Comments({
                 <Edit size={16} />
               </button>
               <button
-                onClick={() => handleDelete(comment.id)}
+                onClick={() => openDeleteConfirm(comment.id)}
                 disabled={isDeleting}
                 className="cursor-pointer text-red-500 hover:text-red-700 disabled:text-gray-400 dark:text-red-300 dark:hover:text-red-500"
               >
@@ -537,7 +556,7 @@ export default function Comments({
                             <Edit size={14} />
                           </button>
                           <button
-                            onClick={() => handleDelete(reply.id, true)}
+                            onClick={() => openDeleteConfirm(reply.id, true)}
                             disabled={isDeleting}
                             className="cursor-pointer text-red-500 hover:text-red-700 disabled:text-gray-400 dark:text-red-300 dark:hover:text-red-500"
                           >
@@ -553,6 +572,24 @@ export default function Comments({
           )}
         </div>
       </div>
+
+      <ConfirmModal
+        title="삭제 확인"
+        description="정말 삭제하시겠습니까?"
+        open={deleteConfirmOpen}
+        onCancel={() => {
+          setDeleteConfirmOpen(false);
+          setPendingDeleteId(null);
+          setPendingDeleteIsReply(false);
+        }}
+        onConfirm={() => {
+          if (!pendingDeleteId) return;
+          handleDelete(pendingDeleteId, pendingDeleteIsReply);
+          setDeleteConfirmOpen(false);
+          setPendingDeleteId(null);
+          setPendingDeleteIsReply(false);
+        }}
+      />
     </>
   );
 }
