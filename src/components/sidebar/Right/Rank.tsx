@@ -249,7 +249,7 @@ export default function Rank() {
           }}
         >
           {/* === 슬라이드 1: 텍스트 챌린지 === */}
-          <div className="w-full shrink-0 flex flex-col gap-4">
+          <div className="w-full shrink-0 flex flex-col gap-2">
             {textTopUsers.map((item, index) => {
               const rankNumber = index + 1;
               const rankSuffix = getOrdinalSuffix(rankNumber);
@@ -279,13 +279,13 @@ export default function Rank() {
                 >
                   <Link
                     href={`/profile?userId=${item.user_id}`}
-                    className="flex items-center gap-1.5 flex-1 min-w-0 py-4 px-2"
+                    className="flex items-center gap-1.5 flex-1 min-w-0 p-2"
                   >
                     <div className="w-8" style={{ color: rankColor }}>
                       {rankNumber}
                       {rankSuffix}.
                     </div>
-                    <div className="flex-1 flex gap-2 items-center">
+                    <div className="flex-1 flex gap-2 items-center line-clamp-1">
                       {/* 🌟 6. 기존 <img> 블록을 UserAvatar 컴포넌트로 교체 */}
                       <UserAvatar
                         src={avatar}
@@ -295,7 +295,7 @@ export default function Rank() {
                         className="w-9 h-9 shrink-0" // 기존과 동일한 w-9 h-9 크기 적용
                       />
 
-                      <div className="min-w-0">
+                      <div>
                         <p className="text-sm truncate">{displayName}</p>
                         <p className="text-xs text-[#717182] truncate dark:text-[#A6A6DB]">
                           {email}
@@ -320,7 +320,7 @@ export default function Rank() {
           </div>
 
           {/* === 슬라이드 2: 이미지 챌린지 === */}
-          <div className="w-full shrink-0 flex flex-col gap-4">
+          <div className="w-full shrink-0 flex flex-col gap-2">
             {imageTopUsers.map((item, index) => {
               const rankNumber = index + 1;
               const rankSuffix = getOrdinalSuffix(rankNumber);
@@ -356,7 +356,7 @@ export default function Rank() {
                       {rankNumber}
                       {rankSuffix}.
                     </div>
-                    <div className="flex-1 flex gap-2 items-center">
+                    <div className="flex-1 flex gap-2 items-center line-clamp-1">
                       {/* 🌟 6. 기존 <img> 블록을 UserAvatar 컴포넌트로 교체 */}
                       <UserAvatar
                         src={avatar}
@@ -366,7 +366,7 @@ export default function Rank() {
                         className="w-9 h-9 shrink-0" // 기존과 동일한 w-9 h-9 크기 적용
                       />
 
-                      <div className="min-w-0">
+                      <div>
                         <p className="text-sm truncate">{displayName}</p>
                         <p className="text-xs text-[#717182] truncate dark:text-[#A6A6DB]">
                           {email}
