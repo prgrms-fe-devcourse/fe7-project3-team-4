@@ -7,6 +7,7 @@ import { createClient } from "@/utils/supabase/client";
 import type { NotificationWithDetails } from "@/types/notification";
 import { useToast } from "../common/toast/ToastContext";
 import { useQueryClient } from "@tanstack/react-query";
+import ConfirmModal from "@/components/common/ConfirmModal";
 
 type NotificationListProps = {
   notifications: NotificationWithDetails[];
@@ -34,6 +35,7 @@ export function NotificationList({
 
   const queryClient = useQueryClient();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   // 1. 실시간 알림 수신 (새 알림이 오면 목록 갱신)
   useEffect(() => {
@@ -111,9 +113,11 @@ export function NotificationList({
   }, [supabase, queryClient, userId]);
 
   // ... (나머지 핸들러는 기존과 동일)
-  const handleDeleteAll = async () => {
-    if (!confirm("모든 알림을 삭제하시겠습니까?")) return;
+  const openDeleteConfirm = () => {
+    setDeleteConfirmOpen(true);
+  };
 
+  const handleDeleteAll = async () => {
     setIsDeleting(true);
 
     const { error } = await supabase
@@ -133,6 +137,7 @@ export function NotificationList({
     }
 
     setIsDeleting(false);
+    setDeleteConfirmOpen(false);
   };
 
   const handleMarkAsRead = (notificationId: string) => {
@@ -176,7 +181,7 @@ export function NotificationList({
 
         <button
           className="cursor-pointer leading-none border-b text-[#717182] disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline"
-          onClick={handleDeleteAll}
+          onClick={openDeleteConfirm}
           disabled={isDeleting || notifications.length === 0}
         >
           {isDeleting ? "삭제 중..." : "알림 삭제"}
@@ -198,6 +203,14 @@ export function NotificationList({
           ))
         )}
       </div>
+
+      <ConfirmModal
+        title="삭제 확인"
+        description="모든 알림을 삭제하시겠습니까?"
+        open={deleteConfirmOpen}
+        onCancel={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteAll}
+      />
     </>
   );
 }
