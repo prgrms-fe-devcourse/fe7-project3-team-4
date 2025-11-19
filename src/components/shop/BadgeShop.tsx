@@ -55,7 +55,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
         setEquippedBadgeId(profile.equipped_badge_id);
       }
 
-      // 1-2. 보유 뱃지 목록
+      // 1-2. 보유 이펙트 목록
       const { data: userBadges } = await supabase
         .from("user_badges")
         .select("badge_id")
@@ -70,7 +70,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
     fetchUserData();
   }, [supabase]);
 
-  // 🔹 보유 뱃지 목록 / 표시 대상 뱃지 목록
+  // 🔹 보유 이펙트 목록 / 표시 대상 이펙트 목록
   const ownedBadges = useMemo(
     () => initialBadges.filter((badge) => ownedBadgeIds.has(badge.id)),
     [initialBadges, ownedBadgeIds]
@@ -122,7 +122,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
   const handleBuy = (badge: BadgeRow) => {
     if (!user) {
       showToast({
-        title: "구매 실패",
+        title: "이펙트 구매 실패",
         message: "로그인이 필요합니다.",
         variant: "warning",
       });
@@ -145,13 +145,13 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
 
       if (error) {
         showToast({
-          title: "구매 실패",
+          title: "이펙트 구매 실패",
           message: "포인트가 부족합니다.",
           variant: "warning",
         });
       } else {
         showToast({
-          title: "구매 성공!",
+          title: "이펙트 구매 성공!",
           message: `${selectedBadge.name} 이펙트를 획득했습니다.`,
           variant: "success",
         });
@@ -160,8 +160,8 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
       }
     } catch (err) {
       showToast({
-        title: "오류",
-        message: `알 수 없는 오류가 발생했습니다.`,
+        title: "이펙트 구매 오류",
+        message: `이펙트 구매 중 오류가 발생했습니다.`,
         variant: "error",
       });
       console.error(err);
@@ -185,15 +185,15 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
 
       setEquippedBadgeId(badgeId);
       showToast({
-        title: "장착 완료!",
+        title: "이펙트 장착 완료!",
         message: "이펙트를 장착했습니다.",
         variant: "success",
       });
     } catch (error) {
       console.error("장착 에러:", error);
       showToast({
-        title: "실패",
-        message: "오류가 발생했습니다.",
+        title: "이펙트 장착 오류",
+        message: "이펙트 장착 중 오류가 발생했습니다.",
         variant: "error",
       });
     } finally {
@@ -215,15 +215,15 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
 
       setEquippedBadgeId(null);
       showToast({
-        title: "해제 완료",
+        title: "이펙트 해제 완료",
         message: "이펙트를 해제했습니다.",
         variant: "success",
       });
     } catch (error) {
       console.error("해제 에러:", error);
       showToast({
-        title: "실패",
-        message: "오류가 발생했습니다.",
+        title: "이펙트 해제 오류",
+        message: "이펙트 해제 중 오류가 발생했습니다.",
         variant: "error",
       });
     } finally {
@@ -277,11 +277,11 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
     "transform-gpu transition-transform transition-opacity duration-700 " +
     "ease-[cubic-bezier(0.25,0.46,0.45,0.94)]";
 
-  // 판매 중인 뱃지가 아예 없을 때 (DB 자체가 비어있음)
+  // 판매 중인 이펙트가 아예 없을 때 (DB 자체가 비어있음)
   if (initialBadges.length === 0) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        판매 중인 뱃지가 없습니다.
+        판매 중인 이펙트가 없습니다.
       </div>
     );
   }
@@ -290,12 +290,12 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
     <div className="relative w-full overflow-hidden max-w-4xl mx-auto px-2 lg:px-6 lg:pt-6">
       <div className="flex items-start justify-between">
         <div className="space-y-3">
-          <h1 className="font-semibold text-xl">프로필 뱃지 상점</h1>
+          <h1 className="font-semibold text-xl">프로필 이펙트 상점</h1>
           <p className="text-gray-600 text-sm">
-            프로필을 나답게 보여줄 뱃지를 골라보세요
+            프로필을 나답게 보여줄 이펙트를 골라보세요
           </p>
 
-          {/* 🔹 전체 / 보유 뱃지 탭 */}
+          {/* 🔹 전체 / 보유 이펙트 탭 */}
           <div className="inline-flex rounded-full bg-slate-100/80 p-1 text-sm text-slate-600">
             <button
               type="button"
@@ -306,7 +306,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                   : "text-slate-500 hover:text-slate-900"
               }`}
             >
-              전체 뱃지
+              전체 이펙트
             </button>
             <button
               type="button"
@@ -317,7 +317,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                   : "text-slate-500 hover:text-slate-900"
               }`}
             >
-              보유 뱃지
+              보유 이펙트
             </button>
           </div>
         </div>
@@ -343,14 +343,14 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
 
       {/* 페이지 루트 */}
       <div
-        className="relative z-10 flex items-center justify-center outline-none py-8 lg:py-15"
+        className="relative z-10 flex items-center justify-center outline-none py-8 lg:pt-12"
         tabIndex={0}
         onKeyDown={handleKeyDown}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
         <main className="flex min-w-full flex-col gap-7 rounded-4xl border border-white/20 bg-white/40 p-6 shadow-xl lg:flex-row lg:gap-10 lg:p-8 dark:bg-white/20 dark:shadow-white/10">
-          {/* 왼쪽: 뱃지 카드 캐러셀 */}
+          {/* 왼쪽: 이펙트 카드 캐러셀 */}
           {/* 모바일 전용 */}
           <section className="flex flex-1 flex-col items-center justify-center gap-4 lg:hidden">
             <div className="relative w-full max-w-[420px] overflow-hidden">
@@ -430,7 +430,8 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
 
           {/* 데스크탑 전용 */}
           <section className="hidden lg:flex flex-1 flex-col items-center justify-center gap-5">
-            <div className="relative h-[360px] w-full max-w-[420px] transform-gpu">
+            {/* 🌟 수정됨: h-[360px] -> h-[640px]로 변경하여 카드 상단이 잘리지 않도록 함 */}
+            <div className="relative h-[590px] w-full max-w-[420px] transform-gpu">
               {displayedBadges.map((badge, index) => {
                 const rarity = badge.rarity ?? "common";
                 const cardIsOwned = ownedBadgeIds.has(badge.id);
@@ -503,7 +504,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
             {currentBadge ? (
               <>
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-[#A6A6DB]">
-                  Badge shop
+                  Effect shop
                 </p>
 
                 <div
@@ -514,13 +515,13 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h2 className="inline-block text-3xl font-extrabold leading-tight tracking-[-0.02em] text-[#0b1f4a] lg:text-[2.1rem]">
-                        <span className="relative inline-block pb-1 dark:text-[#80a8ff]">
+                        <span className="relative inline-block pb-1 dark:text-[#6998ff]">
                           {currentBadge.name}
                           <span className="absolute bottom-0 left-0 h-[3px] w-[72px] rounded-full bg-linear-to-r from-blue-500 via-indigo-500 to-pink-500" />
                         </span>
                       </h2>
                       <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-300">
-                        {rarityLabel[currentBadge.rarity ?? "common"]} badge
+                        {rarityLabel[currentBadge.rarity ?? "common"]} Effect
                       </p>
                     </div>
                     <span
@@ -555,7 +556,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                 </div>
 
                 {/* 버튼 / 상태 영역 */}
-                <div className="mt-2 flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 shadow-lg backdrop-blur-xl dark:bg-white/10 dark:border-white/40">
+                <div className="mt-2 flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 shadow-lg backdrop-blur-xl dark:bg-white/20 dark:border-white/40">
                   <div className="flex items-end justify-between gap-3">
                     <div>
                       {isOwned ? (
@@ -564,10 +565,10 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                             Status
                           </p>
                           <div className="flex items-center gap-2 pt-1">
-                            <span className="text-lg font-bold text-indigo-600">
-                              보유 중인 뱃지
+                            <span className="text-lg font-bold text-[#6758FF] dark:text-[#2e258f]">
+                              보유 중인 이펙트
                             </span>
-                            <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold uppercase text-indigo-600">
+                            <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold uppercase text-[#6758FF]">
                               Owned
                             </span>
                           </div>
@@ -670,18 +671,18 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                 </div>
               </>
             ) : (
-              // 🔹 보유 뱃지 탭인데 아무것도 없을 때 등
+              // 🔹 보유 이펙트 탭인데 아무것도 없을 때 등
               <div className="space-y-4">
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-[#A6A6DB]">
-                  Badge shop
+                  Effect shop
                 </p>
                 <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-                  아직 표시할 뱃지가 없어요
+                  아직 표시할 이펙트가 없어요
                 </h2>
                 <p className="text-sm text-slate-600 dark:text-[#A6A6DB]">
                   {activeTab === "owned"
-                    ? "보유한 뱃지가 아직 없어요. 상점에서 뱃지를 구매하면 여기에서 한 번에 모아볼 수 있어요."
-                    : "판매 중인 뱃지가 없습니다."}
+                    ? "보유한 이펙트가 아직 없어요. 상점에서 이펙트를 구매하면 여기에서 한 번에 모아볼 수 있어요."
+                    : "판매 중인 이펙트가 없습니다."}
                 </p>
                 {activeTab === "owned" && (
                   <button
@@ -689,7 +690,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                     onClick={() => setActiveTab("all")}
                     className="inline-flex items-center justify-center rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:bg-slate-900"
                   >
-                    전체 뱃지 보러가기
+                    전체 이펙트 보러가기
                   </button>
                 )}
               </div>

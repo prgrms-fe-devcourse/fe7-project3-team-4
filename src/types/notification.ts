@@ -12,13 +12,14 @@ export type NotificationWithDetails = {
   type: NotificationType;
   created_at: string;
   is_read: boolean | null;
-  // ⭐️ sender 객체에 'id' 추가
+  // sender 정보 상세 정의
   sender: {
-    id: string | null; // ⭐️ (팔로우 URL용)
+    id: string | null;
     display_name: string | null;
     avatar_url: string | null;
+    equipped_badge_id: string | null; // 👈 이 필드가 필수입니다!
   } | null;
   content: string | null;
-  post_id: string | null; // ⭐️ (게시물 URL용)
-  post_type: string | null; // ⭐️ (게시물 URL용)
+  post_id: string | null;
+  post_type: string | null;
 };
