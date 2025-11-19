@@ -147,7 +147,7 @@ export default function WeeklyNotice({
           <h3 className="text-center font-bold text-2xl">ALGO 주간 챌린지</h3>
           <Zap size={24} strokeWidth={3} className="text-[#eec40a]" />
         </div>
-        <div className="p-6 bg-white/40 border border-white/20 rounded-xl shadow-xl font-medium space-y-1 dark:bg-white/20">
+        <div className="p-6 bg-white/40 border border-white/20 rounded-xl shadow-xl font-medium space-y-1 dark:bg-white/20 text-sm lg:text-base">
           <div className="flex items-center gap-2">
             <svg
               width="18"
@@ -162,7 +162,7 @@ export default function WeeklyNotice({
                 fill="#152E60"
               />
             </svg>
-            <p>
+            <p className="flex-1">
               매주 월요일, 새로운 텍스트/이미지{" "}
               <span className="text-[#248AFF]">주제</span> 공개
             </p>
@@ -181,7 +181,7 @@ export default function WeeklyNotice({
                 fill="#152E60"
               />
             </svg>
-            <p>
+            <p className="flex-1">
               주제에 맞는 <span className="text-[#248AFF]">프롬프트</span>와
               결과물을, 사용한 AI 모델(GPT/Gemini)과 함께 업로드
             </p>
@@ -200,7 +200,7 @@ export default function WeeklyNotice({
                 fill="#152E60"
               />
             </svg>
-            <p>
+            <p className="flex-1">
               차주 월요일 00시 기준, 좋아요 상위 3개의 게시물 작성자에게{" "}
               <span className="text-[#248AFF]">포인트</span> 차등 지급
             </p>
@@ -208,14 +208,14 @@ export default function WeeklyNotice({
         </div>
         <div className="bg-white/40 border border-white/20 rounded-xl shadow-xl p-6 space-y-3 dark:bg-white/20">
           <div className="space-y-1">
-            <h3 className="text-center font-semibold text-xl mb-3">
+            <h3 className="text-center font-semibold text-lg lg:text-xl mb-3">
               {todayLabel}
             </h3>
-            <p className="font-medium text-lg">
+            <p className="font-medium lg:text-lg">
               이번 주 {active === "Image" ? "이미지" : "텍스트"} 주제:{" "}
               <b className="text-[#ff2424]">“{current.shortTitle}”</b>
             </p>
-            <p className="ml-3">{current.description}</p>
+            <p className="ml-3 text-sm lg:text-base">{current.description}</p>
           </div>
           <div className="flex lg:flex-row flex-col gap-4">
             {/* 에시 프롬프트 */}
