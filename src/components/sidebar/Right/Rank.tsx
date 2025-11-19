@@ -38,6 +38,19 @@ type RankData = {
   like_count: number;
 };
 
+// Supabase Realtime payload 타입(프로필 변경용 최소 타입)
+type ProfilesRealtimePayload = {
+  new?: {
+    user_id?: string;
+    id?: string;
+    display_name?: string | null;
+    email?: string | null;
+    avatar_url?: string | null;
+    equipped_badge_id?: string | null;
+  };
+  old?: Record<string, unknown>;
+};
+
 export default function Rank() {
   const [textTopUsers, setTextTopUsers] = useState<RankData[]>([]);
   const [imageTopUsers, setImageTopUsers] = useState<RankData[]>([]);
@@ -178,6 +191,62 @@ export default function Rank() {
       supabase.removeChannel(postChannel);
     };
   }, [supabase, fetchRankData]);
+
+  // 프로필 변경 구독: avatar_url, display_name, equipped_badge_id 등 변경 시 로컬 상태만 부분 갱신
+  useEffect(() => {
+    const profileChannel = supabase
+      .channel("rank-profiles-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "profiles",
+        },
+        (payload: ProfilesRealtimePayload) => {
+          // payload.new에 변경된 행이 들어있습니다.
+          try {
+            const newProfile = payload.new;
+            const changedUserId = newProfile?.user_id ?? newProfile?.id;
+
+            if (!changedUserId || !newProfile) {
+              console.log("Profile update received but missing data:", payload);
+              return;
+            }
+
+            // 안전한 타입으로 변환: undefined를 null로 대체하여 ProfileData 타입과 호환
+            const makeProfilePatch = (uProfile: ProfileData) => {
+              return {
+                display_name: newProfile.display_name ?? uProfile?.display_name ?? null,
+                email: newProfile.email ?? uProfile?.email ?? null,
+                avatar_url: newProfile.avatar_url ?? uProfile?.avatar_url ?? null,
+                equipped_badge_id:
+                  newProfile.equipped_badge_id ?? uProfile?.equipped_badge_id ?? null,
+              } as ProfileData;
+            };
+
+            // text 랭크에서 해당 사용자 프로필만 업데이트
+            setTextTopUsers((prev) =>
+              prev.map((u) => (u.user_id === changedUserId ? { ...u, profile: makeProfilePatch(u.profile) } : u))
+            );
+
+            // image 랭크에서도 동일하게 업데이트
+            setImageTopUsers((prev) =>
+              prev.map((u) => (u.user_id === changedUserId ? { ...u, profile: makeProfilePatch(u.profile) } : u))
+            );
+
+            // (선택) 필요하면 전체 재조회로 정합성 보장: fetchRankData();
+          } catch (e) {
+            console.error("Error handling profile realtime payload:", e, payload);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(profileChannel);
+    };
+  }, [supabase]);
 
   // 텍스트 / 이미지 순위 자동 전환
   useEffect(() => {
