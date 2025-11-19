@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  Award,
   Bell,
   History,
   LogIn,
@@ -109,6 +110,15 @@ export function MobileHeader({
                     onClick={closeMenu}
                   />
                 </div>
+                <div className="cursor-pointer rounded-lg hover:bg-[#ececec] active:bg-[#ececec] dark:hover:bg-[#575757] dark:active:bg-[#575757]">
+                  <MenuBtn
+                    icon={<Award size={20} />}
+                    title="이펙트 상점"
+                    url="shop"
+                    size="md"
+                    onClick={closeMenu}
+                  />
+                </div>
               </div>
 
               <div className="p-1 space-y-1.5">
@@ -161,13 +171,13 @@ export function MobileHeader({
                     </button>
                   )}
                 </li>
-                <li className="cursor-pointer rounded-lg hover:bg-[#ececec] active:bg-[#ececec] dark:hover:bg-[#575757] dark:active:bg-[#575757]">
+                <li className="cursor-pointer flex flex-row items-center rounded-lg hover:bg-[#ececec] active:bg-[#ececec] dark:hover:bg-[#575757] dark:active:bg-[#575757]">
                   {/* TODO: 여기 다크모드 토글 아이콘/텍스트로 바꾸기 */}
                   <button
                     onClick={toggleTheme}
-                    className="cursor-pointer py-2 px-2.5 flex flex-row items-center gap-2.5"
+                    className="cursor-pointer flex items-center flex-1 gap-2.5 py-2 px-2.5"
                   >
-                    {!isDark ? (
+                    {isDark ? (
                       <>
                         <Sun display="Mobile" size={20} />
                         <span>라이트모드</span>

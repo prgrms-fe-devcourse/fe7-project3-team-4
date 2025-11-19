@@ -1,14 +1,18 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Profile } from "@/types";
-import { Calendar, MessageCircle, Pencil, SquarePen, X } from "lucide-react";
-import Image from "next/image"; // Image is still used as a fallback/placeholder conceptually, but UserAvatar will be primary
+import {
+  Calendar,
+  MessageCircle,
+  Pencil,
+  SquarePen,
+  X,
+  Loader2,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import UserAvatar from "../shop/UserAvatar";
-import Link from "next/link";
 
 type ProfileHeaderProps = {
   profile: Profile;
@@ -19,13 +23,13 @@ type ProfileHeaderProps = {
   onEditClick?: () => void;
 };
 
-// 🌟 2. FollowUser 타입에 equipped_badge_id 추가
+// FollowUser 타입은 그대로 유지
 type FollowUser = {
   id: string;
   display_name: string;
   email: string;
   avatar_url: string | null;
-  equipped_badge_id: string | null; // 👈 뱃지 ID 추가
+  equipped_badge_id: string | null;
 };
 
 export function ProfileHeader({
@@ -42,6 +46,8 @@ export function ProfileHeader({
   );
   const [users, setUsers] = useState<FollowUser[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isMessageLoading, setIsMessageLoading] = useState(false);
+
   const supabase = createClient();
   const router = useRouter();
 
@@ -53,13 +59,38 @@ export function ProfileHeader({
       })
     : "가입일 정보 없음";
 
-  // 프로필 링크 클릭 시 모달 닫기
+  // 채팅방 이동 핸들러
+  const handleMessageClick = async () => {
+    if (!profile?.id || isMessageLoading) return;
+
+    try {
+      setIsMessageLoading(true);
+      const { data: roomId, error } = await supabase.rpc("ensure_direct_room", {
+        other_user_id: profile.id,
+      });
+
+      if (error) {
+        console.error("Error fetching room ID:", error);
+        alert("채팅방을 불러오는데 실패했습니다.");
+        return;
+      }
+
+      if (roomId) {
+        router.push(`/message?peerId=${profile.id}&roomId=${roomId}`);
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+    } finally {
+      setIsMessageLoading(false);
+    }
+  };
+
   const handleProfileClick = (userId: string) => {
     handleCloseModal();
     router.push(`/profile?userId=${userId}`);
   };
 
-  // 🌟 3. 팔로잉 목록 조회 쿼리 수정
+  // 🌟 any 제거 및 타입 안전성 확보
   const fetchFollowing = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -67,7 +98,7 @@ export function ProfileHeader({
       .select(
         `
         following_id,
-        profiles:following_id (
+        profiles:profiles!following_id (
           id,
           display_name,
           email,
@@ -76,6 +107,7 @@ export function ProfileHeader({
         )
       `
       )
+      // 👆 설명: "profiles 테이블이랑 조인할 건데(!), following_id 컬럼을 써줘. 그리고 결과 이름은 profiles(:)로 해줘."
       .eq("follower_id", profile!.id);
 
     if (error) {
@@ -87,19 +119,24 @@ export function ProfileHeader({
     if (data) {
       const followingUsers: FollowUser[] = data
         .filter((item) => item.profiles)
-        .map((item: any) => ({
-          id: item.profiles.id,
-          display_name: item.profiles.display_name || "익명",
-          email: item.profiles.email || "",
-          avatar_url: item.profiles.avatar_url,
-          equipped_badge_id: item.profiles.equipped_badge_id, // 👈 뱃지 ID 매핑
-        }));
+        .map((item) => {
+          // 이제 item.profiles에서 에러가 나지 않고 자동완성이 뜰 겁니다.
+          const targetProfile = item.profiles!;
+
+          return {
+            id: targetProfile.id,
+            display_name: targetProfile.display_name || "익명",
+            email: targetProfile.email || "",
+            avatar_url: targetProfile.avatar_url,
+            equipped_badge_id: targetProfile.equipped_badge_id,
+          };
+        });
       setUsers(followingUsers);
     }
     setLoading(false);
   };
 
-  // 🌟 4. 팔로워 목록 조회 쿼리 수정
+  // 🌟 any 제거 및 타입 안전성 확보
   const fetchFollowers = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -107,7 +144,7 @@ export function ProfileHeader({
       .select(
         `
         follower_id,
-        profiles:follower_id (
+        profiles:profiles!follower_id (
           id,
           display_name,
           email,
@@ -116,6 +153,7 @@ export function ProfileHeader({
         )
       `
       )
+      // 👆 설명: "profiles 테이블이랑 조인할 건데(!), follower_id 컬럼을 써줘."
       .eq("following_id", profile!.id);
 
     if (error) {
@@ -127,19 +165,22 @@ export function ProfileHeader({
     if (data) {
       const followerUsers: FollowUser[] = data
         .filter((item) => item.profiles)
-        .map((item: any) => ({
-          id: item.profiles.id,
-          display_name: item.profiles.display_name || "익명",
-          email: item.profiles.email || "",
-          avatar_url: item.profiles.avatar_url,
-          equipped_badge_id: item.profiles.equipped_badge_id, // 👈 뱃지 ID 매핑
-        }));
+        .map((item) => {
+          const targetProfile = item.profiles!;
+
+          return {
+            id: targetProfile.id,
+            display_name: targetProfile.display_name || "익명",
+            email: targetProfile.email || "",
+            avatar_url: targetProfile.avatar_url,
+            equipped_badge_id: targetProfile.equipped_badge_id,
+          };
+        });
       setUsers(followerUsers);
     }
     setLoading(false);
   };
 
-  // 모달 열기
   const handleOpenModal = (type: "following" | "follower") => {
     setModalType(type);
     setShowModal(true);
@@ -150,14 +191,12 @@ export function ProfileHeader({
     }
   };
 
-  // 모달 닫기
   const handleCloseModal = () => {
     setShowModal(false);
     setModalType(null);
     setUsers([]);
   };
 
-  // Realtime 구독
   useEffect(() => {
     if (!showModal || !modalType) return;
 
@@ -192,20 +231,17 @@ export function ProfileHeader({
   return (
     <>
       <div className="mt-6 relative pt-10">
-        {/* 🌟 5. 메인 프로필 아바타 수정 */}
         <div
           className={`group absolute top-0 left-6 z-10 w-24 h-24 rounded-full border-2 flex items-center justify-center border-white ${
-            // 👈 bg-gray-300 제거
             isOwnProfile ? "cursor-pointer" : "cursor-default"
           }`}
           onClick={isOwnProfile ? onAvatarClick : undefined}
         >
-          {/* UserAvatar가 null src도 처리, className으로 크기 전달 */}
           <UserAvatar
             src={profile!.avatar_url}
             alt="프로필 이미지"
             equippedBadgeId={profile?.equipped_badge_id}
-            className="w-full h-full" // 👈 부모 div(w-24 h-24)를 꽉 채움
+            className="w-full h-full"
           />
 
           {isOwnProfile && (
@@ -215,7 +251,6 @@ export function ProfileHeader({
           )}
         </div>
 
-        {/* 프로필 정보 박스 */}
         <div className="bg-white/40 border border-white/20 rounded-xl shadow-xl dark:bg-white/20 dark:shadow-white/20">
           <div className="px-6 pb-6 pt-3">
             <div className="w-full flex justify-end mb-8">
@@ -230,15 +265,20 @@ export function ProfileHeader({
                 </button>
               ) : (
                 <div className="flex gap-2">
-                  {/* 채팅 버튼 */}
-                  <Link
-                    href={`/message?peerId=${profile!.id}`}
-                    className="cursor-pointer leading-none px-2 py-1 text-xs rounded-md lg:text-base lg:px-4 lg:py-3 flex items-center gap-1 lg:rounded-xl border border-[#6758FF]/70 text-[#6758FF] bg-white/70 hover:bg-[#6758FF] hover:text-white dark:bg-white/10 dark:hover:bg-[#6758FF]"
+                  <button
+                    onClick={handleMessageClick}
+                    disabled={isMessageLoading}
+                    className="cursor-pointer leading-none px-2 py-1 text-xs rounded-md lg:text-base lg:px-4 lg:py-3 flex items-center gap-1 lg:rounded-xl border border-[#6758FF]/70 text-[#6758FF] bg-white/70 hover:bg-[#6758FF] hover:text-white dark:bg-[#6758FF] dark:hover:bg-white/10 dark:hover:text-[#6758FF] dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                     title="메시지 보내기"
                   >
-                    <MessageCircle size={14} />
+                    {isMessageLoading ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <MessageCircle size={14} />
+                    )}
                     <span>1:1 채팅</span>
-                  </Link>
+                  </button>
+
                   <button
                     onClick={onFollowToggle}
                     className={`cursor-pointer leading-none px-2 py-1 text-xs rounded-md lg:text-base lg:px-4 lg:py-3 lg:rounded-xl text-white transition-colors ${
@@ -289,7 +329,6 @@ export function ProfileHeader({
         </div>
       </div>
 
-      {/* 팔로우 목록 모달 */}
       {showModal && (
         <div
           className="fixed inset-0 bg-[#717182]/50 z-50 flex items-center justify-center p-4"
@@ -299,7 +338,6 @@ export function ProfileHeader({
             className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden dark:bg-[#181818]"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* 모달 헤더 */}
             <div className="flex items-center justify-between p-4 border-b border-neutral-200 border-opacity-50">
               <h2 className="text-lg font-semibold">
                 {modalType === "following" ? "팔로잉" : "팔로워"}
@@ -312,7 +350,6 @@ export function ProfileHeader({
               </button>
             </div>
 
-            {/* 모달 바디 */}
             <div className="overflow-y-auto max-h-[400px]">
               {loading ? (
                 <div className="flex items-center justify-center py-12">
@@ -336,7 +373,6 @@ export function ProfileHeader({
                       className="p-4 hover:bg-gray-50 transition-colors dark:hover:bg-gray-600"
                     >
                       <div className="flex items-center gap-3">
-                        {/* 🌟 6. 모달 내부 아바타 수정 */}
                         <div
                           onClick={() => handleProfileClick(user.id)}
                           className="shrink-0 cursor-pointer"
@@ -345,11 +381,10 @@ export function ProfileHeader({
                             src={user.avatar_url}
                             alt={`${user.display_name} avatar`}
                             equippedBadgeId={user.equipped_badge_id}
-                            className="w-[50px] h-[50px]" // 👈 className으로 크기 지정
+                            className="w-[50px] h-[50px]"
                           />
                         </div>
 
-                        {/* 사용자 정보 */}
                         <div className="flex-1 min-w-0">
                           <p className="font-medium truncate">
                             {user.display_name}

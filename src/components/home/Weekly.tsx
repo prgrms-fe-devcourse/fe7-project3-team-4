@@ -124,16 +124,16 @@ export default function Weekly({
 
       {/* 날짜 네비게이션 바 */}
       <div className="mt-4 mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="inline-flex items-center gap-2 text-lg text-[#4B4B57] dark:text-slate-200">
+        <div className="inline-flex items-center gap-2 lg:text-lg text-[#4B4B57] dark:text-slate-200">
           <CalendarDays className="w-4 h-4" />
           <span className="font-medium">{currentDateLabel}</span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 text-xs">
           <button
             type="button"
             onClick={() => handleChangeDay(-1)}
-            className="cursor-pointer inline-flex items-center justify-center rounded-full border border-black/10 bg-white/60 px-3 py-1 text-xs shadow-sm hover:bg-white dark:bg-slate-800/70 dark:border-white/15 dark:hover:bg-slate-800"
+            className="cursor-pointer inline-flex items-center justify-center rounded-full border border-black/10 bg-white/60 px-3 py-1 shadow-sm hover:bg-white dark:bg-slate-800/70 dark:border-white/15 dark:hover:bg-slate-800"
           >
             <ChevronLeft className="w-3 h-3 mr-1" />
             이전
@@ -142,7 +142,7 @@ export default function Weekly({
           <button
             type="button"
             onClick={handleGoToday}
-            className="cursor-pointer inline-flex items-center justify-center rounded-full bg-[#6758FF] px-3 py-1 text-xs font-semibold text-white shadow-sm hover:bg-[#4d41cf] dark:bg-[#332c7e]"
+            className="cursor-pointer inline-flex items-center justify-center rounded-full bg-[#6758FF] px-3 py-1 font-semibold text-white shadow-sm hover:bg-[#4d41cf] dark:bg-[#332c7e]"
           >
             오늘
           </button>
@@ -150,7 +150,7 @@ export default function Weekly({
           <button
             type="button"
             onClick={() => handleChangeDay(1)}
-            className="cursor-pointer inline-flex items-center justify-center rounded-full border border-black/10 bg-white/60 px-3 py-1 text-xs shadow-sm hover:bg-white dark:bg-slate-800/70 dark:border-white/15 dark:hover:bg-slate-800"
+            className="cursor-pointer inline-flex items-center justify-center rounded-full border border-black/10 bg-white/60 px-3 py-1 shadow-sm hover:bg-white dark:bg-slate-800/70 dark:border-white/15 dark:hover:bg-slate-800"
           >
             다음
             <ChevronRight className="w-3 h-3 ml-1" />

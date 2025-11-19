@@ -58,7 +58,10 @@ const PromptBlock = ({ text, rotation = "left" }: PromptBlockProps) => {
       }
 
       const rect = wrapperRef.current.getBoundingClientRect();
-      const scannerY = window.innerHeight / 2;
+      const rawScannerY = window.innerHeight / 2;
+      const scannerOffset = rotation === "left" ? 8 : -8;
+
+      const scannerY = rawScannerY + scannerOffset;
 
       const cardTop = rect.top;
       const cardBottom = rect.bottom;
@@ -448,7 +451,7 @@ export default function LaserIntro({ onComplete }: { onComplete: () => void }) {
         />
       </div>
       {/* 왼쪽 카드 스트림 */}
-      <div className="absolute left-4 top-0 h-full flex items-center z-10">
+      <div className="absolute left-4 top-0 h-full hidden md:flex items-center z-10">
         <div ref={leftContainerRef} className="flex flex-col gap-40">
           {prompts.map((prompt, index) => (
             <PromptBlock
@@ -461,7 +464,7 @@ export default function LaserIntro({ onComplete }: { onComplete: () => void }) {
         </div>
       </div>
       {/* 오른쪽 카드 스트림 */}
-      <div className="absolute right-4 top-0 h-full flex items-center z-10">
+      <div className="absolute top-0 h-full flex items-center z-10 left-1/2 -translate-x-1/2 md:left-auto md:right-4 md:translate-x-0">
         <div ref={rightContainerRef} className="flex flex-col gap-40">
           {prompts.map((prompt, index) => (
             <PromptBlock

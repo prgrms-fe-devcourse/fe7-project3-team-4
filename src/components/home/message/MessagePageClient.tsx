@@ -816,8 +816,8 @@ export default function MessagePageClient() {
   return (
     <>
       <section className="w-full h-full lg:pt-10">
-        <div className="lg:max-w-250 mx-auto px-6">
-          <div className="bg-white/40 rounded-xl border border-white/10 lg:shadow-xl h-200 lg:min-w-50 flex flex-row dark:bg-white/20 dark:shadow-white/20">
+        <div className="lg:max-w-250 mx-auto px-6 h-full">
+          <div className="bg-white/40 rounded-xl border border-white/10 lg:shadow-xl h-full lg:h-200 lg:min-w-50 flex flex-row dark:bg-white/20 dark:shadow-white/20">
             {/* ============ 왼쪽 패널 ============ */}
             <div
               className={`flex-1 flex-col h-full w-full lg:max-w-[300px] ${
@@ -825,7 +825,7 @@ export default function MessagePageClient() {
               } lg:flex `}
             >
               {/* 검색 바 */}
-              <div className="p-4 bg-white/40 rounded-tl-xl border-b border-b-[#E5E5E5] dark:bg-white/15 dark:border-b-[#E5E5E5]/50">
+              <div className="p-4 bg-white/40 rounded-xl lg:rounded-tl-xl border-b border-b-[#E5E5E5] dark:bg-white/15 dark:border-b-[#E5E5E5]/50">
                 <div className="relative flex items-center gap-3 border border-[#E5E5E5] rounded-lg p-3 dark:border-[#E5E5E5]/50">
                   <Search className="text-[#DBDBDB]" />
                   <input
@@ -854,7 +854,7 @@ export default function MessagePageClient() {
               </div>
 
               {/* 목록 */}
-              <div className="h-full lg:border-r lg:border-[#E5E5E5]">
+              <div className="lg:h-full lg:border-r lg:border-[#E5E5E5]">
                 <div className="divide-y divide-black/5">
                   {isSearching ? (
                     <>
@@ -970,7 +970,7 @@ export default function MessagePageClient() {
               } lg:flex flex-1 flex-col justify-between h-full`}
             >
               {/* 상단 바 */}
-              <div className="flex justify-between p-4 bg-white/40 rounded-tr-xl border-b border-b-[#E5E5E5] dark:bg-white/15 dark:border-b-[#E5E5E5]/50">
+              <div className="flex justify-between p-4 bg-white/40 rounded-t-xl lg:rounded-tr-xl border-b border-b-[#E5E5E5] dark:bg-white/15 dark:border-b-[#E5E5E5]/50">
                 {/* 모바일 전용 뒤로가기 */}
                 <button
                   type="button"
@@ -997,7 +997,7 @@ export default function MessagePageClient() {
                         className="w-[50px] h-[50px]"
                       />
                     ) : (
-                      <div className="w-[50px] h-[50px] flex  items-center bg-white/70">
+                      <div className="w-[50px] h-[50px] flex items-center justify-center bg-white/70 rounded-full overflow-hidden">
                         <Logo size="md" />
                       </div>
                     )}

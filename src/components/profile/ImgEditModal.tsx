@@ -4,6 +4,7 @@ import { MouseEvent, useState, ChangeEvent, FormEvent } from "react";
 import { FormState, Profile } from "@/types";
 import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
+import { useToast } from "../common/toast/ToastContext";
 
 type ImgEditModalProps = {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export function ImgEditModal({
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const { showToast } = useToast();
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     profile?.avatar_url ?? null
   );
@@ -81,7 +83,11 @@ export function ImgEditModal({
       const result = await action(newUrl);
 
       if (result.success) {
-        alert("프로필 이미지가 변경되었습니다.");
+        showToast({
+          title: "성공",
+          message: "프로필 이미지가 변경되었습니다.",
+          variant: "success",
+        });
         onClose();
       } else {
         throw new Error(result.error ?? "프로필 URL 저장에 실패했습니다.");

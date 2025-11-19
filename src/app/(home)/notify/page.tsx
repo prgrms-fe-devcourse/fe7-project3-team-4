@@ -25,7 +25,7 @@ export default async function NotifyPage() {
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    redirect("/auth/login");
+    redirect("/auth/login?from=notification");
   }
 
   return (

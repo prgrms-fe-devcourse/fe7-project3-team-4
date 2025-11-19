@@ -1,9 +1,11 @@
 import { discordLogin, githubLogin, googleLogin } from "@/utils/actions";
 import { Github } from "lucide-react";
+import LoginToastClient from "./LoginToastClient";
 
 export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
+      <LoginToastClient />
       <div className="relative w-full max-w-md">
         <div className="backdrop-blur-xl bg-white/40 rounded-2xl p-8 shadow-2xl border border-white/20 dark:bg-white/20 dark:border-white/20 dark:shadow-lg dark:shadow-white/20">
           <div className="text-center mb-8">

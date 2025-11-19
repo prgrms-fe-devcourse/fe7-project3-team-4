@@ -8,6 +8,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useFollow } from "@/context/FollowContext";
 import RankFollowButton from "./RankFollowButton";
 import UserAvatar from "@/components/shop/UserAvatar";
+import { useToast } from "@/components/common/toast/ToastContext";
 
 const getOrdinalSuffix = (n: number) => {
   if (n % 100 >= 11 && n % 100 <= 13) {
@@ -56,7 +57,7 @@ export default function Rank() {
   const [imageTopUsers, setImageTopUsers] = useState<RankData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTopic, setActiveTopic] = useState<"text" | "image">("text");
-
+  const { showToast } = useToast();
   const topicLabel = activeTopic === "text" ? "텍스트 챌린지" : "이미지 챌린지";
   const supabase = createClient();
   const { isFollowing, toggleFollow, currentUserId } = useFollow();
@@ -262,7 +263,11 @@ export default function Rank() {
   const handleFollowToggle = async (targetUserId: string) => {
     // ... (기존 팔로우 로직 동일)
     if (!currentUserId) {
-      alert("로그인이 필요합니다.");
+      showToast({
+        title: "팔로우 실패",
+        message: "로그인 후 이용 가능합니다.",
+        variant: "warning",
+      });
       return;
     }
 
@@ -273,7 +278,11 @@ export default function Rank() {
       if (error instanceof Error) {
         alert(error.message);
       } else {
-        alert("팔로우 처리 중 오류가 발생했습니다.");
+        showToast({
+          title: "팔로우 오류",
+          message: "팔로우 처리 중 오류가 발생했습니다.",
+          variant: "error",
+        });
       }
     }
   };
