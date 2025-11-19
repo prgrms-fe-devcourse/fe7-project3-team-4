@@ -231,7 +231,7 @@ export default function Rank() {
   }
 
   return (
-    <Box icon={<Trophy />} title="지난 주 챌린지 순위">
+    <Box icon={<Trophy />} title="이번 주 챌린지 순위">
       {/* 주제 라벨 */}
       <div className="mb-2 flex items-center justify-center">
         <p className="text-sm font-semibold text-[#717182] dark:text-[#A6A6DB]">
@@ -275,32 +275,30 @@ export default function Rank() {
               return (
                 <div
                   key={`text-${item.user_id}`}
-                  className="cursor-pointer flex justify-between items-center hover:bg-gray-50 dark:hover:bg-white/30 rounded-lg pr-2"
+                  className="cursor-pointer flex justify-between items-center hover:bg-gray-200 dark:hover:bg-white/30 rounded-lg p-2"
                 >
                   <Link
                     href={`/profile?userId=${item.user_id}`}
-                    className="flex items-center gap-1.5 flex-1 min-w-0 p-2"
+                    className="flex items-center gap-1.5 flex-1 min-w-0"
                   >
-                    <div className="w-8" style={{ color: rankColor }}>
+                    <div className="flex-none w-8" style={{ color: rankColor }}>
                       {rankNumber}
                       {rankSuffix}.
                     </div>
-                    <div className="flex-1 flex gap-2 items-center line-clamp-1">
-                      {/* 🌟 6. 기존 <img> 블록을 UserAvatar 컴포넌트로 교체 */}
-                      <UserAvatar
-                        src={avatar}
-                        alt={displayName}
-                        equippedBadgeId={equippedBadgeId}
-                        size="sm"
-                        className="w-9 h-9 shrink-0" // 기존과 동일한 w-9 h-9 크기 적용
-                      />
+                    {/* 🌟 6. 기존 <img> 블록을 UserAvatar 컴포넌트로 교체 */}
+                    <UserAvatar
+                      src={avatar}
+                      alt={displayName}
+                      equippedBadgeId={equippedBadgeId}
+                      size="sm"
+                      className="w-9 h-9 shrink-0" // 기존과 동일한 w-9 h-9 크기 적용
+                    />
 
-                      <div>
-                        <p className="text-sm truncate">{displayName}</p>
-                        <p className="text-xs text-[#717182] truncate dark:text-[#A6A6DB]">
-                          {email}
-                        </p>
-                      </div>
+                    <div className="flex flex-col line-clamp-1 mr-2">
+                      <p className="text-sm truncate">{displayName}</p>
+                      <p className="text-xs text-[#717182] truncate dark:text-[#A6A6DB]">
+                        {email}
+                      </p>
                     </div>
                   </Link>
 
@@ -346,32 +344,30 @@ export default function Rank() {
               return (
                 <div
                   key={`image-${item.user_id}`}
-                  className="cursor-pointer flex justify-between items-center hover:bg-gray-50 dark:hover:bg-white/30 rounded-lg pr-2"
+                  className="cursor-pointer flex justify-between items-center hover:bg-gray-200 dark:hover:bg-white/30 rounded-lg p-2"
                 >
                   <Link
                     href={`/profile?userId=${item.user_id}`}
-                    className="flex items-center gap-1.5 flex-1 min-w-0 p-2"
+                    className="flex items-center gap-1.5 flex-1 min-w-0"
                   >
-                    <div className="w-8" style={{ color: rankColor }}>
+                    <div className="flex-none w-8" style={{ color: rankColor }}>
                       {rankNumber}
                       {rankSuffix}.
                     </div>
-                    <div className="flex-1 flex gap-2 items-center line-clamp-1">
-                      {/* 🌟 6. 기존 <img> 블록을 UserAvatar 컴포넌트로 교체 */}
-                      <UserAvatar
-                        src={avatar}
-                        alt={displayName}
-                        equippedBadgeId={equippedBadgeId}
-                        size="sm"
-                        className="w-9 h-9 shrink-0" // 기존과 동일한 w-9 h-9 크기 적용
-                      />
+                    {/* 🌟 6. 기존 <img> 블록을 UserAvatar 컴포넌트로 교체 */}
+                    <UserAvatar
+                      src={avatar}
+                      alt={displayName}
+                      equippedBadgeId={equippedBadgeId}
+                      size="sm"
+                      className="w-9 h-9 shrink-0" // 기존과 동일한 w-9 h-9 크기 적용
+                    />
 
-                      <div>
-                        <p className="text-sm truncate">{displayName}</p>
-                        <p className="text-xs text-[#717182] truncate dark:text-[#A6A6DB]">
-                          {email}
-                        </p>
-                      </div>
+                    <div className="flex flex-col line-clamp-1 mr-2">
+                      <p className="text-sm truncate">{displayName}</p>
+                      <p className="text-xs text-[#717182] truncate dark:text-[#A6A6DB]">
+                        {email}
+                      </p>
                     </div>
                   </Link>
 
