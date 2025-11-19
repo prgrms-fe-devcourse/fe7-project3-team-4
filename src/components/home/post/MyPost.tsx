@@ -4,6 +4,8 @@ import { PostType } from "@/types/Post";
 import Image from "next/image";
 import { getTranslatedTag } from "@/utils/tagTranslator";
 import UserAvatar from "@/components/shop/UserAvatar";
+// import { format } from "path";
+import { formatTimeAgo } from "@/utils/formatTimeAgo";
 
 export default function MyPost({
   data,
@@ -17,7 +19,8 @@ export default function MyPost({
   const authorAvatar = data.profiles?.avatar_url;
   // 🌟 2. 뱃지 ID 추출
   const authorEquippedBadgeId = data.profiles?.equipped_badge_id;
-  const displayDate = (data.created_at || "").slice(0, 10);
+  // const displayDate = (data.created_at || "").slice(0, 10);
+  const displayDate = formatTimeAgo(data.created_at || "");
   const postUrl = `/?type=${data.post_type}&id=${data.id}`;
 
   return (

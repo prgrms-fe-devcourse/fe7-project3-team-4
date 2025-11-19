@@ -9,6 +9,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useSearchParams } from "next/navigation"; // ✅ 추가
+import { formatTimeAgo } from "@/utils/formatTimeAgo";
 
 type NewsItemProps = {
   item: NewsItemWithState;
@@ -32,7 +33,8 @@ export default function NewsItem({
   const currentType = searchParams.get("type") || "all";
 
   const siteName = item.site_name || "익명";
-  const displayDate = (item.published_at || item.created_at).slice(0, 10);
+  // const displayDate = (item.published_at || item.created_at).slice(0, 10);
+  const displayDate = formatTimeAgo(item.published_at || item.created_at);
   const thumb = Array.isArray(item.images) ? item.images[0] : null;
   const likeCount = item.like_count ?? 0;
   const viewCount = item.view_count ?? 0;

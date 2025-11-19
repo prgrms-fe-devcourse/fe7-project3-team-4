@@ -10,6 +10,7 @@ import { getTranslatedTag } from "@/utils/tagTranslator";
 import Link from "next/link";
 import DetailActions from "@/app/(home)/news/[id]/DetailActions";
 import NewsItemSkeleton from "./NewsItemSkeleton";
+import { formatTimeAgo } from "@/utils/formatTimeAgo";
 
 interface NewsDetailProps {
   news: NewsItemWithState;
@@ -45,7 +46,8 @@ export default function NewsDetail({ news, onBack }: NewsDetailProps) {
   }, [news.id, news.content, supabase]);
 
   const author = news.site_name || "Unknown";
-  const displayDate = (news.published_at || news.created_at).slice(0, 10);
+  // const displayDate = (news.published_at || news.created_at).slice(0, 10);
+  const displayDate = formatTimeAgo(news.published_at || news.created_at);
   const thumb = Array.isArray(news.images) ? news.images[0] : null;
   const tags = news.tags || [];
 
