@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -13,6 +14,7 @@ import {
   uploadPromptResultImage,
 } from "@/utils/supabase/storage/posts";
 import { Database, Hashtag, Post } from "@/types";
+import { useToast } from "../common/toast/ToastContext";
 
 type WritePostFormProps = {
   hashtags: Hashtag[];
@@ -52,6 +54,8 @@ export function WritePostForm({
   initialModel = "GPT",
   initialResultMode = "Text",
 }: WritePostFormProps) {
+  const { showToast } = useToast();
+
   // 수정 모드인지 여부
   const isEdit = mode === "edit" && !!postId;
 
@@ -88,11 +92,15 @@ export function WritePostForm({
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user) {
-        alert("로그인 후 이용 가능합니다.");
-        router.push("/auth/login");
-        return;
-      }
+      // if (!user) {
+      //   showToast({
+      //     title: "접근 실패",
+      //     message: "로그인 후 이용 가능합니다.",
+      //     variant: "warning",
+      //   });
+      //   // router.push("/auth/login");
+      //   return;
+      // }
 
       // select가 disabled면 null 이라서 state fallback 사용
       const type =
@@ -123,7 +131,11 @@ export function WritePostForm({
 
       // 3) 그래도 없으면 진짜로 '내용 없음' 처리
       if (!baseDoc || !Array.isArray(baseDoc.content)) {
-        alert("내용을 입력해주세요.");
+        showToast({
+          title: "작성 실패",
+          message: "내용을 입력해주세요.",
+          variant: "warning",
+        });
         return;
       }
 
@@ -140,12 +152,20 @@ export function WritePostForm({
         initialHashtags;
 
       if (!title) {
-        alert("제목을 입력해주세요.");
+        showToast({
+          title: "작성 실패",
+          message: "제목을 입력해주세요.",
+          variant: "warning",
+        });
         return;
       }
 
       if (!baseDoc || !Array.isArray(baseDoc.content)) {
-        alert("내용을 입력해주세요.");
+        showToast({
+          title: "작성 실패",
+          message: "내용을 입력해주세요.",
+          variant: "warning",
+        });
         return;
       }
 
@@ -196,7 +216,11 @@ export function WritePostForm({
         }
 
         if (!promptInput) {
-          alert("사용한 프롬프트를 작성해주세요.");
+          showToast({
+            title: "작성 실패",
+            message: "사용한 프롬프트를 작성해주세요.",
+            variant: "warning",
+          });
           return;
         }
 
@@ -211,7 +235,11 @@ export function WritePostForm({
           }
 
           if (!promptResultText) {
-            alert("프롬프트의 결과 값을 작성해주세요.");
+            showToast({
+              title: "작성 실패",
+              message: "프롬프트의 결과 값을 작성해주세요.",
+              variant: "warning",
+            });
             return;
           }
         }
@@ -234,24 +262,31 @@ export function WritePostForm({
             initialResultMode === "Image" &&
             initialPromptResult
           ) {
-            // 수정 모드 + 새 파일 없음 → 기존 이미지 URL 유지
+            // 수정 모드 + 새 파일 없음 -> 기존 이미지 URL 유지
             promptResultImageUrl = initialPromptResult;
           } else {
-            alert("프롬프트의 결과 값의 이미지를 첨부해주세요.");
+            showToast({
+              title: "작성 실패",
+              message: "프롬프트의 결과 값의 이미지를 첨부해주세요.",
+              variant: "warning",
+            });
             return;
           }
         }
 
-        // 오타 수정: isPromptLike → isPromptLikePost
+        // 오타 수정: isPromptLike -> isPromptLikePost
         if (isPromptLikePost && !isAllChecked) {
-          alert(
-            "프롬프트 관련 게시글 등록을 위해 자가진단 문항을 모두 체크해주세요."
-          );
+          showToast({
+            title: "작성 실패",
+            message:
+              "프롬프트 관련 게시글 등록을 위해 자가진단 문항을 모두 체크해주세요.",
+            variant: "warning",
+          });
           return;
         }
       }
 
-      // ----- 최종 content 구성 (이미지 → 본문) -----
+      // ----- 최종 content 구성 (이미지 -> 본문) -----
       const extendedContent: any[] = [];
 
       // 1) 대표 이미지
@@ -368,12 +403,20 @@ export function WritePostForm({
 
         if (error) {
           console.error("[WritePostForm] update error", error);
-          alert("게시글 수정에 실패했습니다.");
+          showToast({
+            title: "수정 실패",
+            message: "게시글 수정에 실패했습니다.",
+            variant: "error",
+          });
           return;
         }
 
         savedPost = data;
-        alert("게시글이 수정되었습니다.");
+        showToast({
+          title: "수정 완료",
+          message: "게시글이 수정되었습니다.",
+          variant: "success",
+        });
       } else {
         // 새 글 작성(insert)
         const { data, error } = await supabase
@@ -395,12 +438,20 @@ export function WritePostForm({
 
         if (error) {
           console.error("[WritePostForm] insert error", error);
-          alert("게시글 등록에 실패했습니다.");
+          showToast({
+            title: "등록 실패",
+            message: "게시글 등록에 실패했습니다.",
+            variant: "error",
+          });
           return;
         }
 
         savedPost = data;
-        alert("게시글이 등록되었습니다.");
+        showToast({
+          title: "등록 완료",
+          message: "게시글이 등록되었습니다.",
+          variant: "success",
+        });
       }
 
       // 공통 리다이렉트 (수정/등록 모두)
@@ -409,7 +460,11 @@ export function WritePostForm({
       }
     } catch (err) {
       console.error("[WritePostForm] catch error", err);
-      alert("알 수 없는 오류가 발생했습니다.");
+      showToast({
+        title: "오류",
+        message: "알 수 없는 오류가 발생했습니다.",
+        variant: "error",
+      });
     } finally {
       setIsSubmitting(false);
     }

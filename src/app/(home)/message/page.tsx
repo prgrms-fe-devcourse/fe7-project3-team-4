@@ -28,7 +28,7 @@ export default async function MessagePage() {
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    redirect("/auth/login");
+    redirect("/auth/login?from=message");
   }
   return (
     <Suspense fallback={<MessagePageLoading />}>

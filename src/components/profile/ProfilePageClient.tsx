@@ -140,7 +140,7 @@ export default async function ProfilePageClient({
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    redirect("/auth/login");
+    redirect("/auth/login?from=profile");
   }
 
   const search = await searchParams;

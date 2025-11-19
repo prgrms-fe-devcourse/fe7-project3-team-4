@@ -8,6 +8,8 @@ import { BadgeRow } from "@/app/(home)/shop/page";
 
 // 👇 1. 스타일 정의를 외부 파일에서 가져옵니다.
 import { rarityLabel, rarityClass, badgeGradient } from "@/lib/badgeStyle"; // (경로는 실제 위치에 맞게 수정)
+import { useToast } from "../common/toast/ToastContext";
+import ConfirmModal from "../common/ConfirmModal";
 
 interface BadgeShopProps {
   initialBadges: BadgeRow[];
@@ -26,6 +28,9 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
   const [myPoints, setMyPoints] = useState<number>(0);
   const [ownedBadgeIds, setOwnedBadgeIds] = useState<Set<string>>(new Set());
   const [equippedBadgeId, setEquippedBadgeId] = useState<string | null>(null);
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [selectedBadge, setSelectedBadge] = useState<BadgeRow | null>(null);
 
   const supabase = createClient();
 
@@ -113,34 +118,56 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
   const isEquipped = currentBadge && equippedBadgeId === currentBadge.id;
 
   // --- 핸들러 로직 ---
+  const { showToast } = useToast();
+  const handleBuy = (badge: BadgeRow) => {
+    if (!user) {
+      showToast({
+        title: "이펙트 구매 실패",
+        message: "로그인이 필요합니다.",
+        variant: "warning",
+      });
+      return;
+    }
 
-  const handleBuy = async (badge: BadgeRow) => {
-    if (isProcessing || !user) return;
-
-    const confirmBuy = confirm(
-      `${badge.price}포인트를 사용하여 '${badge.name}' 이펙트를 구매하시겠습니까?`
-    );
-    if (!confirmBuy) return;
+    setSelectedBadge(badge);
+    setConfirmOpen(true);
+  };
+  const handleConfirmBuy = async () => {
+    if (!selectedBadge || !user) return;
+    if (isProcessing) return;
 
     setIsProcessing(true);
 
     try {
       const { error } = await supabase.rpc("buy_badge", {
-        badge_id_to_buy: badge.id,
+        badge_id_to_buy: selectedBadge.id,
       });
 
       if (error) {
-        console.error(error);
-        alert(`구매 실패: ${error.message}`);
+        showToast({
+          title: "이펙트 구매 실패",
+          message: "포인트가 부족합니다.",
+          variant: "warning",
+        });
       } else {
-        alert(`구매 성공! '${badge.name}' 이펙트를 획득했습니다.`);
-        setMyPoints((prev) => prev - badge.price);
-        setOwnedBadgeIds((prev) => new Set(prev).add(badge.id));
+        showToast({
+          title: "이펙트 구매 성공!",
+          message: `${selectedBadge.name} 이펙트를 획득했습니다.`,
+          variant: "success",
+        });
+        setMyPoints((prev) => prev - selectedBadge.price);
+        setOwnedBadgeIds((prev) => new Set(prev).add(selectedBadge.id));
       }
     } catch (err) {
-      alert(`알 수 없는 오류가 발생했습니다. (원인: ${err})`);
+      showToast({
+        title: "이펙트 구매 오류",
+        message: `이펙트 구매 중 오류가 발생했습니다.`,
+        variant: "error",
+      });
+      console.error(err);
     } finally {
       setIsProcessing(false);
+      setConfirmOpen(false);
     }
   };
 
@@ -157,10 +184,18 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
       if (error) throw error;
 
       setEquippedBadgeId(badgeId);
-      alert("이펙트를 장착했습니다!");
+      showToast({
+        title: "이펙트 장착 완료!",
+        message: "이펙트를 장착했습니다.",
+        variant: "success",
+      });
     } catch (error) {
       console.error("장착 에러:", error);
-      alert("이펙트 장착에 실패했습니다.");
+      showToast({
+        title: "이펙트 장착 오류",
+        message: "이펙트 장착 중 오류가 발생했습니다.",
+        variant: "error",
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -179,10 +214,18 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
       if (error) throw error;
 
       setEquippedBadgeId(null);
-      alert("이펙트를 해제했습니다.");
+      showToast({
+        title: "이펙트 해제 완료",
+        message: "이펙트를 해제했습니다.",
+        variant: "success",
+      });
     } catch (error) {
       console.error("해제 에러:", error);
-      alert("이펙트 해제에 실패했습니다.");
+      showToast({
+        title: "이펙트 해제 오류",
+        message: "이펙트 해제 중 오류가 발생했습니다.",
+        variant: "error",
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -287,6 +330,15 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
             <div className="text-xl">{myPoints.toLocaleString()}P</div>
           </div>
         </div>
+        {selectedBadge && (
+          <ConfirmModal
+            title="구매 확인"
+            description={`${selectedBadge.price}포인트를 사용하여 ${selectedBadge.name} 이펙트를 구매하시겠습니까?`}
+            onConfirm={handleConfirmBuy}
+            onCancel={() => setConfirmOpen(false)}
+            open={confirmOpen}
+          />
+        )}
       </div>
 
       {/* 페이지 루트 */}

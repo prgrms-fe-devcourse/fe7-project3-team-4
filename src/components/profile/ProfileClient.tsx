@@ -17,6 +17,7 @@ import { createClient } from "@/utils/supabase/client";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { useFollow } from "@/context/FollowContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "../common/toast/ToastContext";
 
 type DbCommentRow = Database["public"]["Tables"]["comments"]["Row"] & {
   content: string | null;
@@ -74,7 +75,7 @@ export default function ProfileClient({
   const [supabase] = useState(() => createClient());
   const queryClient = useQueryClient();
   const channelRef = useRef<RealtimeChannel | null>(null);
-
+  const { showToast } = useToast();
   // [✅ 추가] 탭 상태 관리 (URL 이동 없이 즉시 전환)
   const [activeTab, setActiveTab] = useState<TabKey>(
     (initialTab as TabKey) || "posts"
@@ -342,7 +343,11 @@ export default function ProfileClient({
       if (error instanceof Error) {
         alert(error.message);
       } else {
-        alert("팔로우 처리 중 오류가 발생했습니다.");
+        showToast({
+          title: "팔로우 오류",
+          message: "팔로우 처리 중 오류가 발생했습니다.",
+          variant: "error",
+        });
       }
     }
   }, [toggleFollow, currentUserId, targetUserId]);
@@ -633,10 +638,13 @@ export default function ProfileClient({
         },
         (payload) => {
           const newProfileData = payload.new as Profile;
-          setLocalProfile((prev) => ({
-            ...prev,
-            ...newProfileData,
-          } as Profile));
+          setLocalProfile(
+            (prev) =>
+              ({
+                ...prev,
+                ...newProfileData,
+              } as Profile)
+          );
         }
       );
 
@@ -819,9 +827,7 @@ export default function ProfileClient({
             ["profile", "posts", targetUserId],
             (old: PostType[] = []) =>
               old.map((p) =>
-                p.id === oldBookmark.post_id
-                  ? { ...p, isBookmarked: false }
-                  : p
+                p.id === oldBookmark.post_id ? { ...p, isBookmarked: false } : p
               )
           );
         }
