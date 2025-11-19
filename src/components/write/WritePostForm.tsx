@@ -92,15 +92,9 @@ export function WritePostForm({
         data: { user },
       } = await supabase.auth.getUser();
 
-      // if (!user) {
-      //   showToast({
-      //     title: "접근 실패",
-      //     message: "로그인 후 이용 가능합니다.",
-      //     variant: "warning",
-      //   });
-      //   // router.push("/auth/login");
-      //   return;
-      // }
+      if (!user) {
+        return;
+      }
 
       // select가 disabled면 null 이라서 state fallback 사용
       const type =
