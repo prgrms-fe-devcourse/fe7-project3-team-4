@@ -31,6 +31,7 @@ type PostContentJson = {
 
 /**
  * Post 컴포넌트가 기대하는 "변환된" 데이터 타입
+ * Post.tsx에서 사용하는 필드명(thumbnail, subtitle)과 일치시켜야 합니다.
  */
 type TransformedPostData = {
   id: string;
@@ -44,13 +45,15 @@ type TransformedPostData = {
   user_id: string;
   view_count: number;
   email: string;
-  profiles: ProfileData | undefined; // 🌟 이 타입은 이미 ProfileData를 사용하므로 OK
-  image?: string;
+  profiles: ProfileData | undefined;
+  thumbnail?: string; // image -> thumbnail로 변경
+  subtitle?: string; // subtitle 추가
   hashtags: string[];
   isBookmarked: boolean;
   isLiked: boolean;
   model?: string;
 };
+
 const TAG_LABEL_MAP: Record<string, string> = {
   education: "교육",
   writing: "글쓰기",
@@ -123,8 +126,7 @@ export default async function SearchPostForm({
     return <div>데이터를 불러오는 중 오류가 발생했습니다.</div>;
   }
 
-  // 🌟 3. transformedPosts 매핑 로직은 수정할 필요 없음
-  // (post.profiles가 이미 올바른 ProfileData 타입을 따르므로)
+  // 🌟 3. transformedPosts 매핑 로직 수정
   const transformedPosts: TransformedPostData[] = data
     ? data.map((post: PostQueryData): TransformedPostData => {
         const contentJson = post.content as PostContentJson | null;
@@ -134,12 +136,16 @@ export default async function SearchPostForm({
           user_id: post.user_id ?? "",
           title: post.title ?? "제목 없음",
           content: contentJson ?? {},
-          image:
+          // [수정] Post.tsx는 'thumbnail' props를 사용하므로 키 이름을 변경하고 DB값 혹은 JSON 값을 매핑
+          thumbnail:
+            post.thumbnail ||
             contentJson?.main_image_url ||
             contentJson?.prompt_result_image_url ||
             undefined,
+          // [수정] Post.tsx에서 사용하는 'subtitle' 매핑 추가
+          subtitle: post.subtitle || contentJson?.text || undefined,
           email: post.profiles?.email ?? "이메일 없음",
-          profiles: post.profiles ?? undefined, // 👈 뱃지 ID가 포함된 profiles 객체가 통째로 전달됨
+          profiles: post.profiles ?? undefined,
           isBookmarked: post.user_post_bookmarks.length > 0,
           isLiked: post.user_post_likes.length > 0,
           hashtags: (post.hashtags as string[]) ?? [],
@@ -196,7 +202,7 @@ export default async function SearchPostForm({
             return (
               <Link
                 key={tag.id}
-                href={href} // 수정된 href
+                href={href}
                 className={`cursor-pointer px-2.5 py-1.5 text-xs text-[#4B5563] border border-[#D9D9D9] rounded-lg dark:border-[#F6F6F8]/40 dark:text-[#A6A6DB]
         ${
           isActive

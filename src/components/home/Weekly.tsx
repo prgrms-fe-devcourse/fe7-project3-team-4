@@ -235,7 +235,7 @@ export default function Weekly({
         )}
       </div>
 
-      {/* [수정] 핸들러 props 전달 */}
+      {/* 핸들러 props 전달 */}
       {activeModel === "Text" && (
         <TextWeekly
           data={filtered}

@@ -424,7 +424,7 @@ export default function Comments({
 
               {/* 대댓글 목록 */}
               {showReplies && (
-                <div className="mt-3 space-y-3 pl-6 border-l-2 border-gray-200">
+                <div className="mt-3 space-y-3 pl-6 border-l-2 border-gray-200 dark:border-gray-500">
                   {replies.map((reply) => (
                     <div
                       key={reply.id}
@@ -453,13 +453,13 @@ export default function Comments({
                                 onChange={(e) =>
                                   setEditReplyContent(e.target.value)
                                 }
-                                className="w-full px-2 py-1 bg-[#F5F5F5] text-xs rounded-lg border border-gray-300 focus:outline-none focus:border-blue-500"
+                                className="w-full px-2 py-1 bg-[#F5F5F5] text-xs rounded-lg border border-gray-300 focus:outline-none focus:border-blue-500 dark:bg-white/20"
                                 rows={2}
                               />
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => handleReplyEdit(reply.id)}
-                                  className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+                                  className="cursor-pointer px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
                                 >
                                   저장
                                 </button>
@@ -468,7 +468,7 @@ export default function Comments({
                                     setEditingReplyId(null);
                                     setEditReplyContent("");
                                   }}
-                                  className="px-2 py-1 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400"
+                                  className="cursor-pointer px-2 py-1 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400"
                                 >
                                   취소
                                 </button>
@@ -476,13 +476,13 @@ export default function Comments({
                             </div>
                           ) : (
                             <>
-                              <span className="inline-block px-2 py-1 bg-[#F5F5F5] text-xs rounded-lg mt-1">
+                              <span className="inline-block px-2 py-1 bg-[#F5F5F5] text-xs rounded-lg mt-1 dark:bg-[#EBF2FF]/30">
                                 {reply.content}
                               </span>
-                              <div className="flex items-center gap-1 mt-1 text-[#717182]">
+                              <div className="flex items-center gap-1 mt-1 text-[#717182] dark:text-white">
                                 <button
                                   onClick={() => handleLikeToggle(reply.id)}
-                                  className="cursor-pointer flex items-center justify-center w-4 h-4 rounded-full bg-white border border-[#F0F0F0] hover:bg-gray-100"
+                                  className="cursor-pointer flex items-center justify-center w-4 h-4 rounded-full bg-white border border-[#F0F0F0] hover:bg-gray-100 dark:bg-white/20 dark:border-[#F0F0F0]/40 dark:hover:bg-gray-300  dark:hover:text-[#6758FF]"
                                 >
                                   <ThumbsUp size={8} />
                                 </button>
@@ -505,14 +505,14 @@ export default function Comments({
                               setEditingReplyId(reply.id);
                               setEditReplyContent(reply.content);
                             }}
-                            className="text-blue-500 hover:text-blue-700"
+                            className="cursor-pointer text-blue-500 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-500"
                           >
                             <Edit size={14} />
                           </button>
                           <button
                             onClick={() => handleDelete(reply.id, true)}
                             disabled={isDeleting}
-                            className="text-red-500 hover:text-red-700 disabled:text-gray-400"
+                            className="cursor-pointer text-red-500 hover:text-red-700 disabled:text-gray-400 dark:text-red-300 dark:hover:text-red-500"
                           >
                             <Trash2 size={14} />
                           </button>

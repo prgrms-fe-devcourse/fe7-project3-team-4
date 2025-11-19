@@ -820,7 +820,7 @@ export default function MessagePageClient() {
           <div className="bg-white/40 rounded-xl border border-white/10 lg:shadow-xl h-200 lg:min-w-50 flex flex-row dark:bg-white/20 dark:shadow-white/20">
             {/* ============ 왼쪽 패널 ============ */}
             <div
-              className={`flex-1 flex-col h-full w-full lg:w-auto ${
+              className={`flex-1 flex-col h-full w-full lg:max-w-[300px] ${
                 isThreadOpen ? "hidden" : "block"
               } lg:flex `}
             >
