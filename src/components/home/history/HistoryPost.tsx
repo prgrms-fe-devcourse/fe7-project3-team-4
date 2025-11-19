@@ -1,11 +1,9 @@
 // src/components/home/history/HistoryPost.tsx
 "use client";
-
 import Link from "next/link";
 import { ViewHistoryType } from "@/types/Post";
 import { useMemo, useState } from "react";
 import { X } from "lucide-react";
-import { useRouter } from "next/navigation"; 
 import { useToast } from "@/components/common/toast/ToastContext";
 import { createClient } from "@/utils/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";

@@ -24,7 +24,7 @@ export default async function Page() {
   } = await supabase.auth.getUser();
 
   if (!user || error) {
-    redirect("/auth/login");
+    redirect("/auth/login?from=history");
   }
 
   return (
