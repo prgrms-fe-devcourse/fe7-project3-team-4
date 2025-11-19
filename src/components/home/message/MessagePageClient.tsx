@@ -997,7 +997,7 @@ export default function MessagePageClient() {
                         className="w-[50px] h-[50px]"
                       />
                     ) : (
-                      <div className="w-[50px] h-[50px] flex  items-center bg-white/70">
+                      <div className="w-[50px] h-[50px] flex items-center justify-center bg-white/70 rounded-full overflow-hidden">
                         <Logo size="md" />
                       </div>
                     )}
