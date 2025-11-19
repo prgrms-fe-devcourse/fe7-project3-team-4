@@ -1,4 +1,3 @@
-import ContentBox from "@/components/ContentBox";
 import {
   Heart,
   MessageCircle,
@@ -126,65 +125,65 @@ export function NotificationItem({
   };
 
   return (
-    <ContentBox>
-      <div
-        className={`cursor-pointer rounded-xl transition-colors hover:${
-          data.is_read ? "bg-[#DADADA]" : "bg-gray-50"
-        } ${data.is_read ? "bg-gray-200 dark:bg-white/40" : "bg-white"}`}
-        onClick={handleClick}
-      >
-        <div className="p-6 flex gap-5">
-          <div className="relative w-11 h-11 shrink-0">
-            <div className="relative w-full h-full bg-gray-200 rounded-full overflow-hidden">
-              {senderAvatarUrl ? (
-                <Image
-                  src={senderAvatarUrl}
-                  alt={senderName}
-                  fill
-                  className="object-cover"
-                  sizes="44px"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-300">
-                  <User size={24} className="text-gray-500" />
-                </div>
-              )}
-            </div>
-
-            <div className="absolute -right-2 -bottom-2 w-8 h-8 bg-white rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-              <Icon size={20} className={config.iconColorClass} />
-            </div>
-          </div>
-
-          <div className="space-y-2 grow">
-            <p className="text-sm">
-              <span className="font-medium">{senderName}</span>
-              <span className="text-[#717182]">{config.message}</span>
-            </p>
-
-            {config.showContent && data.content && (
-              <p className="text-sm text-[#111827] line-clamp-1">
-                {data.content}
-              </p>
+    <div
+      className={`cursor-pointer border border-white/20 rounded-xl shadow-xl hover:-translate-y-1 hover:shadow-2xl overflow-hidden ${
+        data.is_read
+          ? "bg-gray-200 dark:bg-white/10"
+          : "bg-white dark:bg-white/30"
+      }`}
+      onClick={handleClick}
+    >
+      <div className="p-6 flex gap-5">
+        <div className="relative w-11 h-11 shrink-0">
+          <div className="relative w-full h-full bg-gray-200 rounded-full overflow-hidden">
+            {senderAvatarUrl ? (
+              <Image
+                src={senderAvatarUrl}
+                alt={senderName}
+                fill
+                className="object-cover"
+                sizes="44px"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-300">
+                <User size={24} className="text-gray-500" />
+              </div>
             )}
-
-            <p
-              className="text-[#717182] text-xs"
-              suppressHydrationWarning={true}
-            >
-              {formatTimeAgo(data.created_at)}
-            </p>
           </div>
 
-          <button
-            onClick={handleDeleteClick}
-            className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 shrink-0 self-start -mr-2 -mt-2" // 정렬 및 디자인
-            aria-label="알림 삭제"
-          >
-            <X size={18} />
-          </button>
+          <div className="absolute -right-2 -bottom-2 w-8 h-8 bg-white rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+            <Icon size={20} className={config.iconColorClass} />
+          </div>
         </div>
+
+        <div className="space-y-2 grow">
+          <p className="text-sm">
+            <span className="font-medium">{senderName}</span>
+            <span className="text-[#717182] dark:text-[#A6A6DB]">
+              {config.message}
+            </span>
+          </p>
+
+          {config.showContent && data.content && (
+            <p className="text-sm line-clamp-1">{data.content}</p>
+          )}
+
+          <p
+            className="text-[#717182] text-xs dark:text-[#A6A6DB]"
+            suppressHydrationWarning={true}
+          >
+            {formatTimeAgo(data.created_at)}
+          </p>
+        </div>
+
+        <button
+          onClick={handleDeleteClick}
+          className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 shrink-0 self-start -mr-2 -mt-2" // 정렬 및 디자인
+          aria-label="알림 삭제"
+        >
+          <X size={18} />
+        </button>
       </div>
-    </ContentBox>
+    </div>
   );
 }

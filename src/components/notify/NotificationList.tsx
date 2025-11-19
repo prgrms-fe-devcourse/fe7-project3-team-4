@@ -119,7 +119,7 @@ export function NotificationList({
           {isDeleting ? "삭제 중..." : "알림 삭제"}
         </button>
       </div>
-      <div className="space-y-4">
+      <div className="space-y-6">
         {notifications.length === 0 ? (
           <p className="text-center text-gray-500 dark:text-white">
             새 알림이 없습니다.

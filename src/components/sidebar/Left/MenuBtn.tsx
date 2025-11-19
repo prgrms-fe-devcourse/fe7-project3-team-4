@@ -48,10 +48,10 @@ export default function MenuBtn({
 
       {notificationCount > 0 && (
         <span
-          className={`absolute  flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white ${
+          className={`absolute flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white ${
             size === "md" && title === "알림"
               ? "top-0 right-0"
-              : "top-2 right-3"
+              : "top-3.5 right-3"
           }`}
         >
           {notificationCount > 9 ? "9+" : notificationCount}
