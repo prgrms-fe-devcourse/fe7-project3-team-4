@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useMemo } from "react";
 import { getTranslatedTag } from "@/utils/tagTranslator";
 import UserAvatar from "@/components/shop/UserAvatar";
+import { formatTimeAgo } from "@/utils/formatTimeAgo";
 
 // [✅ 추가] Tab 타입 정의
 type Tab = "전체" | "뉴스" | "프롬프트" | "자유" | "주간";
@@ -28,7 +29,8 @@ export default function Post({
   const authorAvatar = data.profiles?.avatar_url;
   // 🌟 2. 뱃지 ID 추출
   const authorEquippedBadgeId = data.profiles?.equipped_badge_id;
-  const displayDate = (data.created_at || "").slice(0, 10);
+  // const displayDate = (data.created_at || "").slice(0, 10);
+  const displayDate = formatTimeAgo(data.created_at || "");
 
   // [✅ 수정] postUrl 로직 수정
   const postUrl = useMemo(() => {
