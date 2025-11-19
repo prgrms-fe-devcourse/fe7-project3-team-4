@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 function extractPlainTextFromNode(node: any): string {
   if (!node) return "";
   if (node.type === "text") return node.text ?? "";
