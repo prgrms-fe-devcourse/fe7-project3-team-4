@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { NotificationItem } from "@/components/notify/NotificationItem";
 import { createClient } from "@/utils/supabase/client";
 import type { NotificationWithDetails } from "@/types/notification";
+import { useToast } from "../common/toast/ToastContext";
 
 type NotificationListProps = {
   initialNotifications: NotificationWithDetails[];
@@ -15,7 +16,7 @@ export function NotificationList({
   userId,
 }: NotificationListProps) {
   const supabase = createClient();
-
+  const { showToast } = useToast();
   const [notifications, setNotifications] =
     useState<NotificationWithDetails[]>(initialNotifications);
 
@@ -64,7 +65,11 @@ export function NotificationList({
 
     if (error) {
       console.error("Error deleting notifications:", error);
-      alert("알림 삭제 중 오류가 발생했습니다.");
+      showToast({
+        title: "알림 삭제 오류",
+        message: "알림 삭제 중 오류가 발생했습니다.",
+        variant: "error",
+      });
     } else {
       setNotifications([]);
     }

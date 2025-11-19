@@ -1,9 +1,11 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { ViewHistoryType } from "@/types/Post";
 import HistoryPost from "@/components/home/history/HistoryPost";
 import { deleteAllHistoryAction } from "@/utils/actions/History";
+import { useToast } from "@/components/common/toast/ToastContext";
+import ConfirmModal from "@/components/common/ConfirmModal";
 
 export default function HistoryClientView({
   views,
@@ -11,19 +13,32 @@ export default function HistoryClientView({
   views: ViewHistoryType[];
 }) {
   const [isPending, startTransition] = useTransition();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingDeleteAll, setPendingDeleteAll] = useState(false);
+  const { showToast } = useToast();
 
   const handleDeleteAll = () => {
-    const confirmed = window.confirm(
-      `총 ${views.length}개의 조회 내역을 모두 삭제하시겠습니까?`
-    );
-    if (!confirmed) return;
+    setPendingDeleteAll(true);
+    setConfirmOpen(true);
+  };
 
+  const handleConfirmDeleteAll = () => {
+    setConfirmOpen(false);
     startTransition(async () => {
-      const result = await deleteAllHistoryAction(); // 서버 액션 호출
+      const result = await deleteAllHistoryAction();
       if (result?.error) {
-        alert(result.error);
+        showToast({
+          title: "조회 내역 삭제 실패",
+          message: result.error,
+          variant: "warning",
+        });
       }
     });
+  };
+
+  const handleCancelDeleteAll = () => {
+    setConfirmOpen(false);
+    setPendingDeleteAll(false);
   };
 
   return (
@@ -43,6 +58,15 @@ export default function HistoryClientView({
           <HistoryPost key={view.id} data={view} />
         ))}
       </div>
+      {pendingDeleteAll && (
+        <ConfirmModal
+          title="삭제 확인"
+          description={`총 ${views.length}개의 조회 내역을 모두 삭제하시겠습니까?`}
+          onConfirm={handleConfirmDeleteAll}
+          onCancel={handleCancelDeleteAll}
+          open={confirmOpen}
+        />
+      )}
     </div>
   );
 }

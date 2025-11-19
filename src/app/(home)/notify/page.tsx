@@ -27,7 +27,7 @@ export default async function NotifyPage() {
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    redirect("/auth/login");
+    redirect("/auth/login?from=notification");
   }
   return (
     // NotifyHomeClient가 데이터를 로드하는 동안 PageLoadingFallback을 보여줍니다.

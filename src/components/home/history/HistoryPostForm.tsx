@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { ViewHistoryType } from "@/types/Post";
 import HistoryClientView from "./HistoryPostHeader";
+import { redirect } from "next/navigation";
 
 export default async function HistoryPostForm() {
   const supabase = await createClient();
@@ -8,7 +9,9 @@ export default async function HistoryPostForm() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return <div>로그인이 필요합니다.</div>;
+  if (!user) {
+    redirect("/auth/login?from=history");
+  }
 
   const { data: views, error } = await supabase
     .from("user_post_views")

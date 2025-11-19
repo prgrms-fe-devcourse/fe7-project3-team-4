@@ -2,6 +2,7 @@
 
 import { MouseEvent, useActionState, useEffect, useState } from "react";
 import { FormState, Profile } from "@/types";
+import { useToast } from "../common/toast/ToastContext";
 
 type ProfileEditModalProps = {
   isOpen: boolean;
@@ -20,16 +21,20 @@ export function ProfileEditModal({
     success: false,
     error: null,
   });
-
+  const { showToast } = useToast();
   const [didHandle, setDidHandle] = useState(false);
 
   useEffect(() => {
     if (state.success && !state.error && !didHandle) {
-      alert("프로필이 성공적으로 업데이트 되었습니다.");
+      showToast({
+        title: "성공",
+        message: "프로필이 성공적으로 업데이트 되었습니다.",
+        variant: "success",
+      });
       onClose();
       setDidHandle(true);
     }
-  }, [state.success, state.error, didHandle, onClose]);
+  }, [state.success, state.error, didHandle, onClose, showToast]);
 
   if (!isOpen) return null;
 

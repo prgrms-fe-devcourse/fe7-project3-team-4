@@ -21,6 +21,7 @@ import { createClient } from "@/utils/supabase/client";
 import { Json } from "@/utils/supabase/supabase";
 import NewsItemSkeleton from "@/components/news/NewsItemSkeleton";
 import NewsDetail from "@/components/news/NewsDetail";
+import { useToast } from "../common/toast/ToastContext";
 
 const PAGE_SIZE = 10; // 한 번에 불러올 게시글 수
 
@@ -74,7 +75,7 @@ export default function HomePageClient() {
   const searchParams = useSearchParams();
   const [supabase] = useState(() => createClient());
   const queryClient = useQueryClient();
-  
+
   // 무한 스크롤 감지용 ref
   const { ref: loadMoreRef, inView } = useInView();
 
@@ -234,8 +235,7 @@ export default function HomePageClient() {
                           ...post,
                           comment_count:
                             updatedPost.comment_count ?? post.comment_count,
-                          like_count:
-                            updatedPost.like_count ?? post.like_count,
+                          like_count: updatedPost.like_count ?? post.like_count,
                         }
                       : post
                   )
@@ -342,6 +342,8 @@ export default function HomePageClient() {
     router.push(`/?${params.toString()}`, { scroll: false });
   };
 
+  const { showToast } = useToast();
+
   // 🌟 [변경 5] 좋아요 Optimistic Update (Infinite Query 구조 대응)
   const handlePostLikeToggle = useCallback(
     async (id: string) => {
@@ -349,7 +351,11 @@ export default function HomePageClient() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        alert("로그인이 필요합니다.");
+        showToast({
+          title: "좋아요 실패",
+          message: "로그인 후 이용 가능합니다.",
+          variant: "warning",
+        });
         return;
       }
 
@@ -427,7 +433,11 @@ export default function HomePageClient() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        alert("로그인이 필요합니다.");
+        showToast({
+          title: "북마크 실패",
+          message: "로그인 후 이용 가능합니다.",
+          variant: "warning",
+        });
         return;
       }
 

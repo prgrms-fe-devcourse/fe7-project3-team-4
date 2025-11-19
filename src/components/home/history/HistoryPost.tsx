@@ -8,6 +8,7 @@ import { useMemo, useState } from "react"; // [★] 2. useState 추가
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation"; // [★] 3. useRouter 추가
 import { createClient } from "@/utils/supabase/client"; // [★] 4. supabase/client 추가
+import { useToast } from "@/components/common/toast/ToastContext";
 
 const getBoardTitle = (postType: string | undefined, subType?: string) => {
   let boardName = "";
@@ -55,6 +56,8 @@ const timeAgo = (dateString: string): string => {
 };
 
 export default function HistoryPost({ data }: { data: ViewHistoryType }) {
+  const { showToast } = useToast();
+
   const post = data.posts;
 
   const router = useRouter();
@@ -82,7 +85,11 @@ export default function HistoryPost({ data }: { data: ViewHistoryType }) {
 
     if (error) {
       console.error("조회 내역 삭제 오류:", error);
-      alert("기록 삭제 중 오류가 발생했습니다.");
+      showToast({
+        title: "삭제 실패",
+        message: "오류가 발생하였습니다.",
+        variant: "error",
+      });
       setIsDeleting(false);
     } else {
       router.refresh();
