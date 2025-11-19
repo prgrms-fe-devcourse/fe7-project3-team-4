@@ -442,7 +442,7 @@ export default function Comments({
             <>
               <button
                 onClick={handleShowReplies}
-                className="block cursor-pointer text-[#0094FF] text-sm mt-2 hover:text-[#0095ff8f] dark:text-[#70c3ff8f] dark:hover:text-[#70c3ff]"
+                className="block cursor-pointer text-[#0094FF] text-sm mt-2 hover:text-[#0095ff8f] dark:text-[#70c3ff] dark:hover:text-[#70c3ff8f]"
               >
                 {showReplies
                   ? "답글 숨기기"

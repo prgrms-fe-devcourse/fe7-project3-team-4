@@ -62,12 +62,18 @@ export default function UserAvatar({
       <div
         className={`relative h-full w-full overflow-hidden rounded-full bg-white`}
       >
-        <Image
-          src={src || "/default-avatar.png"}
-          alt={alt}
-          fill
-          className="object-cover"
-        />
+        {src ? (
+          <Image
+            src={src || "/default-avatar.png"}
+            alt={alt}
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-300 flex items-center justify-center font-bold text-gray-500">
+            ?
+          </div>
+        )}
       </div>
     </div>
   );
