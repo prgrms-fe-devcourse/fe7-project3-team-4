@@ -9,7 +9,6 @@ import {
   X,
   Loader2,
 } from "lucide-react";
-import Image from "next/image";
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
