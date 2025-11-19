@@ -291,7 +291,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
 
       {/* 페이지 루트 */}
       <div
-        className="relative z-10 flex items-center justify-center outline-none py-8 lg:py-15"
+        className="relative z-10 flex items-center justify-center outline-none py-8 lg:pt-12"
         tabIndex={0}
         onKeyDown={handleKeyDown}
         onTouchStart={handleTouchStart}
@@ -463,7 +463,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h2 className="inline-block text-3xl font-extrabold leading-tight tracking-[-0.02em] text-[#0b1f4a] lg:text-[2.1rem]">
-                        <span className="relative inline-block pb-1 dark:text-[#80a8ff]">
+                        <span className="relative inline-block pb-1 dark:text-[#6998ff]">
                           {currentBadge.name}
                           <span className="absolute bottom-0 left-0 h-[3px] w-[72px] rounded-full bg-linear-to-r from-blue-500 via-indigo-500 to-pink-500" />
                         </span>
@@ -504,7 +504,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                 </div>
 
                 {/* 버튼 / 상태 영역 */}
-                <div className="mt-2 flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 shadow-lg backdrop-blur-xl dark:bg-white/10 dark:border-white/40">
+                <div className="mt-2 flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 shadow-lg backdrop-blur-xl dark:bg-white/20 dark:border-white/40">
                   <div className="flex items-end justify-between gap-3">
                     <div>
                       {isOwned ? (
@@ -513,10 +513,10 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                             Status
                           </p>
                           <div className="flex items-center gap-2 pt-1">
-                            <span className="text-lg font-bold text-indigo-600">
+                            <span className="text-lg font-bold text-[#6758FF] dark:text-[#2e258f]">
                               보유 중인 이펙트
                             </span>
-                            <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold uppercase text-indigo-600">
+                            <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold uppercase text-[#6758FF]">
                               Owned
                             </span>
                           </div>
