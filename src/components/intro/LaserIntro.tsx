@@ -58,7 +58,10 @@ const PromptBlock = ({ text, rotation = "left" }: PromptBlockProps) => {
       }
 
       const rect = wrapperRef.current.getBoundingClientRect();
-      const scannerY = window.innerHeight / 2;
+      const rawScannerY = window.innerHeight / 2;
+      const scannerOffset = rotation === "left" ? 8 : -8;
+
+      const scannerY = rawScannerY + scannerOffset;
 
       const cardTop = rect.top;
       const cardBottom = rect.bottom;
