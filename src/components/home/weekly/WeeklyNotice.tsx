@@ -105,32 +105,39 @@ const IMAGE_CHALLENGES: ChallengeContent[] = [
   },
 ];
 
-// 날짜 기준으로 오늘 인덱스 계산 (텍스트/이미지 배열 길이가 같으니 같은 날 같은 인덱스 사용)
-function getTodayIndex(length: number): number {
-  const now = new Date();
-  // 날짜만 떼서 UTC 기준 일수로 변환 (타임존 영향 최소화)
+// 특정 날짜 기준으로 인덱스 계산
+function getIndexByDate(length: number, baseDate: Date): number {
   const utcMidnight = Date.UTC(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate()
+    baseDate.getFullYear(),
+    baseDate.getMonth(),
+    baseDate.getDate()
   );
   const daysSinceEpoch = Math.floor(utcMidnight / (1000 * 60 * 60 * 24));
   return daysSinceEpoch % length;
 }
 
-function getTodayLabel(): string {
+// 특정 날짜의 라벨
+function getDateLabel(baseDate: Date): string {
   return new Intl.DateTimeFormat("ko-KR", {
     dateStyle: "full",
     timeZone: "Asia/Seoul",
-  }).format(new Date());
+  }).format(baseDate);
 }
 
-export default function WeeklyNotice({ active }: { active: WeeklyModel }) {
+export default function WeeklyNotice({
+  active,
+  dateKey,
+}: {
+  active: WeeklyModel;
+  dateKey: string;
+}) {
   const isImage = active === "Image";
   const challenges = isImage ? IMAGE_CHALLENGES : TEXT_CHALLENGES;
-  const todayIndex = getTodayIndex(challenges.length);
+
+  const baseDate = new Date(`${dateKey}T00:00:00`);
+  const todayIndex = getIndexByDate(challenges.length, baseDate);
   const current = challenges[todayIndex];
-  const todayLabel = getTodayLabel();
+  const todayLabel = getDateLabel(baseDate);
 
   return (
     <>
@@ -140,7 +147,7 @@ export default function WeeklyNotice({ active }: { active: WeeklyModel }) {
           <h3 className="text-center font-bold text-2xl">ALGO 주간 챌린지</h3>
           <Zap size={24} strokeWidth={3} className="text-[#eec40a]" />
         </div>
-        <div className="p-6 bg-white/40 border border-white/20 rounded-xl shadow-xl font-medium text-lg space-y-1 dark:bg-white/20">
+        <div className="p-6 bg-white/40 border border-white/20 rounded-xl shadow-xl font-medium space-y-1 dark:bg-white/20">
           <div className="flex items-center gap-2">
             <svg
               width="18"
@@ -214,7 +221,9 @@ export default function WeeklyNotice({ active }: { active: WeeklyModel }) {
             {/* 에시 프롬프트 */}
             <div className="w-full lg:w-1/2 bg-[#D9D9D9]/30 p-3 rounded-lg space-y-0.5">
               <p className="font-semibold text-sm">예시 프롬프트</p>
-              <p className="text-xs">{current.examplePrompt}</p>
+              <p className="text-xs whitespace-pre-line">
+                {current.examplePrompt}
+              </p>
             </div>
             {/* 결과 프롬프트 */}
             <div className="w-full lg:w-1/2 bg-[#D9D9D9]/30 p-3 rounded-lg space-y-0.5">
@@ -228,7 +237,9 @@ export default function WeeklyNotice({ active }: { active: WeeklyModel }) {
                   className="w-full"
                 />
               ) : (
-                <p className="text-xs">{current.exampleResult}</p>
+                <p className="text-xs whitespace-pre-line h-20 overflow-hidden line-clamp-5">
+                  {current.exampleResult}
+                </p>
               )}
             </div>
           </div>
