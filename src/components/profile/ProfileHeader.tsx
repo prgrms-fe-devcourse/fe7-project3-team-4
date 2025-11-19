@@ -233,7 +233,7 @@ export function ProfileHeader({
                   {/* 채팅 버튼 */}
                   <Link
                     href={`/message?peerId=${profile!.id}`}
-                    className="cursor-pointer leading-none px-2 py-1 text-xs rounded-md lg:text-base lg:px-4 lg:py-3 flex items-center gap-1 lg:rounded-xl border border-[#6758FF]/70 text-[#6758FF] bg-white/70 hover:bg-[#6758FF] hover:text-white dark:bg-white/10 dark:hover:bg-[#6758FF]"
+                    className="cursor-pointer leading-none px-2 py-1 text-xs rounded-md lg:text-base lg:px-4 lg:py-3 flex items-center gap-1 lg:rounded-xl border border-[#6758FF]/70 text-[#6758FF] bg-white/70 hover:bg-[#6758FF] hover:text-white dark:bg-[#6758FF] dark:hover:bg-white/10 dark:hover:text-[#6758FF] dark:text-white"
                     title="메시지 보내기"
                   >
                     <MessageCircle size={14} />

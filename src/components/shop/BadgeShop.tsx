@@ -469,7 +469,7 @@ export default function BadgeShop({ initialBadges }: BadgeShopProps) {
                         </span>
                       </h2>
                       <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-300">
-                        {rarityLabel[currentBadge.rarity ?? "common"]} badge
+                        {rarityLabel[currentBadge.rarity ?? "common"]} Effect
                       </p>
                     </div>
                     <span
