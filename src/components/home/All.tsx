@@ -4,7 +4,6 @@ import Post from "./post/Post";
 import NewsItem from "@/components/news/NewsItem";
 import NoPosts from "./post/NoPosts";
 import NewsItemSkeleton from "@/components/news/NewsItemSkeleton";
-import { FadeLoader } from "react-spinners"; // [추가]
 import { PostType } from "@/types/Post";
 
 // [✅ 수정] Tab 타입 정의 (page.tsx와 동일하게)
@@ -40,9 +39,6 @@ export default function All({
   onNewsBookmarkToggle,
   onPostLikeToggle,
   onPostBookmarkToggle,
-  // [추가] 무한 스크롤 props 받기
-  newsLoadingMore,
-  hasNextPage,
   loadMoreTriggerRef,
   activeTab, // [✅ 추가] activeTab prop 사용
 }: AllProps) {
@@ -119,21 +115,6 @@ export default function All({
             );
           }
         })}
-      </div>
-
-      {/* [추가] '뉴스' 탭과 동일한 무한 스크롤 UI */}
-      <div className="flex justify-center items-center py-6" role="status">
-        {newsLoadingMore && (
-          <>
-            <span className="sr-only">추가 로딩 중...</span>
-            <FadeLoader color="#808080" />
-          </>
-        )}
-        {!newsLoadingMore && !hasNextPage && combinedData.length > 0 && (
-          <p className="text-center text-gray-500">
-            모든 콘텐츠를 불러왔습니다.
-          </p>
-        )}
       </div>
       <div
         ref={loadMoreTriggerRef}
