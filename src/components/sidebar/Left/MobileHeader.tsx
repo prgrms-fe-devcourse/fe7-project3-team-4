@@ -114,7 +114,7 @@ export function MobileHeader({
                   <MenuBtn
                     icon={<Award size={20} />}
                     title="이펙트 상점"
-                    url="views"
+                    url="shop"
                     size="md"
                     onClick={closeMenu}
                   />
