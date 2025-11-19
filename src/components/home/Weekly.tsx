@@ -8,6 +8,7 @@ import ImgWeekly from "./weekly/ImgWeekly";
 import WeeklyNotice from "./weekly/WeeklyNotice";
 import { PostType, WeeklyModel } from "@/types/Post";
 import { useTheme } from "../theme/ThemeProvider";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 
 // [수정] Props 타입 정의 및 핸들러 추가
 type WeeklyProps = {
@@ -17,6 +18,38 @@ type WeeklyProps = {
   activeSubType: string | null;
 };
 
+// yyyy-mm-dd 포맷으로 변환
+function toDateKey(date: Date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+// 오늘 날짜 키
+function getTodayKey() {
+  return toDateKey(new Date());
+}
+
+// created_at(ISO 문자열)을 yyyy-mm-dd로 변환
+function getPostDateKey(iso: string | null | undefined) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return toDateKey(d);
+}
+
+// 날짜 라벨 (YYYY년 M월 D일 요일)
+function formatDateLabel(dateKey: string) {
+  const base = new Date(`${dateKey}T00:00:00`);
+  if (Number.isNaN(base.getTime())) return dateKey;
+
+  return new Intl.DateTimeFormat("ko-KR", {
+    dateStyle: "full",
+    timeZone: "Asia/Seoul",
+  }).format(base);
+}
+
 export default function Weekly({
   data,
   onLikeToggle,
@@ -25,26 +58,60 @@ export default function Weekly({
 }: WeeklyProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isDark } = useTheme();
+
   const [activeModel, setActiveModel] = useState<WeeklyModel>(() => {
     if (activeSubType === "Image") return "Image";
     return "Text";
   });
 
-  const { isDark } = useTheme();
+  // 날짜 상태: URL 쿼리의 ?day=yyyy-mm-dd 를 우선 사용, 없으면 오늘
+  const [currentDateKey, setCurrentDateKey] = useState<string>(() => {
+    const fromQuery = searchParams.get("day");
+    return fromQuery || getTodayKey();
+  });
+
+  const currentDateLabel = useMemo(
+    () => formatDateLabel(currentDateKey),
+    [currentDateKey]
+  );
+
+  const updateUrl = (model: WeeklyModel, dateKey: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("sub_type", model);
+    params.set("day", dateKey);
+    router.push(`/?${params.toString()}`, { scroll: false });
+  };
 
   const handleModelChange = (model: WeeklyModel) => {
     setActiveModel(model);
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("sub_type", model);
-    router.push(`/?${params.toString()}`, { scroll: false });
+    updateUrl(model, currentDateKey);
+  };
+
+  // 날짜 이동 핸들러
+  const handleChangeDay = (delta: number) => {
+    const base = new Date(`${currentDateKey}T00:00:00`);
+    base.setDate(base.getDate() + delta);
+    const nextKey = toDateKey(base);
+    setCurrentDateKey(nextKey);
+    updateUrl(activeModel, nextKey);
+  };
+
+  const handleGoToday = () => {
+    const todayKey = getTodayKey();
+    setCurrentDateKey(todayKey);
+    updateUrl(activeModel, todayKey);
   };
 
   const filtered = useMemo(
     () =>
-      data.filter(
-        (post) => post.result_mode?.toLowerCase() === activeModel.toLowerCase()
-      ),
-    [data, activeModel]
+      data.filter((post) => {
+        const modeMatch =
+          post.result_mode?.toLowerCase() === activeModel.toLowerCase();
+        const dateMatch = getPostDateKey(post.created_at) === currentDateKey;
+        return modeMatch && dateMatch;
+      }),
+    [data, activeModel, currentDateKey]
   );
 
   return (
@@ -54,8 +121,45 @@ export default function Weekly({
         active={activeModel}
         onChange={handleModelChange}
       />
-      {/* 주간 챌린지 공지? */}
-      <WeeklyNotice active={activeModel} />
+
+      {/* 날짜 네비게이션 바 */}
+      <div className="mt-4 mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="inline-flex items-center gap-2 text-lg text-[#4B4B57] dark:text-slate-200">
+          <CalendarDays className="w-4 h-4" />
+          <span className="font-medium">{currentDateLabel}</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => handleChangeDay(-1)}
+            className="cursor-pointer inline-flex items-center justify-center rounded-full border border-black/10 bg-white/60 px-3 py-1 text-xs shadow-sm hover:bg-white dark:bg-slate-800/70 dark:border-white/15 dark:hover:bg-slate-800"
+          >
+            <ChevronLeft className="w-3 h-3 mr-1" />
+            이전
+          </button>
+
+          <button
+            type="button"
+            onClick={handleGoToday}
+            className="cursor-pointer inline-flex items-center justify-center rounded-full bg-[#6758FF] px-3 py-1 text-xs font-semibold text-white shadow-sm hover:bg-[#4d41cf] dark:bg-[#332c7e]"
+          >
+            오늘
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleChangeDay(1)}
+            className="cursor-pointer inline-flex items-center justify-center rounded-full border border-black/10 bg-white/60 px-3 py-1 text-xs shadow-sm hover:bg-white dark:bg-slate-800/70 dark:border-white/15 dark:hover:bg-slate-800"
+          >
+            다음
+            <ChevronRight className="w-3 h-3 ml-1" />
+          </button>
+        </div>
+      </div>
+
+      {/* 주간 챌린지 공지 (날짜별로 주제 고정) */}
+      <WeeklyNotice active={activeModel} dateKey={currentDateKey} />
 
       <div className="flex justify-center">
         {isDark ? (
@@ -131,7 +235,7 @@ export default function Weekly({
         )}
       </div>
 
-      {/* [수정] 핸들러 props 전달 */}
+      {/* 핸들러 props 전달 */}
       {activeModel === "Text" && (
         <TextWeekly
           data={filtered}

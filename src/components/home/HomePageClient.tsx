@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useInView } from "react-intersection-observer"; // 👈 무한 스크롤 감지용 (설치 필요)
 import All from "@/components/home/All";
 import Prompt from "@/components/home/Prompt";
 import TopBar from "@/components/home/TopBar";
@@ -18,7 +21,8 @@ import { createClient } from "@/utils/supabase/client";
 import { Json } from "@/utils/supabase/supabase";
 import NewsItemSkeleton from "@/components/news/NewsItemSkeleton";
 import NewsDetail from "@/components/news/NewsDetail";
-import { useQuery, useQueryClient } from "@tanstack/react-query"; // 👈 React Query 추가
+
+const PAGE_SIZE = 10; // 한 번에 불러올 게시글 수
 
 type Tab = "전체" | "뉴스" | "프롬프트" | "자유" | "주간";
 
@@ -38,6 +42,7 @@ const tabToType: Record<Tab, string> = {
   주간: "weekly",
 };
 
+// Supabase에서 반환되는 원본 데이터 타입 정의
 type SupabasePostItem = {
   id: string;
   title: string | null;
@@ -68,7 +73,10 @@ export default function HomePageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [supabase] = useState(() => createClient());
-  const queryClient = useQueryClient(); // 👈 쿼리 클라이언트 사용
+  const queryClient = useQueryClient();
+  
+  // 무한 스크롤 감지용 ref
+  const { ref: loadMoreRef, inView } = useInView();
 
   const [detailLoading, setDetailLoading] = useState(false);
 
@@ -77,12 +85,12 @@ export default function HomePageClient() {
     isLoadingMore: newsLoadingMore,
     newsList,
     message,
-    hasNextPage,
+    hasNextPage: newsHasNextPage,
     sortBy,
     handleSortChange,
     handleLikeToggle: handleNewsLikeToggle,
     handleBookmarkToggle: handleNewsBookmarkToggle,
-    loadMoreTriggerRef,
+    loadMoreTriggerRef: newsLoadMoreTriggerRef,
     fileInputRef,
     loadingUpload,
     handleFileChange,
@@ -98,14 +106,24 @@ export default function HomePageClient() {
     return searchParams.get("sub_type");
   }, [searchParams]);
 
-  // 🌟 [변경 1] useQuery로 데이터 가져오기 (자동 캐싱됨)
-  const { data: posts = [], isLoading: postsLoading } = useQuery({
-    queryKey: ["posts", sortBy], // 정렬 기준이 바뀌면 키가 바뀌어 새로 요청됨
-    queryFn: async () => {
+  // 🌟 [변경 1] useInfiniteQuery로 페이지네이션 적용
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: postsLoading,
+  } = useInfiniteQuery({
+    queryKey: ["posts", sortBy],
+    initialPageParam: 0,
+    queryFn: async ({ pageParam = 0 }) => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       const userId = user?.id;
+
+      const from = pageParam * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
 
       let query = supabase
         .from("posts")
@@ -131,7 +149,8 @@ export default function HomePageClient() {
           "user_post_bookmarks.user_id",
           "eq",
           userId || "00000000-0000-0000-0000-000000000000"
-        );
+        )
+        .range(from, to); // 👈 범위 제한 추가
 
       if (sortBy === "like_count") {
         query = query.order("like_count", {
@@ -142,10 +161,10 @@ export default function HomePageClient() {
         query = query.order("created_at", { ascending: false });
       }
 
-      const { data, error } = await query;
+      const { data: fetchedData, error } = await query;
       if (error) throw error;
 
-      const typedData = data as unknown as SupabasePostItem[];
+      const typedData = fetchedData as unknown as SupabasePostItem[];
       return typedData.map((item) => ({
         id: item.id,
         title: item.title || "",
@@ -175,43 +194,75 @@ export default function HomePageClient() {
           : undefined,
       }));
     },
-    staleTime: 60 * 1000, // 1분간 재요청 안 함 (캐시 사용)
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage.length === PAGE_SIZE ? allPages.length : undefined;
+    },
+    staleTime: 60 * 1000,
   });
 
-  // 🌟 [변경 2] Realtime 구독이 캐시 데이터를 업데이트하도록 수정
+  // 🌟 [변경 2] 데이터 평탄화 (InfiniteData -> Array)
+  const posts = useMemo(() => {
+    return data?.pages.flatMap((page) => page) || [];
+  }, [data]);
+
+  // 🌟 [변경 3] 스크롤 바닥 감지 시 다음 페이지 로드
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // 🌟 [변경 4] Realtime 구독 (INSERT, UPDATE, DELETE 처리)
   useEffect(() => {
     const channel = supabase
       .channel("posts-changes")
       .on(
         "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "posts",
-        },
+        { event: "*", schema: "public", table: "posts" },
         (payload) => {
-          const updatedPost = payload.new as {
-            id: string;
-            comment_count: number;
-            like_count?: number;
-          };
+          // 1. UPDATE: 기존 캐시 수정
+          if (payload.eventType === "UPDATE") {
+            const updatedPost = payload.new as Partial<PostType>;
+            queryClient.setQueryData(["posts", sortBy], (oldData: any) => {
+              if (!oldData) return oldData;
+              return {
+                ...oldData,
+                pages: oldData.pages.map((page: PostType[]) =>
+                  page.map((post) =>
+                    post.id === updatedPost.id
+                      ? {
+                          ...post,
+                          comment_count:
+                            updatedPost.comment_count ?? post.comment_count,
+                          like_count:
+                            updatedPost.like_count ?? post.like_count,
+                        }
+                      : post
+                  )
+                ),
+              };
+            });
+          }
 
-          // 캐시 데이터 직접 수정
-          queryClient.setQueryData(
-            ["posts", sortBy],
-            (oldPosts: PostType[] | undefined) => {
-              if (!oldPosts) return oldPosts;
-              return oldPosts.map((post) =>
-                post.id === updatedPost.id
-                  ? {
-                      ...post,
-                      comment_count: updatedPost.comment_count,
-                      like_count: updatedPost.like_count ?? post.like_count,
-                    }
-                  : post
-              );
-            }
-          );
+          // 2. DELETE: 캐시에서 제거
+          if (payload.eventType === "DELETE") {
+            const deletedId = payload.old.id;
+            queryClient.setQueryData(["posts", sortBy], (oldData: any) => {
+              if (!oldData) return oldData;
+              return {
+                ...oldData,
+                pages: oldData.pages.map((page: PostType[]) =>
+                  page.filter((post) => post.id !== deletedId)
+                ),
+              };
+            });
+          }
+
+          // 3. INSERT: 목록 새로고침 (새 글은 프로필 정보 JOIN이 필요하므로 refetch 권장)
+          if (payload.eventType === "INSERT") {
+            // 최신순 정렬일 때만 즉시 반응하거나, 사용자 경험을 위해 전체 갱신
+            queryClient.invalidateQueries({ queryKey: ["posts"] });
+          }
         }
       )
       .subscribe();
@@ -221,7 +272,6 @@ export default function HomePageClient() {
     };
   }, [supabase, sortBy, queryClient]);
 
-  // [✅ 신규] ID만으로 뉴스와 게시글을 구분하는 통합 로직 (posts는 이제 useQuery 데이터)
   const selectedItem = useMemo(() => {
     const id = searchParams.get("id");
     if (!id) return null;
@@ -235,11 +285,10 @@ export default function HomePageClient() {
     if (postItem) {
       return { type: "post" as const, data: postItem };
     }
-
     return null;
   }, [searchParams, newsList, posts]);
 
-  // [✅ 수정] ID 기반 로딩 상태 관리
+  // 상세 페이지 로딩 처리
   useEffect(() => {
     const id = searchParams.get("id");
     if (id) {
@@ -293,7 +342,7 @@ export default function HomePageClient() {
     router.push(`/?${params.toString()}`, { scroll: false });
   };
 
-  // 🌟 [변경 3] 좋아요 토글 시 캐시 업데이트 (Optimistic Update)
+  // 🌟 [변경 5] 좋아요 Optimistic Update (Infinite Query 구조 대응)
   const handlePostLikeToggle = useCallback(
     async (id: string) => {
       const {
@@ -304,33 +353,42 @@ export default function HomePageClient() {
         return;
       }
 
-      // 현재 캐시 데이터 스냅샷
-      const previousPosts = queryClient.getQueryData<PostType[]>([
-        "posts",
-        sortBy,
-      ]);
-      const currentItem = previousPosts?.find((item) => item.id === id);
-      if (!currentItem) return;
+      const previousData = queryClient.getQueryData<any>(["posts", sortBy]);
+      let isCurrentlyLiked = false;
+      let currentLikes = 0;
 
-      const isCurrentlyLiked = currentItem.isLiked;
-      const currentLikes = currentItem.like_count ?? 0;
+      // 현재 상태 찾기
+      if (previousData?.pages) {
+        for (const page of previousData.pages) {
+          const item = page.find((p: PostType) => p.id === id);
+          if (item) {
+            isCurrentlyLiked = item.isLiked;
+            currentLikes = item.like_count ?? 0;
+            break;
+          }
+        }
+      }
 
-      // 1. UI 즉시 업데이트
-      queryClient.setQueryData(
-        ["posts", sortBy],
-        (old: PostType[] | undefined) =>
-          old?.map((item) =>
-            item.id === id
-              ? {
-                  ...item,
-                  isLiked: !isCurrentlyLiked,
-                  like_count: !isCurrentlyLiked
-                    ? currentLikes + 1
-                    : Math.max(0, currentLikes - 1),
-                }
-              : item
-          )
-      );
+      // UI 즉시 업데이트
+      queryClient.setQueryData(["posts", sortBy], (oldData: any) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: PostType[]) =>
+            page.map((post) =>
+              post.id === id
+                ? {
+                    ...post,
+                    isLiked: !isCurrentlyLiked,
+                    like_count: !isCurrentlyLiked
+                      ? currentLikes + 1
+                      : Math.max(0, currentLikes - 1),
+                  }
+                : post
+            )
+          ),
+        };
+      });
 
       try {
         if (isCurrentlyLiked) {
@@ -344,21 +402,20 @@ export default function HomePageClient() {
           const { error } = await supabase
             .from("user_post_likes")
             .insert({ user_id: user.id, post_id: id });
-
           if (error && error.code !== "23505") throw error;
         }
       } catch (err) {
         console.error("Error toggling like:", err);
-        // 2. 에러 발생 시 롤백
-        if (previousPosts) {
-          queryClient.setQueryData(["posts", sortBy], previousPosts);
+        // 에러 시 롤백
+        if (previousData) {
+          queryClient.setQueryData(["posts", sortBy], previousData);
         }
       }
     },
     [supabase, queryClient, sortBy]
   );
 
-  // 🌟 [변경 4] 북마크 토글 시 캐시 업데이트 (Optimistic Update)
+  // 🌟 [변경 6] 북마크 Optimistic Update (Infinite Query 구조 대응)
   const handlePostBookmarkToggle = useCallback(
     async (id: string, type: "post" | "news") => {
       if (type === "news") {
@@ -374,28 +431,37 @@ export default function HomePageClient() {
         return;
       }
 
-      const previousPosts = queryClient.getQueryData<PostType[]>([
-        "posts",
-        sortBy,
-      ]);
-      const currentItem = previousPosts?.find((item) => item.id === id);
-      if (!currentItem) return;
+      const previousData = queryClient.getQueryData<any>(["posts", sortBy]);
+      let isCurrentlyBookmarked = false;
 
-      const isCurrentlyBookmarked = currentItem.isBookmarked;
+      // 현재 상태 찾기
+      if (previousData?.pages) {
+        for (const page of previousData.pages) {
+          const item = page.find((p: PostType) => p.id === id);
+          if (item) {
+            isCurrentlyBookmarked = item.isBookmarked;
+            break;
+          }
+        }
+      }
 
-      // 1. UI 즉시 업데이트
-      queryClient.setQueryData(
-        ["posts", sortBy],
-        (old: PostType[] | undefined) =>
-          old?.map((item) =>
-            item.id === id
-              ? {
-                  ...item,
-                  isBookmarked: !isCurrentlyBookmarked,
-                }
-              : item
-          )
-      );
+      // UI 즉시 업데이트
+      queryClient.setQueryData(["posts", sortBy], (oldData: any) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: PostType[]) =>
+            page.map((post) =>
+              post.id === id
+                ? {
+                    ...post,
+                    isBookmarked: !isCurrentlyBookmarked,
+                  }
+                : post
+            )
+          ),
+        };
+      });
 
       try {
         if (isCurrentlyBookmarked) {
@@ -409,14 +475,12 @@ export default function HomePageClient() {
           const { error } = await supabase
             .from("user_post_bookmarks")
             .insert({ user_id: user.id, post_id: id });
-
           if (error && error.code !== "23505") throw error;
         }
       } catch (err) {
-        console.log(err);
-        // 2. 에러 발생 시 롤백
-        if (previousPosts) {
-          queryClient.setQueryData(["posts", sortBy], previousPosts);
+        console.error(err);
+        if (previousData) {
+          queryClient.setQueryData(["posts", sortBy], previousData);
         }
       }
     },
@@ -447,13 +511,11 @@ export default function HomePageClient() {
           />
         </div>
 
-        {/* ID 기반 통합 상세 페이지 렌더링 */}
         {searchParams.get("id") ? (
-          // 로딩 중이면 스켈레톤
+          // 상세 페이지 렌더링
           detailLoading || postsLoading || newsLoading ? (
             <NewsItemSkeleton />
           ) : selectedItem ? (
-            // 타입에 따라 적절한 컴포넌트 렌더링
             selectedItem.type === "news" ? (
               <NewsDetail news={selectedItem.data} onBack={handleBack} />
             ) : (
@@ -465,7 +527,6 @@ export default function HomePageClient() {
               />
             )
           ) : (
-            // 아이템을 찾지 못한 경우
             <div className="flex flex-col items-center justify-center py-20 px-4">
               <p className="text-gray-500 text-center">
                 콘텐츠를 찾을 수 없습니다.
@@ -484,7 +545,7 @@ export default function HomePageClient() {
             <div className="space-y-8 pb-6">
               {activeTab === "전체" && (
                 <All
-                  posts={posts}
+                  posts={posts} // 평탄화된 데이터 전달
                   news={newsList}
                   isLoading={postsLoading || newsLoading}
                   sortBy={sortBy}
@@ -493,8 +554,8 @@ export default function HomePageClient() {
                   onPostLikeToggle={handlePostLikeToggle}
                   onPostBookmarkToggle={handlePostBookmarkToggle}
                   newsLoadingMore={newsLoadingMore}
-                  hasNextPage={hasNextPage}
-                  loadMoreTriggerRef={loadMoreTriggerRef}
+                  hasNextPage={newsHasNextPage}
+                  loadMoreTriggerRef={newsLoadMoreTriggerRef}
                   activeTab={activeTab}
                 />
               )}
@@ -516,14 +577,9 @@ export default function HomePageClient() {
                     className="flex justify-center items-center py-6"
                     role="status"
                   >
-                    {newsLoadingMore && (
-                      <>
-                        <span className="sr-only">추가 로딩 중...</span>
-                        <FadeLoader color="#808080" />
-                      </>
-                    )}
+                    {newsLoadingMore && <FadeLoader color="#808080" />}
                     {!newsLoadingMore &&
-                      !hasNextPage &&
+                      !newsHasNextPage &&
                       newsList.length > 0 && (
                         <p className="text-center text-gray-500">
                           모든 뉴스를 불러왔습니다.
@@ -531,7 +587,7 @@ export default function HomePageClient() {
                       )}
                   </div>
                   <div
-                    ref={loadMoreTriggerRef}
+                    ref={newsLoadMoreTriggerRef}
                     style={{ height: "1px" }}
                     aria-hidden="true"
                   />
@@ -561,6 +617,21 @@ export default function HomePageClient() {
                   onBookmarkToggle={handlePostBookmarkToggle}
                   activeSubType={activeSubType}
                 />
+              )}
+
+              {/* 🌟 [추가] 게시글 무한 스크롤 로딩 트리거 (전체/프롬프트/자유/주간 탭에서만 동작) */}
+              {activeTab !== "뉴스" && (
+                <div
+                  ref={loadMoreRef}
+                  className="flex justify-center items-center py-6 min-h-[50px]"
+                >
+                  {isFetchingNextPage && <FadeLoader color="#808080" />}
+                  {!hasNextPage && posts.length > 0 && (
+                    <p className="text-center text-gray-500">
+                      모든 게시글을 불러왔습니다.
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           </>
