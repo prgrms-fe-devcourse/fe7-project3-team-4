@@ -5,6 +5,9 @@ import { ThemeProvider } from "@/components/theme/ThemeProvider";
 export const metadata = {
   title: "ALGO | AI PROMPT",
   description: "ALGO | AI PROMPT",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default async function RootLayout({
