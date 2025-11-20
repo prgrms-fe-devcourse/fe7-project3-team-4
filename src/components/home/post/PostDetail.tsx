@@ -100,6 +100,11 @@ export default function PostDetail({
   onBack,
 }: PostDetailProps) {
   const [post, setPost] = useState(initialPost);
+  
+  useEffect(() => {
+    setPost(initialPost);
+  }, [initialPost]);
+  
   const [comments, setComments] = useState<PostComment[]>([]);
   const [sortOrder, setSortOrder] = useState<"latest" | "popular">("latest");
   const [isFollowLoading, setIsFollowLoading] = useState(false);
