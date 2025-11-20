@@ -3,8 +3,8 @@
 
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { useInView } from "react-intersection-observer"; // 👈 무한 스크롤 감지용 (설치 필요)
+import { useInfiniteQuery, useQueryClient, useQuery } from "@tanstack/react-query"; // ⭐️ useQuery 추가
+import { useInView } from "react-intersection-observer";
 import All from "@/components/home/All";
 import Prompt from "@/components/home/Prompt";
 import TopBar from "@/components/home/TopBar";
@@ -23,7 +23,7 @@ import NewsItemSkeleton from "@/components/news/NewsItemSkeleton";
 import NewsDetail from "@/components/news/NewsDetail";
 import { useToast } from "../common/toast/ToastContext";
 
-const PAGE_SIZE = 10; // 한 번에 불러올 게시글 수
+const PAGE_SIZE = 10;
 
 type Tab = "전체" | "뉴스" | "프롬프트" | "자유" | "주간";
 
@@ -76,9 +76,7 @@ export default function HomePageClient() {
   const [supabase] = useState(() => createClient());
   const queryClient = useQueryClient();
 
-  // 무한 스크롤 감지용 ref
   const { ref: loadMoreRef, inView } = useInView();
-
   const [detailLoading, setDetailLoading] = useState(false);
 
   const {
@@ -107,7 +105,13 @@ export default function HomePageClient() {
     return searchParams.get("sub_type");
   }, [searchParams]);
 
-  // 🌟 [변경 1] useInfiniteQuery로 페이지네이션 적용
+  // URL 파라미터 추출
+  const paramId = searchParams.get("id");
+  const paramType = searchParams.get("type");
+
+  // ============================================================
+  // 1. 홈 피드용 무한 스크롤 쿼리 (기존 유지)
+  // ============================================================
   const {
     data,
     fetchNextPage,
@@ -151,7 +155,7 @@ export default function HomePageClient() {
           "eq",
           userId || "00000000-0000-0000-0000-000000000000"
         )
-        .range(from, to); // 👈 범위 제한 추가
+        .range(from, to);
 
       if (sortBy === "like_count") {
         query = query.order("like_count", {
@@ -201,19 +205,140 @@ export default function HomePageClient() {
     staleTime: 60 * 1000,
   });
 
-  // 🌟 [변경 2] 데이터 평탄화 (InfiniteData -> Array)
   const posts = useMemo(() => {
     return data?.pages.flatMap((page) => page) || [];
   }, [data]);
 
-  // 🌟 [변경 3] 스크롤 바닥 감지 시 다음 페이지 로드
+  // ============================================================
+  // ⭐️ 2. 개별 게시글(Post) 단건 조회 (리스트에 없을 경우)
+  // ============================================================
+  const { data: singlePost } = useQuery({
+    queryKey: ["post", paramId],
+    queryFn: async () => {
+      if (!paramId) return null;
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id;
+
+      const { data, error } = await supabase
+        .from("posts")
+        .select(
+          `
+          *,
+          profiles:user_id (
+            display_name,
+            email,
+            avatar_url,
+            equipped_badge_id
+          ),
+          user_post_likes!left(user_id),
+          user_post_bookmarks!left(user_id)
+        `
+        )
+        .filter(
+          "user_post_likes.user_id",
+          "eq",
+          userId || "00000000-0000-0000-0000-000000000000"
+        )
+        .filter(
+          "user_post_bookmarks.user_id",
+          "eq",
+          userId || "00000000-0000-0000-0000-000000000000"
+        )
+        .eq("id", paramId)
+        .single();
+
+      if (error || !data) return null;
+
+      const item = data as unknown as SupabasePostItem;
+      return {
+        id: item.id,
+        title: item.title || "",
+        content: item.content,
+        created_at: item.created_at || "",
+        post_type: item.post_type || "",
+        hashtags: item.hashtags || undefined,
+        like_count: item.like_count || 0,
+        comment_count: item.comment_count || 0,
+        view_count: item.view_count || 0,
+        user_id: item.user_id || "",
+        model: (item.model as "GPT" | "Gemini") || undefined,
+        result_mode: (item.result_mode as "text" | "image") || undefined,
+        thumbnail: item.thumbnail || "",
+        subtitle: item.subtitle || "",
+        isLiked: !!(item.user_post_likes && item.user_post_likes.length > 0),
+        isBookmarked: !!(
+          item.user_post_bookmarks && item.user_post_bookmarks.length > 0
+        ),
+        profiles: item.profiles
+          ? {
+              display_name: item.profiles.display_name,
+              email: item.profiles.email,
+              avatar_url: item.profiles.avatar_url,
+              equipped_badge_id: item.profiles.equipped_badge_id,
+            }
+          : undefined,
+      } as PostType;
+    },
+    // ID가 있고, 타입이 뉴스가 아니며, 목록에 없을 때만 실행
+    enabled: !!paramId && paramType !== "news" && !posts.some((p) => p.id === paramId),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // ============================================================
+  // ⭐️ 3. 개별 뉴스(News) 단건 조회 (리스트에 없을 경우)
+  // ============================================================
+  const { data: singleNews } = useQuery({
+    queryKey: ["news", paramId],
+    queryFn: async () => {
+      if (!paramId) return null;
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id;
+
+      const { data: newsItem, error } = await supabase
+        .from("news")
+        .select(
+          `
+          id, title, content, site_name, url, published_at, created_at, metadata, 
+          like_count, view_count, tags, images,
+          user_news_likes!left(user_id),
+          user_news_bookmarks!left(user_id)
+        `
+        )
+        .filter(
+          "user_news_likes.user_id",
+          "eq",
+          userId || "00000000-0000-0000-0000-000000000000"
+        )
+        .filter(
+          "user_news_bookmarks.user_id",
+          "eq",
+          userId || "00000000-0000-0000-0000-000000000000"
+        )
+        .eq("id", paramId)
+        .single();
+
+      if (error || !newsItem) return null;
+
+      return {
+        ...newsItem,
+        isLiked: newsItem.user_news_likes.length > 0,
+        isBookmarked: newsItem.user_news_bookmarks.length > 0,
+      } as any;
+    },
+    // ID가 있고, 타입이 뉴스이며, 목록에 없을 때만 실행
+    enabled: !!paramId && paramType === "news" && !newsList.some((n) => n.id === paramId),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // ============================================================
+  // 4. 스크롤 및 Realtime 구독
+  // ============================================================
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // 🌟 [변경 4] Realtime 구독 (INSERT, UPDATE, DELETE 처리)
   useEffect(() => {
     const channel = supabase
       .channel("posts-changes")
@@ -221,7 +346,7 @@ export default function HomePageClient() {
         "postgres_changes",
         { event: "*", schema: "public", table: "posts" },
         (payload) => {
-          // 1. UPDATE: 기존 캐시 수정
+          // 1. UPDATE
           if (payload.eventType === "UPDATE") {
             const updatedPost = payload.new as Partial<PostType>;
             queryClient.setQueryData(["posts", sortBy], (oldData: any) => {
@@ -242,9 +367,20 @@ export default function HomePageClient() {
                 ),
               };
             });
+            // 단건 조회 캐시도 업데이트
+            if (updatedPost.id) {
+               queryClient.setQueryData(["post", updatedPost.id], (oldData: PostType | undefined) => {
+                   if(!oldData) return oldData;
+                   return { 
+                       ...oldData, 
+                       comment_count: updatedPost.comment_count ?? oldData.comment_count,
+                       like_count: updatedPost.like_count ?? oldData.like_count
+                   };
+               });
+            }
           }
 
-          // 2. DELETE: 캐시에서 제거
+          // 2. DELETE
           if (payload.eventType === "DELETE") {
             const deletedId = payload.old.id;
             queryClient.setQueryData(["posts", sortBy], (oldData: any) => {
@@ -258,9 +394,8 @@ export default function HomePageClient() {
             });
           }
 
-          // 3. INSERT: 목록 새로고침 (새 글은 프로필 정보 JOIN이 필요하므로 refetch 권장)
+          // 3. INSERT
           if (payload.eventType === "INSERT") {
-            // 최신순 정렬일 때만 즉시 반응하거나, 사용자 경험을 위해 전체 갱신
             queryClient.invalidateQueries({ queryKey: ["posts"] });
           }
         }
@@ -272,47 +407,47 @@ export default function HomePageClient() {
     };
   }, [supabase, sortBy, queryClient]);
 
+  // ============================================================
+  // ⭐️ 5. selectedItem 계산 (리스트 + 단건 조회 결과 통합)
+  // ============================================================
   const selectedItem = useMemo(() => {
     const id = searchParams.get("id");
     if (!id) return null;
 
-    const newsItem = newsList.find((n) => n.id === id);
+    // 1. 뉴스 확인 (목록 or 단건)
+    const newsItem = newsList.find((n) => n.id === id) || singleNews;
     if (newsItem) {
       return { type: "news" as const, data: newsItem };
     }
 
-    const postItem = posts.find((p) => p.id === id);
+    // 2. 게시글 확인 (목록 or 단건)
+    const postItem = posts.find((p) => p.id === id) || singlePost;
     if (postItem) {
       return { type: "post" as const, data: postItem };
     }
     return null;
-  }, [searchParams, newsList, posts]);
+  }, [searchParams, newsList, posts, singlePost, singleNews]);
 
   // 상세 페이지 로딩 처리
   useEffect(() => {
     const id = searchParams.get("id");
 
-    // 1. ID가 URL에 없으면 로딩 상태 아님 (목록 보기)
     if (!id) {
       setDetailLoading(false);
       return;
     }
 
-    // 2. ID가 있고, 이미 리스트에서 해당 아이템을 찾았다면? -> 로딩 끝, 즉시 보여줌
     if (selectedItem) {
       setDetailLoading(false);
       return;
     }
 
-    // 3. ID는 있는데 리스트에 아직 없다? (방금 글 써서 리스트 갱신 전일 확률 높음)
-    // 스켈레톤을 보여주기 위해 로딩 true로 설정
     setDetailLoading(true);
 
-    // 4. 최대 2초까지 기다려줌 (Realtime이나 Refetch가 2초 안에 보통 됨)
-    // 2초 뒤에도 데이터가 안 오면 그때는 진짜 없는 것이므로 로딩 끄고 404 화면 노출
+    // 데이터를 기다리기 위해 타임아웃 설정 (단건 조회 실패 시 Fallback)
     const timer = setTimeout(() => {
       setDetailLoading(false);
-    }, 2000);
+    }, 3000);
 
     return () => clearTimeout(timer);
   }, [searchParams, selectedItem]);
@@ -361,12 +496,10 @@ export default function HomePageClient() {
 
   const { showToast } = useToast();
 
-  // 🌟 [변경 5] 좋아요 Optimistic Update (Infinite Query 구조 대응)
+  // ⭐️ 6. 좋아요 핸들러 (단건 조회 데이터까지 대응)
   const handlePostLikeToggle = useCallback(
     async (id: string) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         showToast({
           title: "좋아요 실패",
@@ -376,23 +509,35 @@ export default function HomePageClient() {
         return;
       }
 
-      const previousData = queryClient.getQueryData<any>(["posts", sortBy]);
+      // 현재 상태 찾기 (목록 또는 단건 조회 캐시)
       let isCurrentlyLiked = false;
       let currentLikes = 0;
+      let found = false;
 
-      // 현재 상태 찾기
-      if (previousData?.pages) {
-        for (const page of previousData.pages) {
+      // 1) 목록 캐시에서 찾기
+      const listData = queryClient.getQueryData<any>(["posts", sortBy]);
+      if (listData?.pages) {
+        for (const page of listData.pages) {
           const item = page.find((p: PostType) => p.id === id);
           if (item) {
             isCurrentlyLiked = item.isLiked;
             currentLikes = item.like_count ?? 0;
+            found = true;
             break;
           }
         }
       }
 
-      // UI 즉시 업데이트
+      // 2) 목록에 없으면 단건 조회 캐시에서 찾기
+      if (!found) {
+        const singleData = queryClient.getQueryData<PostType>(["post", id]);
+        if (singleData) {
+          isCurrentlyLiked = singleData.isLiked;
+          currentLikes = singleData.like_count ?? 0;
+        }
+      }
+
+      // 낙관적 업데이트 (목록)
       queryClient.setQueryData(["posts", sortBy], (oldData: any) => {
         if (!oldData) return oldData;
         return {
@@ -413,6 +558,18 @@ export default function HomePageClient() {
         };
       });
 
+      // 낙관적 업데이트 (단건)
+      queryClient.setQueryData(["post", id], (oldData: PostType | undefined) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          isLiked: !isCurrentlyLiked,
+          like_count: !isCurrentlyLiked
+            ? currentLikes + 1
+            : Math.max(0, currentLikes - 1),
+        };
+      });
+
       try {
         if (isCurrentlyLiked) {
           const { error } = await supabase
@@ -429,16 +586,16 @@ export default function HomePageClient() {
         }
       } catch (err) {
         console.error("Error toggling like:", err);
-        // 에러 시 롤백
-        if (previousData) {
-          queryClient.setQueryData(["posts", sortBy], previousData);
+        // 에러 시 롤백 (생략하거나 목록 캐시만 복구)
+        if (listData) {
+          queryClient.setQueryData(["posts", sortBy], listData);
         }
       }
     },
-    [supabase, queryClient, sortBy]
+    [supabase, queryClient, sortBy, showToast]
   );
 
-  // 🌟 [변경 6] 북마크 Optimistic Update (Infinite Query 구조 대응)
+  // ⭐️ 7. 북마크 핸들러 (단건 조회 데이터까지 대응)
   const handlePostBookmarkToggle = useCallback(
     async (id: string, type: "post" | "news") => {
       if (type === "news") {
@@ -446,9 +603,7 @@ export default function HomePageClient() {
         return;
       }
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         showToast({
           title: "북마크 실패",
@@ -458,21 +613,30 @@ export default function HomePageClient() {
         return;
       }
 
-      const previousData = queryClient.getQueryData<any>(["posts", sortBy]);
-      let isCurrentlyBookmarked = false;
-
       // 현재 상태 찾기
-      if (previousData?.pages) {
-        for (const page of previousData.pages) {
+      let isCurrentlyBookmarked = false;
+      let found = false;
+
+      const listData = queryClient.getQueryData<any>(["posts", sortBy]);
+      if (listData?.pages) {
+        for (const page of listData.pages) {
           const item = page.find((p: PostType) => p.id === id);
           if (item) {
             isCurrentlyBookmarked = item.isBookmarked;
+            found = true;
             break;
           }
         }
       }
 
-      // UI 즉시 업데이트
+      if (!found) {
+        const singleData = queryClient.getQueryData<PostType>(["post", id]);
+        if (singleData) {
+          isCurrentlyBookmarked = singleData.isBookmarked;
+        }
+      }
+
+      // 낙관적 업데이트 (목록)
       queryClient.setQueryData(["posts", sortBy], (oldData: any) => {
         if (!oldData) return oldData;
         return {
@@ -487,6 +651,15 @@ export default function HomePageClient() {
                 : post
             )
           ),
+        };
+      });
+
+      // 낙관적 업데이트 (단건)
+      queryClient.setQueryData(["post", id], (oldData: PostType | undefined) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          isBookmarked: !isCurrentlyBookmarked,
         };
       });
 
@@ -506,12 +679,12 @@ export default function HomePageClient() {
         }
       } catch (err) {
         console.error(err);
-        if (previousData) {
-          queryClient.setQueryData(["posts", sortBy], previousData);
+        if (listData) {
+          queryClient.setQueryData(["posts", sortBy], listData);
         }
       }
     },
-    [supabase, queryClient, sortBy, handleNewsBookmarkToggle]
+    [supabase, queryClient, sortBy, handleNewsBookmarkToggle, showToast]
   );
 
   return (
@@ -572,7 +745,7 @@ export default function HomePageClient() {
             <div className="space-y-8 pb-6">
               {activeTab === "전체" && (
                 <All
-                  posts={posts} // 평탄화된 데이터 전달
+                  posts={posts}
                   news={newsList}
                   isLoading={postsLoading || newsLoading}
                   sortBy={sortBy}
@@ -646,7 +819,7 @@ export default function HomePageClient() {
                 />
               )}
 
-              {/* 🌟 [추가] 게시글 무한 스크롤 로딩 트리거 (전체/프롬프트/자유/주간 탭에서만 동작) */}
+              {/* 게시글 무한 스크롤 로딩 트리거 */}
               {activeTab !== "뉴스" && (
                 <div
                   ref={loadMoreRef}

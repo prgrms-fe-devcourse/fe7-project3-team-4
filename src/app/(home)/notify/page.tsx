@@ -1,20 +1,8 @@
-// src/app/(home)/notify/page.tsx
-import { Suspense } from "react";
 import NotifyHomeClient from "@/components/notify/NotifyHomeClient";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
-
-function PageLoadingFallback() {
-  return (
-    <section className="relative max-w-2xl mx-auto">
-      <div className="mt-6 space-y-6">
-        <div className="text-center p-4">알림 페이지를 불러오는 중...</div>
-      </div>
-    </section>
-  );
-}
 
 export default async function NotifyPage() {
   const supabase = await createClient();
@@ -25,14 +13,10 @@ export default async function NotifyPage() {
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    redirect("/auth/login?from=notification");
+    redirect("/auth/login");
   }
 
-  return (
-    <Suspense fallback={<PageLoadingFallback />}>
-      <NotifyHomeClient userId={user.id} />
-    </Suspense>
-  );
+  return <NotifyHomeClient userId={user.id} />;
 }
 
 // // app/notify/page.tsx
