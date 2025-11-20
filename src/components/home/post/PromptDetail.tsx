@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/components/common/toast/ToastContext";
 import { PostType } from "@/types/Post";
 import {
   extractFirstLinkHref,
@@ -11,6 +12,8 @@ import Image from "next/image";
 import { useCallback, useMemo, useState } from "react";
 
 export default function PromptDetail({ post }: { post: PostType }) {
+  const { showToast } = useToast();
+
   /* copied는 추후에 Toast 창으로 사용 */
   const [copied, setCopied] = useState(false);
 
@@ -41,7 +44,12 @@ export default function PromptDetail({ post }: { post: PostType }) {
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 1200);
-  }, [promptInput]);
+    showToast({
+      title: "복사 완료",
+      message: "클립보드에 복사되었습니다.",
+      variant: "success",
+    });
+  }, [promptInput, showToast]);
 
   return (
     <>
