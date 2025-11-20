@@ -532,7 +532,7 @@ export default function HomePageClient() {
       if (!found) {
         const singleData = queryClient.getQueryData<PostType>(["post", id]);
         if (singleData) {
-          isCurrentlyLiked = singleData.isLiked;
+          isCurrentlyLiked = singleData.isLiked ?? false;
           currentLikes = singleData.like_count ?? 0;
         }
       }
@@ -632,7 +632,7 @@ export default function HomePageClient() {
       if (!found) {
         const singleData = queryClient.getQueryData<PostType>(["post", id]);
         if (singleData) {
-          isCurrentlyBookmarked = singleData.isBookmarked;
+          isCurrentlyBookmarked = singleData.isBookmarked ?? false;
         }
       }
 
