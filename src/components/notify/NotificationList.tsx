@@ -1,118 +1,29 @@
 // src/components/notify/NotificationList.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { NotificationItem } from "@/components/notify/NotificationItem";
 import { createClient } from "@/utils/supabase/client";
 import type { NotificationWithDetails } from "@/types/notification";
 import { useToast } from "../common/toast/ToastContext";
-import { useQueryClient } from "@tanstack/react-query";
 import ConfirmModal from "@/components/common/ConfirmModal";
 
 type NotificationListProps = {
   notifications: NotificationWithDetails[];
   userId: string;
-};
-
-// 실시간 페이로드 타입 정의
-type ProfilesRealtimePayload = {
-  new?: {
-    id?: string;
-    display_name?: string | null;
-    avatar_url?: string | null;
-    equipped_badge_id?: string | null;
-  };
+  onUpdate: () => void;
 };
 
 export function NotificationList({
-  notifications: initialNotifications,
+  notifications,
   userId,
+  onUpdate,
 }: NotificationListProps) {
   const supabase = createClient();
   const { showToast } = useToast();
-  const [notifications, setNotifications] =
-    useState<NotificationWithDetails[]>(initialNotifications);
-
-  const queryClient = useQueryClient();
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
-  // 1. 실시간 알림 수신 (새 알림이 오면 목록 갱신)
-  useEffect(() => {
-    const channel = supabase
-      .channel("realtime-notifications")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `recipient_id=eq.${userId}`,
-        },
-        () => {
-          queryClient.invalidateQueries({
-            queryKey: ["notifications", userId],
-          });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [supabase, userId, queryClient]);
-
-  // 2. ⭐️ 실시간 프로필 변경 수신 (알림 보낸 사람의 뱃지 등이 바뀌면 갱신)
-  useEffect(() => {
-    const channel = supabase
-      .channel("notify-profiles-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "profiles",
-        },
-        (payload: ProfilesRealtimePayload) => {
-          const newProfile = payload.new;
-          if (!newProfile?.id) return;
-
-          // React Query 캐시를 직접 수정하여 즉시 반영
-          queryClient.setQueryData(
-            ["notifications", userId],
-            (oldData: NotificationWithDetails[] | undefined) => {
-              if (!oldData) return oldData;
-
-              return oldData.map((n) => {
-                // 알림 보낸 사람이 업데이트된 유저라면 정보 갱신
-                if (n.sender && n.sender.id === newProfile.id) {
-                  return {
-                    ...n,
-                    sender: {
-                      ...n.sender,
-                      display_name:
-                        newProfile.display_name ?? n.sender.display_name,
-                      avatar_url: newProfile.avatar_url ?? n.sender.avatar_url,
-                      equipped_badge_id:
-                        newProfile.equipped_badge_id ??
-                        n.sender.equipped_badge_id,
-                    },
-                  };
-                }
-                return n;
-              });
-            }
-          );
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [supabase, queryClient, userId]);
-
-  // ... (나머지 핸들러는 기존과 동일)
   const openDeleteConfirm = () => {
     setDeleteConfirmOpen(true);
   };
@@ -133,45 +44,41 @@ export function NotificationList({
         variant: "error",
       });
     } else {
-      queryClient.setQueryData(["notifications", userId], []);
+      // 삭제 성공 시 데이터 다시 불러오기
+      onUpdate();
     }
 
     setIsDeleting(false);
     setDeleteConfirmOpen(false);
   };
 
-  const handleMarkAsRead = (notificationId: string) => {
-    queryClient.setQueryData(
-      ["notifications", userId],
-      (oldData: NotificationWithDetails[] | undefined) =>
-        oldData
-          ? oldData.map((n) =>
-              n.id === notificationId ? { ...n, is_read: true } : n
-            )
-          : []
-    );
+  const handleMarkAsRead = async (notificationId: string) => {
+    const { error } = await supabase
+      .from("notifications")
+      .update({ is_read: true })
+      .eq("id", notificationId);
+
+    if (error) {
+      console.error("Failed to mark notification as read:", error);
+    }
+    // 실시간 구독으로 자동 업데이트됨
   };
 
-  const handleDelete = (notificationId: string) => {
-    queryClient.setQueryData(
-      ["notifications", userId],
-      (oldData: NotificationWithDetails[] | undefined) =>
-        oldData ? oldData.filter((n) => n.id !== notificationId) : []
-    );
+  const handleDelete = async (notificationId: string) => {
+    const { error } = await supabase
+      .from("notifications")
+      .delete()
+      .eq("id", notificationId);
 
-    const deleteFromDB = async () => {
-      const { error } = await supabase
-        .from("notifications")
-        .delete()
-        .eq("id", notificationId);
-
-      if (error) {
-        console.error("Error deleting notification:", error);
-        queryClient.invalidateQueries({ queryKey: ["notifications", userId] });
-      }
-    };
-
-    deleteFromDB();
+    if (error) {
+      console.error("Error deleting notification:", error);
+      showToast({
+        title: "알림 삭제 오류",
+        message: "알림 삭제 중 오류가 발생했습니다.",
+        variant: "error",
+      });
+    }
+    // 실시간 구독으로 자동 업데이트됨
   };
 
   return (
