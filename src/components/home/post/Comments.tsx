@@ -363,7 +363,7 @@ export default function Comments({
                 {comment.profiles?.display_name}
               </div>
               <div className="text-xs text-[#717182] dark:text-[#A6A6DB]">
-                @{comment.profiles?.email}
+                {comment.profiles?.email}
               </div>
             </div>
           </div>
