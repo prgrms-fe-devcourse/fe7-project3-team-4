@@ -291,14 +291,31 @@ export default function HomePageClient() {
   // 상세 페이지 로딩 처리
   useEffect(() => {
     const id = searchParams.get("id");
-    if (id) {
-      setDetailLoading(true);
-      const timer = setTimeout(() => setDetailLoading(false), 100);
-      return () => clearTimeout(timer);
-    } else {
+
+    // 1. ID가 URL에 없으면 로딩 상태 아님 (목록 보기)
+    if (!id) {
       setDetailLoading(false);
+      return;
     }
-  }, [searchParams]);
+
+    // 2. ID가 있고, 이미 리스트에서 해당 아이템을 찾았다면? -> 로딩 끝, 즉시 보여줌
+    if (selectedItem) {
+      setDetailLoading(false);
+      return;
+    }
+
+    // 3. ID는 있는데 리스트에 아직 없다? (방금 글 써서 리스트 갱신 전일 확률 높음)
+    // 스켈레톤을 보여주기 위해 로딩 true로 설정
+    setDetailLoading(true);
+
+    // 4. 최대 2초까지 기다려줌 (Realtime이나 Refetch가 2초 안에 보통 됨)
+    // 2초 뒤에도 데이터가 안 오면 그때는 진짜 없는 것이므로 로딩 끄고 404 화면 노출
+    const timer = setTimeout(() => {
+      setDetailLoading(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [searchParams, selectedItem]);
 
   const postsByType = useMemo(
     () => ({
