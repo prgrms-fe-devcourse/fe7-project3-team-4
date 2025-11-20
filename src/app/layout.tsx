@@ -1,0 +1,30 @@
+import "@/assets/css/index.css";
+import Providers from "./Providers";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
+
+export const metadata = {
+  title: "ALGO | AI PROMPT",
+  description: "ALGO | AI PROMPT",
+  icons: {
+    icon: "/favicon.svg",
+  },
+};
+
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="ko" suppressHydrationWarning>
+      <body className="min-h-screen">
+        <ThemeProvider>
+          <Providers>
+            <div className="pointer-events-none fixed inset-0 -z-10 min-h-screen bgGradient" />
+            {children}
+          </Providers>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
